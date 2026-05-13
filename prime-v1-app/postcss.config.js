@@ -1,5 +1,3 @@
-const config = {
+module.exports = {
   plugins: {},
-};
-
-export default config;
+}
