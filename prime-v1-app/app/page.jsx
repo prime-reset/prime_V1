@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main
@@ -5,7 +7,8 @@ export default function Home() {
         backgroundColor: "#050505",
         color: "white",
         minHeight: "100vh",
-        fontFamily: "Arial",
+        fontFamily: "Arial, sans-serif",
+        padding: "28px",
         paddingBottom: "140px",
       }}
     >
@@ -13,165 +16,146 @@ export default function Home() {
         style={{
           maxWidth: "430px",
           margin: "0 auto",
-          padding: "28px",
         }}
       >
-        {/* HERO */}
+        {/* LOGO */}
 
-        <div
+        <p
           style={{
-            position: "relative",
+            color: "#C8A96B",
+            letterSpacing: "6px",
+            fontSize: "14px",
             marginBottom: "40px",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              width: "240px",
-              height: "240px",
-              background: "#C8A96B",
-              filter: "blur(130px)",
-              opacity: 0.12,
-              top: "-100px",
-              right: "-100px",
-              borderRadius: "999px",
-            }}
-          />
+          PRIME.
+        </p>
 
-          <p
-            style={{
-              color: "#C8A96B",
-              letterSpacing: "4px",
-              fontSize: "12px",
-              marginBottom: "20px",
-              position: "relative",
-              zIndex: 2,
-            }}
-          >
-            PRIME.
-          </p>
+        {/* HERO */}
 
-          <h1
-            style={{
-              fontSize: "60px",
-              lineHeight: "60px",
-              marginBottom: "28px",
-              fontWeight: "700",
-              position: "relative",
-              zIndex: 2,
-            }}
-          >
-            Trading
-            <br />
-            Discipline OS
-          </h1>
+        <h1
+          style={{
+            fontSize: "76px",
+            lineHeight: "76px",
+            marginBottom: "30px",
+            fontWeight: "700",
+          }}
+        >
+          Trading
+          <br />
+          Discipline OS
+        </h1>
 
-          <p
-            style={{
-              color: "#8D8D8D",
-              fontSize: "20px",
-              lineHeight: "34px",
-              maxWidth: "360px",
-              position: "relative",
-              zIndex: 2,
-            }}
-          >
-            PRIME transforme ton comportement de trader
-            en système d’exécution discipliné.
-          </p>
-        </div>
+        <p
+          style={{
+            color: "#8D8D8D",
+            fontSize: "18px",
+            lineHeight: "42px",
+            marginBottom: "50px",
+          }}
+        >
+          PRIME transforme ton comportement de
+          trader en système d’exécution discipliné.
+        </p>
 
         {/* CTA */}
 
-        <button
+        <Link
+          href="/session"
           style={{
-            width: "100%",
-            background: "#C8A96B",
-            color: "#000",
-            border: "none",
-            padding: "20px",
-            borderRadius: "22px",
-            fontWeight: "700",
-            fontSize: "17px",
-            marginBottom: "30px",
-            cursor: "pointer",
-            boxShadow: "0 0 40px rgba(200,169,107,0.18)",
+            textDecoration: "none",
           }}
         >
-          Commencer ma session
-        </button>
+          <button
+            style={{
+              width: "100%",
+              background: "#C8A96B",
+              color: "#000",
+              border: "none",
+              padding: "22px",
+              borderRadius: "24px",
+              fontWeight: "700",
+              fontSize: "18px",
+              cursor: "pointer",
+              marginBottom: "40px",
+              boxShadow:
+                "0 0 40px rgba(200,169,107,0.18)",
+            }}
+          >
+            Commencer ma session
+          </button>
+        </Link>
 
-        {/* MINI CARDS */}
+        {/* CARDS */}
 
         <div
           style={{
-            display: "flex",
-            gap: "14px",
-            marginBottom: "24px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "16px",
+            marginBottom: "20px",
           }}
         >
           <div
             style={{
-              flex: 1,
-              background: "#111",
-              borderRadius: "24px",
-              padding: "20px",
-              border: "1px solid rgba(255,255,255,0.05)",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+              background: "#0E0E0E",
+              padding: "26px",
+              borderRadius: "28px",
+              border:
+                "1px solid rgba(255,255,255,0.04)",
             }}
           >
             <p
               style={{
                 color: "#666",
-                fontSize: "12px",
-                marginBottom: "12px",
+                fontSize: "13px",
+                marginBottom: "18px",
                 letterSpacing: "1px",
               }}
             >
               ÉTAT
             </p>
 
-            <h3
+            <h2
               style={{
                 color: "#C8A96B",
                 margin: 0,
-                fontSize: "22px",
+                fontSize: "24px",
               }}
             >
               Focus
-            </h3>
+            </h2>
           </div>
 
           <div
             style={{
-              flex: 1,
-              background: "#111",
-              borderRadius: "24px",
-              padding: "20px",
-              border: "1px solid rgba(255,255,255,0.05)",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+              background: "#0E0E0E",
+              padding: "26px",
+              borderRadius: "28px",
+              border:
+                "1px solid rgba(255,255,255,0.04)",
             }}
           >
             <p
               style={{
                 color: "#666",
-                fontSize: "12px",
-                marginBottom: "12px",
+                fontSize: "13px",
+                marginBottom: "18px",
                 letterSpacing: "1px",
               }}
             >
               RISQUE
             </p>
 
-            <h3
+            <h2
               style={{
                 color: "#C8A96B",
                 margin: 0,
-                fontSize: "22px",
+                fontSize: "24px",
               }}
             >
               Stable
-            </h3>
+            </h2>
           </div>
         </div>
 
@@ -180,19 +164,21 @@ export default function Home() {
         <div
           style={{
             background:
-              "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
-            border: "1px solid rgba(255,255,255,0.05)",
-            borderRadius: "30px",
+              "linear-gradient(180deg,#111111 0%,#090909 100%)",
+            borderRadius: "32px",
             padding: "30px",
-            marginBottom: "24px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+            marginBottom: "30px",
+            border:
+              "1px solid rgba(255,255,255,0.05)",
+            boxShadow:
+              "0 0 40px rgba(255,255,255,0.03)",
           }}
         >
           <p
             style={{
               color: "#666",
+              marginBottom: "12px",
               fontSize: "13px",
-              marginBottom: "16px",
               letterSpacing: "1px",
             }}
           >
@@ -201,10 +187,10 @@ export default function Home() {
 
           <h2
             style={{
+              fontSize: "82px",
               color: "#C8A96B",
-              fontSize: "92px",
               margin: 0,
-              lineHeight: 1,
+              lineHeight: "90px",
             }}
           >
             92
@@ -212,9 +198,9 @@ export default function Home() {
 
           <p
             style={{
-              color: "#999",
-              marginTop: "18px",
-              fontSize: "22px",
+              color: "#A0A0A0",
+              fontSize: "18px",
+              marginTop: "16px",
               lineHeight: "34px",
             }}
           >
@@ -222,60 +208,21 @@ export default function Home() {
           </p>
         </div>
 
-        {/* INSIGHT IA */}
-
-        <div
-          style={{
-            background:
-              "linear-gradient(135deg, #111111 0%, #181818 100%)",
-            borderRadius: "30px",
-            padding: "30px",
-            marginBottom: "24px",
-            border: "1px solid rgba(255,255,255,0.05)",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
-          }}
-        >
-          <p
-            style={{
-              color: "#C8A96B",
-              marginBottom: "16px",
-              fontSize: "14px",
-              letterSpacing: "1px",
-            }}
-          >
-            INSIGHT IA
-          </p>
-
-          <p
-            style={{
-              color: "white",
-              fontSize: "26px",
-              lineHeight: "40px",
-              fontWeight: "600",
-            }}
-          >
-            Tu exécutes mieux lorsque tu réduis ton rythme
-            après une perte.
-          </p>
-        </div>
-
         {/* PROFIL */}
 
         <div
           style={{
-            background:
-              "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
-            borderRadius: "30px",
+            background: "#0E0E0E",
+            borderRadius: "32px",
             padding: "30px",
-            border: "1px solid rgba(255,255,255,0.05)",
-            marginBottom: "24px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+            border:
+              "1px solid rgba(255,255,255,0.05)",
           }}
         >
           <p
             style={{
               color: "#666",
-              marginBottom: "16px",
+              marginBottom: "20px",
               fontSize: "13px",
               letterSpacing: "1px",
             }}
@@ -283,107 +230,25 @@ export default function Home() {
             PROFIL TRADER
           </p>
 
-          <h3
+          <h2
             style={{
-              fontSize: "36px",
-              marginBottom: "18px",
-              lineHeight: "42px",
+              fontSize: "28px",
+              marginBottom: "20px",
             }}
           >
             Structure & Liquidité
-          </h3>
-
-          <p
-            style={{
-              color: "#999",
-              fontSize: "20px",
-              lineHeight: "34px",
-            }}
-          >
-            Tu trades les sweeps, les BOS et les réactions
-            propres avec patience et précision.
-          </p>
-        </div>
-
-        {/* PRESCRIPTION */}
-
-        <div
-          style={{
-            background: "#111",
-            borderRadius: "30px",
-            padding: "30px",
-            marginBottom: "24px",
-            border: "1px solid rgba(255,255,255,0.05)",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
-          }}
-        >
-          <p
-            style={{
-              color: "#666",
-              marginBottom: "16px",
-              fontSize: "13px",
-              letterSpacing: "1px",
-            }}
-          >
-            PRESCRIPTION ACTIVE
-          </p>
-
-          <p
-            style={{
-              color: "white",
-              fontSize: "24px",
-              lineHeight: "38px",
-              fontWeight: "600",
-            }}
-          >
-            Maximum 1 trade après une perte pendant
-            5 jours.
-          </p>
-        </div>
-
-        {/* STREAK */}
-
-        <div
-          style={{
-            background:
-              "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
-            borderRadius: "30px",
-            padding: "30px",
-            border: "1px solid rgba(255,255,255,0.05)",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
-          }}
-        >
-          <p
-            style={{
-              color: "#666",
-              fontSize: "13px",
-              letterSpacing: "1px",
-              marginBottom: "16px",
-            }}
-          >
-            STREAK
-          </p>
-
-          <h2
-            style={{
-              color: "white",
-              fontSize: "48px",
-              margin: 0,
-            }}
-          >
-            12 jours
           </h2>
 
           <p
             style={{
-              color: "#999",
-              marginTop: "14px",
-              lineHeight: "32px",
+              color: "#A0A0A0",
+              lineHeight: "38px",
               fontSize: "18px",
             }}
           >
-            Tu maintiens une discipline constante depuis
-            presque deux semaines.
+            Tu trades les sweeps, les BOS et les
+            réactions propres avec patience et
+            précision.
           </p>
         </div>
       </div>
@@ -393,41 +258,67 @@ export default function Home() {
       <div
         style={{
           position: "fixed",
-          bottom: "20px",
+          bottom: "24px",
           left: "50%",
           transform: "translateX(-50%)",
-          width: "90%",
-          maxWidth: "430px",
+          width: "92%",
+          maxWidth: "460px",
           background: "rgba(15,15,15,0.92)",
-          border: "1px solid rgba(255,255,255,0.05)",
+          backdropFilter: "blur(20px)",
           borderRadius: "28px",
-          padding: "18px 24px",
+          padding: "20px 28px",
           display: "flex",
           justifyContent: "space-between",
-          backdropFilter: "blur(20px)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+          border:
+            "1px solid rgba(255,255,255,0.06)",
+          boxShadow:
+            "0 0 40px rgba(0,0,0,0.4)",
         }}
       >
-        <span
+        <Link
+          href="/"
           style={{
             color: "#C8A96B",
+            textDecoration: "none",
             fontWeight: "700",
+            fontSize: "16px",
           }}
         >
           Prime
-        </span>
+        </Link>
 
-        <span style={{ color: "#777" }}>
+        <Link
+          href="/session"
+          style={{
+            color: "#777",
+            textDecoration: "none",
+            fontSize: "16px",
+          }}
+        >
           Session
-        </span>
+        </Link>
 
-        <span style={{ color: "#777" }}>
+        <Link
+          href="/coach"
+          style={{
+            color: "#777",
+            textDecoration: "none",
+            fontSize: "16px",
+          }}
+        >
           Coach
-        </span>
+        </Link>
 
-        <span style={{ color: "#777" }}>
+        <Link
+          href="/journal"
+          style={{
+            color: "#777",
+            textDecoration: "none",
+            fontSize: "16px",
+          }}
+        >
           Journal
-        </span>
+        </Link>
       </div>
     </main>
   );
