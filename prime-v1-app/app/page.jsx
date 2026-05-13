@@ -6,7 +6,7 @@ export default function Home() {
         color: "white",
         minHeight: "100vh",
         fontFamily: "Arial",
-        paddingBottom: "120px",
+        paddingBottom: "140px",
       }}
     >
       <div
@@ -27,13 +27,13 @@ export default function Home() {
           <div
             style={{
               position: "absolute",
-              width: "220px",
-              height: "220px",
+              width: "240px",
+              height: "240px",
               background: "#C8A96B",
-              filter: "blur(120px)",
+              filter: "blur(130px)",
               opacity: 0.12,
-              top: "-80px",
-              right: "-80px",
+              top: "-100px",
+              right: "-100px",
               borderRadius: "999px",
             }}
           />
@@ -53,8 +53,8 @@ export default function Home() {
 
           <h1
             style={{
-              fontSize: "58px",
-              lineHeight: "58px",
+              fontSize: "60px",
+              lineHeight: "60px",
               marginBottom: "28px",
               fontWeight: "700",
               position: "relative",
@@ -89,17 +89,91 @@ export default function Home() {
             background: "#C8A96B",
             color: "#000",
             border: "none",
-            padding: "18px",
-            borderRadius: "20px",
+            padding: "20px",
+            borderRadius: "22px",
             fontWeight: "700",
             fontSize: "17px",
-            marginBottom: "32px",
+            marginBottom: "30px",
             cursor: "pointer",
-            boxShadow: "0 0 40px rgba(200,169,107,0.15)",
+            boxShadow: "0 0 40px rgba(200,169,107,0.18)",
           }}
         >
           Commencer ma session
         </button>
+
+        {/* MINI CARDS */}
+
+        <div
+          style={{
+            display: "flex",
+            gap: "14px",
+            marginBottom: "24px",
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              background: "#111",
+              borderRadius: "24px",
+              padding: "20px",
+              border: "1px solid rgba(255,255,255,0.05)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+            }}
+          >
+            <p
+              style={{
+                color: "#666",
+                fontSize: "12px",
+                marginBottom: "12px",
+                letterSpacing: "1px",
+              }}
+            >
+              ÉTAT
+            </p>
+
+            <h3
+              style={{
+                color: "#C8A96B",
+                margin: 0,
+                fontSize: "22px",
+              }}
+            >
+              Focus
+            </h3>
+          </div>
+
+          <div
+            style={{
+              flex: 1,
+              background: "#111",
+              borderRadius: "24px",
+              padding: "20px",
+              border: "1px solid rgba(255,255,255,0.05)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+            }}
+          >
+            <p
+              style={{
+                color: "#666",
+                fontSize: "12px",
+                marginBottom: "12px",
+                letterSpacing: "1px",
+              }}
+            >
+              RISQUE
+            </p>
+
+            <h3
+              style={{
+                color: "#C8A96B",
+                margin: 0,
+                fontSize: "22px",
+              }}
+            >
+              Stable
+            </h3>
+          </div>
+        </div>
 
         {/* SCORE */}
 
@@ -108,8 +182,8 @@ export default function Home() {
             background:
               "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
             border: "1px solid rgba(255,255,255,0.05)",
-            borderRadius: "28px",
-            padding: "28px",
+            borderRadius: "30px",
+            padding: "30px",
             marginBottom: "24px",
             boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
           }}
@@ -128,7 +202,7 @@ export default function Home() {
           <h2
             style={{
               color: "#C8A96B",
-              fontSize: "82px",
+              fontSize: "92px",
               margin: 0,
               lineHeight: 1,
             }}
@@ -140,7 +214,8 @@ export default function Home() {
             style={{
               color: "#999",
               marginTop: "18px",
-              fontSize: "20px",
+              fontSize: "22px",
+              lineHeight: "34px",
             }}
           >
             Discipline excellente aujourd’hui.
@@ -153,8 +228,8 @@ export default function Home() {
           style={{
             background:
               "linear-gradient(135deg, #111111 0%, #181818 100%)",
-            borderRadius: "28px",
-            padding: "28px",
+            borderRadius: "30px",
+            padding: "30px",
             marginBottom: "24px",
             border: "1px solid rgba(255,255,255,0.05)",
             boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
@@ -163,7 +238,7 @@ export default function Home() {
           <p
             style={{
               color: "#C8A96B",
-              marginBottom: "14px",
+              marginBottom: "16px",
               fontSize: "14px",
               letterSpacing: "1px",
             }}
@@ -174,8 +249,8 @@ export default function Home() {
           <p
             style={{
               color: "white",
-              fontSize: "24px",
-              lineHeight: "38px",
+              fontSize: "26px",
+              lineHeight: "40px",
               fontWeight: "600",
             }}
           >
@@ -190,8 +265,8 @@ export default function Home() {
           style={{
             background:
               "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
-            borderRadius: "28px",
-            padding: "28px",
+            borderRadius: "30px",
+            padding: "30px",
             border: "1px solid rgba(255,255,255,0.05)",
             marginBottom: "24px",
             boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
@@ -210,9 +285,9 @@ export default function Home() {
 
           <h3
             style={{
-              fontSize: "34px",
+              fontSize: "36px",
               marginBottom: "18px",
-              lineHeight: "40px",
+              lineHeight: "42px",
             }}
           >
             Structure & Liquidité
@@ -230,13 +305,50 @@ export default function Home() {
           </p>
         </div>
 
+        {/* PRESCRIPTION */}
+
+        <div
+          style={{
+            background: "#111",
+            borderRadius: "30px",
+            padding: "30px",
+            marginBottom: "24px",
+            border: "1px solid rgba(255,255,255,0.05)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+          }}
+        >
+          <p
+            style={{
+              color: "#666",
+              marginBottom: "16px",
+              fontSize: "13px",
+              letterSpacing: "1px",
+            }}
+          >
+            PRESCRIPTION ACTIVE
+          </p>
+
+          <p
+            style={{
+              color: "white",
+              fontSize: "24px",
+              lineHeight: "38px",
+              fontWeight: "600",
+            }}
+          >
+            Maximum 1 trade après une perte pendant
+            5 jours.
+          </p>
+        </div>
+
         {/* STREAK */}
 
         <div
           style={{
-            background: "#0D0D0D",
-            borderRadius: "28px",
-            padding: "24px",
+            background:
+              "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
+            borderRadius: "30px",
+            padding: "30px",
             border: "1px solid rgba(255,255,255,0.05)",
             boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
           }}
@@ -255,7 +367,7 @@ export default function Home() {
           <h2
             style={{
               color: "white",
-              fontSize: "44px",
+              fontSize: "48px",
               margin: 0,
             }}
           >
@@ -265,8 +377,8 @@ export default function Home() {
           <p
             style={{
               color: "#999",
-              marginTop: "12px",
-              lineHeight: "30px",
+              marginTop: "14px",
+              lineHeight: "32px",
               fontSize: "18px",
             }}
           >
@@ -276,7 +388,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* NAVIGATION */}
+      {/* BOTTOM NAV */}
 
       <div
         style={{
@@ -288,7 +400,7 @@ export default function Home() {
           maxWidth: "430px",
           background: "rgba(15,15,15,0.92)",
           border: "1px solid rgba(255,255,255,0.05)",
-          borderRadius: "26px",
+          borderRadius: "28px",
           padding: "18px 24px",
           display: "flex",
           justifyContent: "space-between",
@@ -296,7 +408,12 @@ export default function Home() {
           boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
         }}
       >
-        <span style={{ color: "#C8A96B", fontWeight: "600" }}>
+        <span
+          style={{
+            color: "#C8A96B",
+            fontWeight: "700",
+          }}
+        >
           Prime
         </span>
 
