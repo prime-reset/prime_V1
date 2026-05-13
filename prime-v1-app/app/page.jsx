@@ -16,19 +16,36 @@ export default function Home() {
           padding: "28px",
         }}
       >
-        {/* HEADER */}
+        {/* HERO */}
 
         <div
           style={{
+            position: "relative",
             marginBottom: "40px",
           }}
         >
+          <div
+            style={{
+              position: "absolute",
+              width: "220px",
+              height: "220px",
+              background: "#C8A96B",
+              filter: "blur(120px)",
+              opacity: 0.12,
+              top: "-80px",
+              right: "-80px",
+              borderRadius: "999px",
+            }}
+          />
+
           <p
             style={{
               color: "#C8A96B",
               letterSpacing: "4px",
               fontSize: "12px",
               marginBottom: "20px",
+              position: "relative",
+              zIndex: 2,
             }}
           >
             PRIME.
@@ -36,10 +53,12 @@ export default function Home() {
 
           <h1
             style={{
-              fontSize: "54px",
-              lineHeight: "54px",
-              marginBottom: "24px",
+              fontSize: "58px",
+              lineHeight: "58px",
+              marginBottom: "28px",
               fontWeight: "700",
+              position: "relative",
+              zIndex: 2,
             }}
           >
             Trading
@@ -50,8 +69,11 @@ export default function Home() {
           <p
             style={{
               color: "#8D8D8D",
-              fontSize: "18px",
-              lineHeight: "30px",
+              fontSize: "20px",
+              lineHeight: "34px",
+              maxWidth: "360px",
+              position: "relative",
+              zIndex: 2,
             }}
           >
             PRIME transforme ton comportement de trader
@@ -73,20 +95,23 @@ export default function Home() {
             fontSize: "17px",
             marginBottom: "32px",
             cursor: "pointer",
+            boxShadow: "0 0 40px rgba(200,169,107,0.15)",
           }}
         >
           Commencer ma session
         </button>
 
-        {/* SCORE CARD */}
+        {/* SCORE */}
 
         <div
           style={{
-            background: "#0D0D0D",
-            border: "1px solid #1A1A1A",
+            background:
+              "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
+            border: "1px solid rgba(255,255,255,0.05)",
             borderRadius: "28px",
             padding: "28px",
             marginBottom: "24px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
           }}
         >
           <p
@@ -131,7 +156,8 @@ export default function Home() {
             borderRadius: "28px",
             padding: "28px",
             marginBottom: "24px",
-            border: "1px solid #1D1D1D",
+            border: "1px solid rgba(255,255,255,0.05)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
           }}
         >
           <p
@@ -162,11 +188,13 @@ export default function Home() {
 
         <div
           style={{
-            background: "#0D0D0D",
+            background:
+              "linear-gradient(180deg, #111111 0%, #0A0A0A 100%)",
             borderRadius: "28px",
             padding: "28px",
-            border: "1px solid #1A1A1A",
+            border: "1px solid rgba(255,255,255,0.05)",
             marginBottom: "24px",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
           }}
         >
           <p
@@ -201,9 +229,54 @@ export default function Home() {
             propres avec patience et précision.
           </p>
         </div>
+
+        {/* STREAK */}
+
+        <div
+          style={{
+            background: "#0D0D0D",
+            borderRadius: "28px",
+            padding: "24px",
+            border: "1px solid rgba(255,255,255,0.05)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+          }}
+        >
+          <p
+            style={{
+              color: "#666",
+              fontSize: "13px",
+              letterSpacing: "1px",
+              marginBottom: "16px",
+            }}
+          >
+            STREAK
+          </p>
+
+          <h2
+            style={{
+              color: "white",
+              fontSize: "44px",
+              margin: 0,
+            }}
+          >
+            12 jours
+          </h2>
+
+          <p
+            style={{
+              color: "#999",
+              marginTop: "12px",
+              lineHeight: "30px",
+              fontSize: "18px",
+            }}
+          >
+            Tu maintiens une discipline constante depuis
+            presque deux semaines.
+          </p>
+        </div>
       </div>
 
-      {/* BOTTOM NAVIGATION */}
+      {/* NAVIGATION */}
 
       <div
         style={{
@@ -213,19 +286,31 @@ export default function Home() {
           transform: "translateX(-50%)",
           width: "90%",
           maxWidth: "430px",
-          background: "rgba(15,15,15,0.95)",
-          border: "1px solid #222",
-          borderRadius: "24px",
+          background: "rgba(15,15,15,0.92)",
+          border: "1px solid rgba(255,255,255,0.05)",
+          borderRadius: "26px",
           padding: "18px 24px",
           display: "flex",
           justifyContent: "space-between",
           backdropFilter: "blur(20px)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
         }}
       >
-        <span style={{ color: "#C8A96B" }}>Prime</span>
-        <span style={{ color: "#777" }}>Session</span>
-        <span style={{ color: "#777" }}>Coach</span>
-        <span style={{ color: "#777" }}>Journal</span>
+        <span style={{ color: "#C8A96B", fontWeight: "600" }}>
+          Prime
+        </span>
+
+        <span style={{ color: "#777" }}>
+          Session
+        </span>
+
+        <span style={{ color: "#777" }}>
+          Coach
+        </span>
+
+        <span style={{ color: "#777" }}>
+          Journal
+        </span>
       </div>
     </main>
   );
