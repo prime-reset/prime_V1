@@ -20,28 +20,39 @@ export default function BottomNav({ active }) {
         maxWidth: "520px",
         background: "rgba(15,15,15,0.95)",
         border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "26px",
+        borderRadius: "28px",
         display: "flex",
         justifyContent: "space-around",
+        alignItems: "center",
         padding: "16px 10px",
-        backdropFilter: "blur(14px)",
+        backdropFilter: "blur(16px)",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.55)",
         zIndex: 50,
       }}
     >
-      {items.map(([label, href]) => (
-        <Link
-          key={label}
-          href={href}
-          style={{
-            color: active === label ? "#D4B06A" : "#8B8B8B",
-            textDecoration: "none",
-            fontSize: "15px",
-            fontWeight: active === label ? "700" : "500",
-          }}
-        >
-          {label}
-        </Link>
-      ))}
+      {items.map(([label, href]) => {
+        const isActive = active === label;
+
+        return (
+          <Link
+            key={label}
+            href={href}
+            style={{
+              color: isActive ? "#D4B06A" : "#777",
+              textDecoration: "none",
+              fontSize: "14px",
+              fontWeight: isActive ? "700" : "500",
+              padding: "8px 6px",
+              borderRadius: "14px",
+              background: isActive
+                ? "rgba(212,176,106,0.10)"
+                : "transparent",
+            }}
+          >
+            {label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
