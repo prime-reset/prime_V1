@@ -1,3 +1,5 @@
+"use client";
+
 export default function PrimaryButton({ children }) {
   return (
     <button
@@ -27,8 +29,6 @@ export default function PrimaryButton({ children }) {
         `,
 
         transition: "all 0.28s ease",
-
-        transform: "translateY(0px)",
 
         animation: "buttonGlow 4s ease-in-out infinite",
       }}
