@@ -1,5 +1,5 @@
 import Link from "next/link";
-
+import BottomNav from "./components/BottomNav";
 export default function Home() {
   return (
     <main
@@ -320,6 +320,7 @@ export default function Home() {
           Journal
         </Link>
       </div>
+      <BottomNav active="Prime" />
     </main>
   );
 }
