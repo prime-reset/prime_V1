@@ -1,86 +1,181 @@
 import Link from "next/link";
 import BottomNav from "./components/BottomNav";
-import PremiumCard from "./components/PremiumCard";
 import FadeIn from "./components/FadeIn";
 
 export default function Home() {
   return (
-    <main style={{ backgroundColor: "#050505", color: "white", minHeight: "100vh", fontFamily: "Arial, sans-serif", padding: "28px", paddingBottom: "150px" }}>
-      <div style={{ maxWidth: "430px", margin: "0 auto" }}>
-        <FadeIn>
-          <p style={{ color: "#C8A96B", letterSpacing: "6px", fontSize: "14px", marginBottom: "40px" }}>PRIME.</p>
+    <main
+      style={{
+        minHeight: "100vh",
+        color: "white",
+        position: "relative",
+        overflow: "hidden",
+        backgroundImage:
+          "linear-gradient(to bottom, rgba(0,0,0,0.72), rgba(0,0,0,0.96)), url('/background.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Glow premium */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-120px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "420px",
+          height: "420px",
+          background: "rgba(212,176,106,0.12)",
+          filter: "blur(120px)",
+          borderRadius: "50%",
+          zIndex: 0,
+        }}
+      />
 
-          <h1 style={{ fontSize: "72px", lineHeight: "72px", marginBottom: "30px", fontWeight: "700" }}>
-            Trading<br />Discipline OS
-          </h1>
-
-          <p style={{ color: "#8D8D8D", fontSize: "18px", lineHeight: "36px", marginBottom: "40px" }}>
-            PRIME transforme ton comportement de trader en système d’exécution discipliné.
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: "430px",
+          margin: "0 auto",
+          padding: "32px 24px 120px",
+        }}
+      >
+        <FadeIn delay={0}>
+          <p
+            style={{
+              color: "#D4B06A",
+              letterSpacing: "6px",
+              fontSize: "12px",
+              marginBottom: "42px",
+            }}
+          >
+            PRIME.
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.1}>
-          <Link href="/session" style={{ textDecoration: "none" }}>
-            <button style={primaryButton}>Commencer ma session</button>
-          </Link>
-        </FadeIn>
-
-        <FadeIn delay={0.15}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px", marginBottom: "34px" }}>
-            <Link href="/stats" style={{ textDecoration: "none" }}>
-              <button style={secondaryButton}>Voir mes stats</button>
-            </Link>
-
-            <Link href="/reset" style={{ textDecoration: "none" }}>
-              <button style={secondaryButton}>Mode Reset</button>
-            </Link>
-
-            <Link href="/onboarding" style={{ textDecoration: "none" }}>
-              <button style={secondaryButton}>Créer mon profil PRIME</button>
-            </Link>
-          </div>
-        </FadeIn>
-
         <FadeIn delay={0.2}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
-            <PremiumCard>
-              <p style={label}>ÉTAT</p>
-              <h2 style={goldTitle}>Focus</h2>
-            </PremiumCard>
-
-            <PremiumCard>
-              <p style={label}>RISQUE</p>
-              <h2 style={goldTitle}>Stable</h2>
-            </PremiumCard>
-          </div>
-        </FadeIn>
-
-        <FadeIn delay={0.3}>
-          <PremiumCard gradient>
-            <p style={label}>SCORE DISCIPLINE</p>
-
-            <h2 style={{ fontSize: "82px", color: "#C8A96B", margin: 0, lineHeight: "90px" }}>
-              92
-            </h2>
-
-            <p style={{ color: "#A0A0A0", fontSize: "18px", marginTop: "16px", lineHeight: "34px" }}>
-              Discipline excellente aujourd’hui.
-            </p>
-          </PremiumCard>
+          <h1
+            style={{
+              fontSize: "64px",
+              lineHeight: "0.95",
+              marginBottom: "28px",
+              fontWeight: "700",
+            }}
+          >
+            Trading
+            <br />
+            Discipline OS
+          </h1>
         </FadeIn>
 
         <FadeIn delay={0.4}>
-          <PremiumCard gradient>
-            <p style={label}>PRESCRIPTION ACTIVE</p>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.72)",
+              fontSize: "20px",
+              lineHeight: "1.7",
+              marginBottom: "42px",
+            }}
+          >
+            PRIME transforme ton comportement de trader en
+            système d’exécution discipliné.
+          </p>
+        </FadeIn>
 
-            <h2 style={{ fontSize: "28px", lineHeight: "38px", color: "white", marginBottom: "14px" }}>
-              Maximum 1 trade après une perte.
-            </h2>
+        <FadeIn delay={0.6}>
+          <Link href="/session">
+            <button
+              style={{
+                width: "100%",
+                padding: "20px",
+                borderRadius: "22px",
+                border: "none",
+                background:
+                  "linear-gradient(135deg,#D4B06A,#B68B45)",
+                color: "black",
+                fontSize: "18px",
+                fontWeight: "700",
+                cursor: "pointer",
+                marginBottom: "28px",
+                boxShadow: "0 12px 40px rgba(212,176,106,0.28)",
+                transition: "0.3s",
+              }}
+            >
+              Commencer ma session
+            </button>
+          </Link>
+        </FadeIn>
 
-            <p style={{ color: "#A0A0A0", fontSize: "18px", lineHeight: "30px" }}>
-              Objectif : protéger ton capital émotionnel avant de protéger ton PnL.
-            </p>
-          </PremiumCard>
+        <FadeIn delay={0.8}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+            }}
+          >
+            <div
+              style={{
+                background: "rgba(15,15,15,0.72)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                backdropFilter: "blur(14px)",
+                padding: "24px",
+                borderRadius: "24px",
+              }}
+            >
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.45)",
+                  marginBottom: "10px",
+                  fontSize: "13px",
+                  letterSpacing: "2px",
+                }}
+              >
+                ÉTAT
+              </p>
+
+              <h3
+                style={{
+                  color: "#D4B06A",
+                  fontSize: "18px",
+                }}
+              >
+                Focus
+              </h3>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(15,15,15,0.72)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                backdropFilter: "blur(14px)",
+                padding: "24px",
+                borderRadius: "24px",
+              }}
+            >
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.45)",
+                  marginBottom: "10px",
+                  fontSize: "13px",
+                  letterSpacing: "2px",
+                }}
+              >
+                RISQUE
+              </p>
+
+              <h3
+                style={{
+                  color: "#D4B06A",
+                  fontSize: "18px",
+                }}
+              >
+                Stable
+              </h3>
+            </div>
+          </div>
         </FadeIn>
       </div>
 
@@ -88,40 +183,3 @@ export default function Home() {
     </main>
   );
 }
-
-const primaryButton = {
-  width: "100%",
-  background: "#C8A96B",
-  color: "#000",
-  border: "none",
-  padding: "22px",
-  borderRadius: "24px",
-  fontWeight: "700",
-  fontSize: "18px",
-  cursor: "pointer",
-  boxShadow: "0 0 40px rgba(200,169,107,0.18)",
-};
-
-const secondaryButton = {
-  width: "100%",
-  background: "#111",
-  color: "white",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "18px",
-  padding: "18px",
-  fontSize: "16px",
-  cursor: "pointer",
-};
-
-const label = {
-  color: "#666",
-  fontSize: "13px",
-  marginBottom: "14px",
-  letterSpacing: "1px",
-};
-
-const goldTitle = {
-  color: "#C8A96B",
-  margin: 0,
-  fontSize: "24px",
-};
