@@ -33,3 +33,22 @@ body {
     transform: translateY(0px);
   }
 }
+@keyframes buttonGlow {
+  0% {
+    box-shadow:
+      0 0 40px rgba(212,176,106,0.14),
+      0 12px 30px rgba(0,0,0,0.35);
+  }
+
+  50% {
+    box-shadow:
+      0 0 70px rgba(212,176,106,0.24),
+      0 12px 30px rgba(0,0,0,0.35);
+  }
+
+  100% {
+    box-shadow:
+      0 0 40px rgba(212,176,106,0.14),
+      0 12px 30px rgba(0,0,0,0.35);
+  }
+}
