@@ -18,6 +18,19 @@ export default function Home() {
         <Link href="/session" style={{ textDecoration: "none" }}>
           <button style={{ width: "100%", background: "#C8A96B", color: "#000", border: "none", padding: "22px", borderRadius: "24px", fontWeight: "700", fontSize: "18px", cursor: "pointer", marginBottom: "40px" }}>
             Commencer ma session
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "18px" }}>
+  <a href="/stats">
+    <button style={secondaryButton}>Voir mes stats</button>
+  </a>
+
+  <a href="/reset">
+    <button style={secondaryButton}>Mode Reset</button>
+  </a>
+
+  <a href="/onboarding">
+    <button style={secondaryButton}>Onboarding PRIME</button>
+  </a>
+</div>
           </button>
         </Link>
 
@@ -44,3 +57,13 @@ export default function Home() {
     </main>
   );
 }
+const secondaryButton = {
+  width: "100%",
+  background: "#111",
+  color: "white",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "18px",
+  padding: "18px",
+  fontSize: "16px",
+  cursor: "pointer",
+};
