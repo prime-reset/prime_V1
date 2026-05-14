@@ -140,7 +140,11 @@ const primaryButton = {
   fontWeight: "700",
   cursor: "pointer",
   marginBottom: "26px",
-  boxShadow: "0 0 40px rgba(212,176,106,0.25)",
+  boxShadow: `
+  0 0 40px rgba(212,176,106,0.18),
+  0 10px 30px rgba(0,0,0,0.35)
+`,
+transition: "all 0.3s ease",
 };
 
 const cardLink = {
