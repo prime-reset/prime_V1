@@ -1,8 +1,8 @@
-       import Link from "next/link";
+      import Link from "next/link";
 import BottomNav from "./components/BottomNav";
 import FadeIn from "./components/FadeIn";
-import PremiumCard from "./components/PremiumCard";
 import PrimaryButton from "./components/PrimaryButton";
+import ActionCard from "./components/ActionCard";
 
 export default function Home() {
   return (
@@ -29,29 +29,9 @@ export default function Home() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: "-120px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "420px",
-          height: "420px",
-          background:
-            "radial-gradient(circle, rgba(212,176,106,0.14), transparent 70%)",
-          filter: "blur(60px)",
-          zIndex: 0,
-        }}
-      />
+      <div style={goldGlow} />
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          maxWidth: "430px",
-          margin: "0 auto",
-        }}
-      >
+      <div style={container}>
         <FadeIn delay={0}>
           <p style={logo}>PRIME.</p>
         </FadeIn>
@@ -78,27 +58,27 @@ export default function Home() {
         </FadeIn>
 
         <FadeIn delay={0.6}>
-          <PremiumCard>
-            <Link href="/stats" style={cardLink}>
-              Voir mes stats
-            </Link>
-          </PremiumCard>
+          <ActionCard
+            href="/stats"
+            title="Voir mes stats"
+            subtitle="Suis ta discipline, ton streak et tes erreurs dominantes."
+          />
         </FadeIn>
 
         <FadeIn delay={0.75}>
-          <PremiumCard>
-            <Link href="/reset" style={cardLink}>
-              Mode Reset
-            </Link>
-          </PremiumCard>
+          <ActionCard
+            href="/reset"
+            title="Mode Reset"
+            subtitle="Stoppe la dérive émotionnelle avant qu’elle ne coûte cher."
+          />
         </FadeIn>
 
         <FadeIn delay={0.9}>
-          <PremiumCard>
-            <Link href="/onboarding" style={cardLink}>
-              Créer mon profil PRIME
-            </Link>
-          </PremiumCard>
+          <ActionCard
+            href="/onboarding"
+            title="Créer mon profil PRIME"
+            subtitle="Personnalise ton coaching, ta checklist et tes prescriptions."
+          />
         </FadeIn>
       </div>
 
@@ -106,6 +86,26 @@ export default function Home() {
     </main>
   );
 }
+
+const goldGlow = {
+  position: "absolute",
+  top: "-120px",
+  left: "50%",
+  transform: "translateX(-50%)",
+  width: "420px",
+  height: "420px",
+  background:
+    "radial-gradient(circle, rgba(212,176,106,0.14), transparent 70%)",
+  filter: "blur(60px)",
+  zIndex: 0,
+};
+
+const container = {
+  position: "relative",
+  zIndex: 2,
+  maxWidth: "430px",
+  margin: "0 auto",
+};
 
 const logo = {
   color: "#D4B06A",
@@ -128,11 +128,4 @@ const subtitle = {
   lineHeight: "1.6",
   marginBottom: "42px",
   maxWidth: "380px",
-};
-
-const cardLink = {
-  color: "white",
-  textDecoration: "none",
-  fontSize: "20px",
-  display: "block",
 };
