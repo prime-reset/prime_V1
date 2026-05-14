@@ -1,7 +1,8 @@
-import Link from "next/link";
+       import Link from "next/link";
 import BottomNav from "./components/BottomNav";
 import FadeIn from "./components/FadeIn";
 import PremiumCard from "./components/PremiumCard";
+import PrimaryButton from "./components/PrimaryButton";
 
 export default function Home() {
   return (
@@ -72,7 +73,7 @@ export default function Home() {
 
         <FadeIn delay={0.45}>
           <Link href="/session" style={{ textDecoration: "none" }}>
-            <button style={primaryButton}>Commencer ma session</button>
+            <PrimaryButton>Commencer ma session</PrimaryButton>
           </Link>
         </FadeIn>
 
@@ -127,24 +128,6 @@ const subtitle = {
   lineHeight: "1.6",
   marginBottom: "42px",
   maxWidth: "380px",
-};
-
-const primaryButton = {
-  width: "100%",
-  padding: "24px",
-  borderRadius: "30px",
-  border: "none",
-  background: "#D4B06A",
-  color: "black",
-  fontSize: "22px",
-  fontWeight: "700",
-  cursor: "pointer",
-  marginBottom: "26px",
-  boxShadow: `
-  0 0 40px rgba(212,176,106,0.18),
-  0 10px 30px rgba(0,0,0,0.35)
-`,
-transition: "all 0.3s ease",
 };
 
 const cardLink = {
