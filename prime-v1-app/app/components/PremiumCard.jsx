@@ -2,16 +2,22 @@ export default function PremiumCard({ children }) {
   return (
     <div
       style={{
-        background: "rgba(15,15,15,0.55)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "28px",
-        padding: "28px",
-        marginBottom: "22px",
-        backdropFilter: "blur(12px)",
+        background: "rgba(12,12,12,0.42)",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: "30px",
+        padding: "30px",
+        marginBottom: "24px",
 
-        boxShadow: "0 8px 40px rgba(0,0,0,0.35)",
+        backdropFilter: "blur(14px)",
 
-        transition: "0.35s ease",
+        boxShadow: `
+          0 10px 40px rgba(0,0,0,0.35),
+          inset 0 1px 0 rgba(255,255,255,0.03)
+        `,
+
+        transition: "all 0.35s ease",
+
+        animation: "floating 5s ease-in-out infinite",
       }}
     >
       {children}
