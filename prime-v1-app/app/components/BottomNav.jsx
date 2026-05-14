@@ -18,15 +18,15 @@ export default function BottomNav({ active }) {
         transform: "translateX(-50%)",
         width: "92%",
         maxWidth: "520px",
-        background: "rgba(15,15,15,0.95)",
+        background: "rgba(10,10,10,0.55)",
         border: "1px solid rgba(255,255,255,0.08)",
         borderRadius: "28px",
         display: "flex",
         justifyContent: "space-around",
         alignItems: "center",
         padding: "16px 10px",
-        backdropFilter: "blur(16px)",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.55)",
+        backdropFilter: "blur(18px)",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
         zIndex: 50,
       }}
     >
@@ -38,15 +38,19 @@ export default function BottomNav({ active }) {
             key={label}
             href={href}
             style={{
-              color: isActive ? "#D4B06A" : "#777",
+              color: isActive ? "#D4B06A" : "#8B8B8B",
               textDecoration: "none",
               fontSize: "14px",
               fontWeight: isActive ? "700" : "500",
-              padding: "8px 6px",
-              borderRadius: "14px",
+              padding: "9px 10px",
+              borderRadius: "16px",
               background: isActive
-                ? "rgba(212,176,106,0.10)"
+                ? "rgba(212,176,106,0.12)"
                 : "transparent",
+              boxShadow: isActive
+                ? "0 0 24px rgba(212,176,106,0.12)"
+                : "none",
+              transition: "all 0.25s ease",
             }}
           >
             {label}
