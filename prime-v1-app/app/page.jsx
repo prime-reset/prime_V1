@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BottomNav from "./components/BottomNav";
+import PremiumCard from "./components/PremiumCard";
 
 export default function Home() {
   return (
@@ -51,12 +52,13 @@ export default function Home() {
             marginBottom: "40px",
           }}
         >
-          PRIME transforme ton comportement de trader en système d’exécution
-          discipliné.
+          PRIME transforme ton comportement de trader en système d’exécution discipliné.
         </p>
 
         <Link href="/session" style={{ textDecoration: "none" }}>
-          <button style={primaryButton}>Commencer ma session</button>
+          <button style={primaryButton}>
+            Commencer ma session
+          </button>
         </Link>
 
         <div
@@ -69,15 +71,21 @@ export default function Home() {
           }}
         >
           <Link href="/stats" style={{ textDecoration: "none" }}>
-            <button style={secondaryButton}>Voir mes stats</button>
+            <button style={secondaryButton}>
+              Voir mes stats
+            </button>
           </Link>
 
           <Link href="/reset" style={{ textDecoration: "none" }}>
-            <button style={secondaryButton}>Mode Reset</button>
+            <button style={secondaryButton}>
+              Mode Reset
+            </button>
           </Link>
 
           <Link href="/onboarding" style={{ textDecoration: "none" }}>
-            <button style={secondaryButton}>Créer mon profil PRIME</button>
+            <button style={secondaryButton}>
+              Créer mon profil PRIME
+            </button>
           </Link>
         </div>
 
@@ -89,18 +97,18 @@ export default function Home() {
             marginBottom: "20px",
           }}
         >
-          <div style={miniCard}>
+          <PremiumCard>
             <p style={label}>ÉTAT</p>
             <h2 style={goldTitle}>Focus</h2>
-          </div>
+          </PremiumCard>
 
-          <div style={miniCard}>
+          <PremiumCard>
             <p style={label}>RISQUE</p>
             <h2 style={goldTitle}>Stable</h2>
-          </div>
+          </PremiumCard>
         </div>
 
-        <div style={mainCard}>
+        <PremiumCard gradient>
           <p style={label}>SCORE DISCIPLINE</p>
 
           <h2
@@ -124,9 +132,9 @@ export default function Home() {
           >
             Discipline excellente aujourd’hui.
           </p>
-        </div>
+        </PremiumCard>
 
-        <div style={mainCard}>
+        <PremiumCard gradient>
           <p style={label}>PRESCRIPTION ACTIVE</p>
 
           <h2
@@ -147,10 +155,9 @@ export default function Home() {
               lineHeight: "30px",
             }}
           >
-            Objectif : protéger ton capital émotionnel avant de protéger ton
-            PnL.
+            Objectif : protéger ton capital émotionnel avant de protéger ton PnL.
           </p>
-        </div>
+        </PremiumCard>
       </div>
 
       <BottomNav active="Prime" />
@@ -180,21 +187,6 @@ const secondaryButton = {
   padding: "18px",
   fontSize: "16px",
   cursor: "pointer",
-};
-
-const miniCard = {
-  background: "#0E0E0E",
-  padding: "24px",
-  borderRadius: "28px",
-  border: "1px solid rgba(255,255,255,0.04)",
-};
-
-const mainCard = {
-  background: "linear-gradient(180deg,#111111 0%,#090909 100%)",
-  borderRadius: "32px",
-  padding: "30px",
-  marginBottom: "24px",
-  border: "1px solid rgba(255,255,255,0.05)",
 };
 
 const label = {
