@@ -1,163 +1,87 @@
 import Link from "next/link";
 import BottomNav from "./components/BottomNav";
 import PremiumCard from "./components/PremiumCard";
+import FadeIn from "./components/FadeIn";
 
 export default function Home() {
   return (
-    <main
-      style={{
-        backgroundColor: "#050505",
-        color: "white",
-        minHeight: "100vh",
-        fontFamily: "Arial, sans-serif",
-        padding: "28px",
-        paddingBottom: "150px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "430px",
-          margin: "0 auto",
-        }}
-      >
-        <p
-          style={{
-            color: "#C8A96B",
-            letterSpacing: "6px",
-            fontSize: "14px",
-            marginBottom: "40px",
-          }}
-        >
-          PRIME.
-        </p>
+    <main style={{ backgroundColor: "#050505", color: "white", minHeight: "100vh", fontFamily: "Arial, sans-serif", padding: "28px", paddingBottom: "150px" }}>
+      <div style={{ maxWidth: "430px", margin: "0 auto" }}>
+        <FadeIn>
+          <p style={{ color: "#C8A96B", letterSpacing: "6px", fontSize: "14px", marginBottom: "40px" }}>PRIME.</p>
 
-        <h1
-          style={{
-            fontSize: "72px",
-            lineHeight: "72px",
-            marginBottom: "30px",
-            fontWeight: "700",
-          }}
-        >
-          Trading
-          <br />
-          Discipline OS
-        </h1>
+          <h1 style={{ fontSize: "72px", lineHeight: "72px", marginBottom: "30px", fontWeight: "700" }}>
+            Trading<br />Discipline OS
+          </h1>
 
-        <p
-          style={{
-            color: "#8D8D8D",
-            fontSize: "18px",
-            lineHeight: "36px",
-            marginBottom: "40px",
-          }}
-        >
-          PRIME transforme ton comportement de trader en système d’exécution discipliné.
-        </p>
-
-        <Link href="/session" style={{ textDecoration: "none" }}>
-          <button style={primaryButton}>
-            Commencer ma session
-          </button>
-        </Link>
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-            marginTop: "16px",
-            marginBottom: "34px",
-          }}
-        >
-          <Link href="/stats" style={{ textDecoration: "none" }}>
-            <button style={secondaryButton}>
-              Voir mes stats
-            </button>
-          </Link>
-
-          <Link href="/reset" style={{ textDecoration: "none" }}>
-            <button style={secondaryButton}>
-              Mode Reset
-            </button>
-          </Link>
-
-          <Link href="/onboarding" style={{ textDecoration: "none" }}>
-            <button style={secondaryButton}>
-              Créer mon profil PRIME
-            </button>
-          </Link>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-            marginBottom: "20px",
-          }}
-        >
-          <PremiumCard>
-            <p style={label}>ÉTAT</p>
-            <h2 style={goldTitle}>Focus</h2>
-          </PremiumCard>
-
-          <PremiumCard>
-            <p style={label}>RISQUE</p>
-            <h2 style={goldTitle}>Stable</h2>
-          </PremiumCard>
-        </div>
-
-        <PremiumCard gradient>
-          <p style={label}>SCORE DISCIPLINE</p>
-
-          <h2
-            style={{
-              fontSize: "82px",
-              color: "#C8A96B",
-              margin: 0,
-              lineHeight: "90px",
-            }}
-          >
-            92
-          </h2>
-
-          <p
-            style={{
-              color: "#A0A0A0",
-              fontSize: "18px",
-              marginTop: "16px",
-              lineHeight: "34px",
-            }}
-          >
-            Discipline excellente aujourd’hui.
+          <p style={{ color: "#8D8D8D", fontSize: "18px", lineHeight: "36px", marginBottom: "40px" }}>
+            PRIME transforme ton comportement de trader en système d’exécution discipliné.
           </p>
-        </PremiumCard>
+        </FadeIn>
 
-        <PremiumCard gradient>
-          <p style={label}>PRESCRIPTION ACTIVE</p>
+        <FadeIn delay={0.1}>
+          <Link href="/session" style={{ textDecoration: "none" }}>
+            <button style={primaryButton}>Commencer ma session</button>
+          </Link>
+        </FadeIn>
 
-          <h2
-            style={{
-              fontSize: "28px",
-              lineHeight: "38px",
-              color: "white",
-              marginBottom: "14px",
-            }}
-          >
-            Maximum 1 trade après une perte.
-          </h2>
+        <FadeIn delay={0.15}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px", marginBottom: "34px" }}>
+            <Link href="/stats" style={{ textDecoration: "none" }}>
+              <button style={secondaryButton}>Voir mes stats</button>
+            </Link>
 
-          <p
-            style={{
-              color: "#A0A0A0",
-              fontSize: "18px",
-              lineHeight: "30px",
-            }}
-          >
-            Objectif : protéger ton capital émotionnel avant de protéger ton PnL.
-          </p>
-        </PremiumCard>
+            <Link href="/reset" style={{ textDecoration: "none" }}>
+              <button style={secondaryButton}>Mode Reset</button>
+            </Link>
+
+            <Link href="/onboarding" style={{ textDecoration: "none" }}>
+              <button style={secondaryButton}>Créer mon profil PRIME</button>
+            </Link>
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={0.2}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+            <PremiumCard>
+              <p style={label}>ÉTAT</p>
+              <h2 style={goldTitle}>Focus</h2>
+            </PremiumCard>
+
+            <PremiumCard>
+              <p style={label}>RISQUE</p>
+              <h2 style={goldTitle}>Stable</h2>
+            </PremiumCard>
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={0.3}>
+          <PremiumCard gradient>
+            <p style={label}>SCORE DISCIPLINE</p>
+
+            <h2 style={{ fontSize: "82px", color: "#C8A96B", margin: 0, lineHeight: "90px" }}>
+              92
+            </h2>
+
+            <p style={{ color: "#A0A0A0", fontSize: "18px", marginTop: "16px", lineHeight: "34px" }}>
+              Discipline excellente aujourd’hui.
+            </p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.4}>
+          <PremiumCard gradient>
+            <p style={label}>PRESCRIPTION ACTIVE</p>
+
+            <h2 style={{ fontSize: "28px", lineHeight: "38px", color: "white", marginBottom: "14px" }}>
+              Maximum 1 trade après une perte.
+            </h2>
+
+            <p style={{ color: "#A0A0A0", fontSize: "18px", lineHeight: "30px" }}>
+              Objectif : protéger ton capital émotionnel avant de protéger ton PnL.
+            </p>
+          </PremiumCard>
+        </FadeIn>
       </div>
 
       <BottomNav active="Prime" />
