@@ -115,7 +115,7 @@ const logo = {
 };
 
 const title = {
-  fontSize: "68px",
+  fontSize: "60px",
   lineHeight: "0.92",
   fontWeight: "700",
   marginBottom: "34px",
