@@ -4,7 +4,16 @@ body {
   background: black;
   color: white;
   font-family: Arial, sans-serif;
+  overflow-x: hidden;
 }
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* FADE */
 
 @keyframes fadeUp {
   from {
@@ -20,35 +29,50 @@ body {
   }
 }
 
+/* FLOATING */
+
 @keyframes floating {
   0% {
     transform: translateY(0px);
   }
 
   50% {
-    transform: translateY(-4px);
+    transform: translateY(-6px);
   }
 
   100% {
     transform: translateY(0px);
   }
 }
-@keyframes buttonGlow {
+
+/* GOLD GLOW */
+
+@keyframes pulseGlow {
   0% {
-    box-shadow:
-      0 0 40px rgba(212,176,106,0.14),
-      0 12px 30px rgba(0,0,0,0.35);
+    opacity: 0.45;
   }
 
   50% {
-    box-shadow:
-      0 0 70px rgba(212,176,106,0.24),
-      0 12px 30px rgba(0,0,0,0.35);
+    opacity: 0.8;
   }
 
   100% {
-    box-shadow:
-      0 0 40px rgba(212,176,106,0.14),
-      0 12px 30px rgba(0,0,0,0.35);
+    opacity: 0.45;
+  }
+}
+
+/* BACKGROUND MOVE */
+
+@keyframes backgroundMove {
+  0% {
+    background-position: center top;
+  }
+
+  50% {
+    background-position: center 20px;
+  }
+
+  100% {
+    background-position: center top;
   }
 }
