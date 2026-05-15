@@ -10,6 +10,14 @@ export default function SessionPage() {
   const [primeProfile, setPrimeProfile] = useState(null);
   const [checkedItems, setCheckedItems] = useState([]);
 
+  const [review, setReview] = useState({
+    respectedPlan: "",
+    movedStop: "",
+    revengeTrade: "",
+    emotionalLevel: "",
+    impulsiveEntry: "",
+  });
+
   useEffect(() => {
     const savedProfile = localStorage.getItem("primeProfile");
 
@@ -23,7 +31,7 @@ export default function SessionPage() {
     "Liquidité identifiée",
     "Setup conforme au plan",
     "Risque défini avant l’entrée",
-    "Invalider clairement le trade",
+    "Invalidation claire",
   ];
 
   const toggleItem = (item) => {
@@ -34,27 +42,53 @@ export default function SessionPage() {
     }
   };
 
-  const score = Math.round((checkedItems.length / checklist.length) * 100);
+  const updateReview = (field, value) => {
+    setReview({
+      ...review,
+      [field]: value,
+    });
+  };
+
+  const checklistScore = Math.round(
+    (checkedItems.length / checklist.length) * 100
+  );
+
+  const reviewPenalty = calculateReviewPenalty(review);
+
+  const finalScore = Math.max(0, checklistScore - reviewPenalty);
 
   const status =
-    score >= 80
-      ? "Session validée"
-      : score >= 50
+    finalScore >= 80
+      ? "Session disciplinée"
+      : finalScore >= 50
       ? "Session fragile"
-      : "Risque élevé";
+      : "Dérive comportementale";
+
+  const detectedError = detectBehavioralError(review);
+
+  const prescription = generatePrescription(detectedError, primeProfile);
+
+  const isReviewComplete =
+    review.respectedPlan &&
+    review.movedStop &&
+    review.revengeTrade &&
+    review.emotionalLevel &&
+    review.impulsiveEntry;
 
   const saveSession = () => {
     const sessionResult = {
       date: new Date().toLocaleDateString("fr-FR"),
-      score,
+      score: finalScore,
+      checklistScore,
+      reviewPenalty,
       status,
       checklist,
       checkedItems,
+      review,
+      detectedError,
+      prescription,
       profile: primeProfile?.detectedProfile || "Profil standard",
       risk: primeProfile?.risk || "Anticipation / impulsivité",
-      prescription:
-        primeProfile?.prescription ||
-        "Attendre une confirmation complète avant toute exécution.",
     };
 
     const existingSessions =
@@ -65,7 +99,7 @@ export default function SessionPage() {
       JSON.stringify([sessionResult, ...existingSessions])
     );
 
-    alert("Session PRIME sauvegardée.");
+    alert("Session PRIME sauvegardée avec analyse comportementale.");
   };
 
   return (
@@ -81,8 +115,8 @@ export default function SessionPage() {
           </h1>
 
           <p style={subtitle}>
-            Coche les éléments validés avant d’exécuter. PRIME calcule ton score
-            de discipline en temps réel.
+            Coche ta checklist puis renseigne ton comportement post-session.
+            PRIME calcule ton score réel de discipline.
           </p>
         </FadeIn>
 
@@ -96,18 +130,25 @@ export default function SessionPage() {
 
             <p style={text}>
               Risque surveillé :{" "}
-              <strong>{primeProfile?.risk || "Anticipation / impulsivité"}</strong>
+              <strong>
+                {primeProfile?.risk || "Anticipation / impulsivité"}
+              </strong>
             </p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.35}>
           <PremiumCard>
-            <p style={cardLabel}>SCORE DISCIPLINE</p>
+            <p style={cardLabel}>SCORE DISCIPLINE FINAL</p>
 
-            <h2 style={scoreStyle}>{score}</h2>
+            <h2 style={scoreStyle}>{finalScore}</h2>
 
             <p style={text}>{status}</p>
+
+            <p style={smallText}>
+              Checklist : {checklistScore}/100 · Pénalité comportementale : -
+              {reviewPenalty}
+            </p>
           </PremiumCard>
         </FadeIn>
 
@@ -140,23 +181,66 @@ export default function SessionPage() {
 
         <FadeIn delay={0.65}>
           <PremiumCard>
-            <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
+            <p style={cardLabel}>REVIEW COMPORTEMENTALE</p>
 
-            <h2 style={cardTitle}>
-              {primeProfile?.prescription ||
-                "Attendre une confirmation complète avant toute exécution."}
-            </h2>
+            <ReviewSelect
+              label="As-tu respecté ton plan ?"
+              value={review.respectedPlan}
+              onChange={(value) => updateReview("respectedPlan", value)}
+              options={["Oui", "Partiellement", "Non"]}
+            />
+
+            <ReviewSelect
+              label="As-tu déplacé ton stop ?"
+              value={review.movedStop}
+              onChange={(value) => updateReview("movedStop", value)}
+              options={["Non", "Oui"]}
+            />
+
+            <ReviewSelect
+              label="As-tu fait un revenge trade ?"
+              value={review.revengeTrade}
+              onChange={(value) => updateReview("revengeTrade", value)}
+              options={["Non", "Oui"]}
+            />
+
+            <ReviewSelect
+              label="Ton niveau émotionnel ?"
+              value={review.emotionalLevel}
+              onChange={(value) => updateReview("emotionalLevel", value)}
+              options={["Calme", "Tendu", "Élevé"]}
+            />
+
+            <ReviewSelect
+              label="As-tu pris une entrée impulsive ?"
+              value={review.impulsiveEntry}
+              onChange={(value) => updateReview("impulsiveEntry", value)}
+              options={["Non", "Oui"]}
+            />
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.8}>
+          <PremiumCard>
+            <p style={cardLabel}>ANALYSE PRIME</p>
+
+            <h2 style={cardTitle}>{detectedError}</h2>
+
+            <p style={text}>{prescription}</p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.95}>
           <button
             onClick={saveSession}
+            disabled={!isReviewComplete}
             style={{
               background: "transparent",
               border: "none",
               padding: 0,
               width: "100%",
+              opacity: isReviewComplete ? 1 : 0.35,
+              cursor: isReviewComplete ? "pointer" : "not-allowed",
             }}
           >
             <PrimaryButton>Sauvegarder ma session</PrimaryButton>
@@ -166,6 +250,79 @@ export default function SessionPage() {
 
       <BottomNav active="Session" />
     </main>
+  );
+}
+
+function ReviewSelect({ label, value, onChange, options }) {
+  return (
+    <div style={{ marginBottom: "22px" }}>
+      <p style={reviewLabel}>{label}</p>
+
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={select}
+      >
+        <option value="">Choisir</option>
+
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function calculateReviewPenalty(review) {
+  let penalty = 0;
+
+  if (review.respectedPlan === "Partiellement") penalty += 10;
+  if (review.respectedPlan === "Non") penalty += 25;
+  if (review.movedStop === "Oui") penalty += 15;
+  if (review.revengeTrade === "Oui") penalty += 25;
+  if (review.emotionalLevel === "Tendu") penalty += 8;
+  if (review.emotionalLevel === "Élevé") penalty += 18;
+  if (review.impulsiveEntry === "Oui") penalty += 15;
+
+  return penalty;
+}
+
+function detectBehavioralError(review) {
+  if (review.revengeTrade === "Oui") return "Revenge trade détecté";
+  if (review.movedStop === "Oui") return "Stop déplacé";
+  if (review.impulsiveEntry === "Oui") return "Entrée impulsive";
+  if (review.respectedPlan === "Non") return "Non-respect du plan";
+  if (review.emotionalLevel === "Élevé") return "Émotion dominante élevée";
+
+  return "Comportement stable";
+}
+
+function generatePrescription(error, primeProfile) {
+  if (error === "Revenge trade détecté") {
+    return "Prescription : maximum 1 trade après une perte pendant 7 jours.";
+  }
+
+  if (error === "Stop déplacé") {
+    return "Prescription : interdiction de modifier le stop une fois le trade lancé.";
+  }
+
+  if (error === "Entrée impulsive") {
+    return "Prescription : attendre une confirmation complète avant toute exécution.";
+  }
+
+  if (error === "Non-respect du plan") {
+    return "Prescription : réduire le nombre de trades et valider la checklist avant chaque entrée.";
+  }
+
+  if (error === "Émotion dominante élevée") {
+    return "Prescription : activer le Mode Reset avant toute nouvelle décision.";
+  }
+
+  return (
+    primeProfile?.prescription ||
+    "Prescription : conserver le même niveau d’exigence sur la prochaine session."
   );
 }
 
@@ -223,15 +380,21 @@ const scoreStyle = {
 
 const cardTitle = {
   color: "white",
-  fontSize: "24px",
+  fontSize: "26px",
   lineHeight: "36px",
-  margin: 0,
+  margin: "0 0 14px",
 };
 
 const text = {
   color: "rgba(255,255,255,0.62)",
   fontSize: "18px",
   lineHeight: "30px",
+};
+
+const smallText = {
+  color: "rgba(255,255,255,0.42)",
+  fontSize: "15px",
+  lineHeight: "24px",
 };
 
 const checkButton = {
@@ -261,4 +424,22 @@ const checkText = {
   color: "rgba(255,255,255,0.82)",
   fontSize: "17px",
   lineHeight: "26px",
+};
+
+const reviewLabel = {
+  color: "rgba(255,255,255,0.74)",
+  fontSize: "17px",
+  lineHeight: "26px",
+  marginBottom: "10px",
+};
+
+const select = {
+  width: "100%",
+  background: "rgba(15,15,15,0.8)",
+  color: "white",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "18px",
+  padding: "16px",
+  fontSize: "16px",
+  outline: "none",
 };
