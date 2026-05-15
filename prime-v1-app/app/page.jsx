@@ -1,4 +1,4 @@
-      import Link from "next/link";
+import Link from "next/link";
 import BottomNav from "./components/BottomNav";
 import FadeIn from "./components/FadeIn";
 import PrimaryButton from "./components/PrimaryButton";
@@ -27,6 +27,7 @@ export default function Home() {
         backgroundSize: "cover",
         backgroundPosition: "center top",
         backgroundRepeat: "no-repeat",
+        animation: "backgroundMove 14s ease-in-out infinite",
       }}
     >
       <div style={goldGlow} />
@@ -98,6 +99,7 @@ const goldGlow = {
     "radial-gradient(circle, rgba(212,176,106,0.14), transparent 70%)",
   filter: "blur(60px)",
   zIndex: 0,
+  animation: "pulseGlow 5s ease-in-out infinite",
 };
 
 const container = {
