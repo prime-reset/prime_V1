@@ -6,18 +6,33 @@ import FadeIn from "../components/FadeIn";
 import PremiumCard from "../components/PremiumCard";
 
 export default function StatsPage() {
+  const [sessions, setSessions] = useState([]);
   const [primeProfile, setPrimeProfile] = useState(null);
 
   useEffect(() => {
+    const savedSessions =
+      JSON.parse(localStorage.getItem("primeSessions")) || [];
+
     const savedProfile = localStorage.getItem("primeProfile");
+
+    setSessions(savedSessions);
 
     if (savedProfile) {
       setPrimeProfile(JSON.parse(savedProfile));
     }
   }, []);
 
-  const disciplineScore = getDisciplineScore(primeProfile?.risk);
-  const disciplineLevel = getDisciplineLevel(disciplineScore);
+  const scores = sessions.map((session) => session.score);
+
+  const averageScore =
+    scores.length > 0
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      : getDisciplineScore(primeProfile?.risk);
+
+  const bestScore = scores.length > 0 ? Math.max(...scores) : "-";
+  const lastScore = scores.length > 0 ? scores[0] : null;
+
+  const disciplineLevel = getDisciplineLevel(averageScore);
 
   return (
     <main style={main}>
@@ -32,57 +47,62 @@ export default function StatsPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME transforme ton profil, ton risque dominant et tes habitudes en indicateurs de progression.
+            PRIME suit ton évolution à partir de tes vraies sessions sauvegardées.
           </p>
         </FadeIn>
 
         <FadeIn delay={0.2}>
           <PremiumCard>
-            <p style={cardLabel}>SCORE DISCIPLINE ESTIMÉ</p>
-            <h2 style={score}>{disciplineScore}</h2>
+            <p style={cardLabel}>SCORE MOYEN</p>
+
+            <h2 style={score}>{averageScore}</h2>
+
             <p style={text}>{disciplineLevel}</p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.35}>
-          <PremiumCard>
-            <p style={cardLabel}>PROFIL ACTIF</p>
-            <h2 style={goldTitle}>
-              {primeProfile?.detectedProfile || "Profil standard"}
-            </h2>
-            <p style={text}>
-              Risque dominant :{" "}
-              <strong>{primeProfile?.risk || "Anticipation / impulsivité"}</strong>
-            </p>
-          </PremiumCard>
+          <div style={grid}>
+            <PremiumCard>
+              <p style={cardLabel}>SESSIONS</p>
+              <h2 style={smallScore}>{sessions.length}</h2>
+            </PremiumCard>
+
+            <PremiumCard>
+              <p style={cardLabel}>MEILLEUR</p>
+              <h2 style={smallScore}>{bestScore}</h2>
+            </PremiumCard>
+          </div>
         </FadeIn>
 
         <FadeIn delay={0.5}>
           <PremiumCard>
-            <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
-            <h2 style={cardTitle}>
-              {primeProfile?.prescription ||
-                "Respecter une checklist complète avant chaque entrée."}
+            <p style={cardLabel}>DERNIÈRE SESSION</p>
+
+            <h2 style={goldTitle}>
+              {lastScore ? `${lastScore.score}/100` : "Aucune session"}
             </h2>
+
+            <p style={text}>
+              {lastScore
+                ? lastScore.status
+                : "Sauvegarde ta première session pour générer tes statistiques réelles."}
+            </p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.65}>
           <PremiumCard>
-            <p style={cardLabel}>CHECKLIST SUIVIE</p>
+            <p style={cardLabel}>PROFIL ACTIF</p>
 
-            {(primeProfile?.checklist || [
-              "Contexte marché validé",
-              "Setup conforme au plan",
-              "Risque défini avant l’entrée",
-              "État émotionnel stable",
-              "Invalidation claire",
-            ]).map((item) => (
-              <div key={item} style={listItem}>
-                <span style={dot} />
-                <p style={listText}>{item}</p>
-              </div>
-            ))}
+            <h2 style={goldTitle}>
+              {primeProfile?.detectedProfile || "Profil standard"}
+            </h2>
+
+            <p style={text}>
+              Risque dominant :{" "}
+              <strong>{primeProfile?.risk || "Anticipation / impulsivité"}</strong>
+            </p>
           </PremiumCard>
         </FadeIn>
       </div>
@@ -139,6 +159,12 @@ const subtitle = {
   marginBottom: "34px",
 };
 
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "16px",
+};
+
 const cardLabel = {
   color: "rgba(255,255,255,0.45)",
   fontSize: "13px",
@@ -153,6 +179,13 @@ const score = {
   margin: "0 0 16px",
 };
 
+const smallScore = {
+  color: "#D4B06A",
+  fontSize: "42px",
+  lineHeight: "48px",
+  margin: 0,
+};
+
 const goldTitle = {
   color: "#D4B06A",
   fontSize: "34px",
@@ -160,37 +193,8 @@ const goldTitle = {
   margin: "0 0 14px",
 };
 
-const cardTitle = {
-  color: "white",
-  fontSize: "24px",
-  lineHeight: "36px",
-  margin: 0,
-};
-
 const text = {
   color: "rgba(255,255,255,0.62)",
   fontSize: "18px",
   lineHeight: "30px",
-};
-
-const listItem = {
-  display: "flex",
-  alignItems: "center",
-  gap: "14px",
-  marginBottom: "16px",
-};
-
-const dot = {
-  width: "10px",
-  height: "10px",
-  borderRadius: "999px",
-  background: "#D4B06A",
-  boxShadow: "0 0 18px rgba(212,176,106,0.25)",
-};
-
-const listText = {
-  margin: 0,
-  color: "rgba(255,255,255,0.82)",
-  fontSize: "18px",
-  lineHeight: "28px",
 };
