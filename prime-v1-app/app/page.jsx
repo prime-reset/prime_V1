@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import BottomNav from "./components/BottomNav";
 import FadeIn from "./components/FadeIn";
@@ -5,6 +8,16 @@ import PrimaryButton from "./components/PrimaryButton";
 import ActionCard from "./components/ActionCard";
 
 export default function Home() {
+  const [primeProfile, setPrimeProfile] = useState(null);
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("primeProfile");
+
+    if (savedProfile) {
+      setPrimeProfile(JSON.parse(savedProfile));
+    }
+  }, []);
+
   return (
     <main
       style={{
@@ -47,18 +60,53 @@ export default function Home() {
 
         <FadeIn delay={0.3}>
           <p style={subtitle}>
-            PRIME transforme ton comportement de trader en système d’exécution
-            discipliné.
+            {primeProfile
+              ? `Profil actif : ${primeProfile.detectedProfile}. PRIME adapte ta session selon ton risque dominant.`
+              : "PRIME transforme ton comportement de trader en système d’exécution discipliné."}
           </p>
         </FadeIn>
 
         <FadeIn delay={0.45}>
           <Link href="/session" style={{ textDecoration: "none" }}>
-            <PrimaryButton>Commencer ma session</PrimaryButton>
+            <PrimaryButton>
+              {primeProfile
+                ? "Lancer ma session personnalisée"
+                : "Commencer ma session"}
+            </PrimaryButton>
           </Link>
         </FadeIn>
 
-        <FadeIn delay={0.6}>
+        {primeProfile && (
+          <FadeIn delay={0.55}>
+            <ActionCard
+              href="/profile"
+              title={primeProfile.detectedProfile}
+              subtitle={`Risque dominant : ${primeProfile.risk}`}
+            />
+          </FadeIn>
+        )}
+
+        {primeProfile && (
+          <FadeIn delay={0.65}>
+            <ActionCard
+              href="/coach"
+              title="Prescription active"
+              subtitle={primeProfile.prescription}
+            />
+          </FadeIn>
+        )}
+
+        {!primeProfile && (
+          <FadeIn delay={0.6}>
+            <ActionCard
+              href="/onboarding"
+              title="Créer mon profil PRIME"
+              subtitle="Personnalise ton coaching, ta checklist et tes prescriptions."
+            />
+          </FadeIn>
+        )}
+
+        <FadeIn delay={0.75}>
           <ActionCard
             href="/stats"
             title="Voir mes stats"
@@ -66,19 +114,11 @@ export default function Home() {
           />
         </FadeIn>
 
-        <FadeIn delay={0.75}>
+        <FadeIn delay={0.9}>
           <ActionCard
             href="/reset"
             title="Mode Reset"
             subtitle="Stoppe la dérive émotionnelle avant qu’elle ne coûte cher."
-          />
-        </FadeIn>
-
-        <FadeIn delay={0.9}>
-          <ActionCard
-            href="/onboarding"
-            title="Créer mon profil PRIME"
-            subtitle="Personnalise ton coaching, ta checklist et tes prescriptions."
           />
         </FadeIn>
       </div>
