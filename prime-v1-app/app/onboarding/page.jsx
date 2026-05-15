@@ -1,42 +1,229 @@
+"use client";
+
+import { useState } from "react";
 import BottomNav from "../components/BottomNav";
+import FadeIn from "../components/FadeIn";
+import PremiumCard from "../components/PremiumCard";
+import PrimaryButton from "../components/PrimaryButton";
 
 export default function OnboardingPage() {
+  const [profile, setProfile] = useState({
+    tradingStyle: "",
+    experience: "",
+    psychology: "",
+    weakness: "",
+  });
+
+  const updateField = (field, value) => {
+    setProfile({
+      ...profile,
+      [field]: value,
+    });
+  };
+
   return (
-    <main style={{ background: "#050505", color: "white", minHeight: "100vh", padding: "24px", paddingBottom: "120px", fontFamily: "Arial, sans-serif" }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        background:
+          "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
+        color: "white",
+        padding: "32px",
+        paddingBottom: "140px",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
-        <p style={{ color: "#D4B06A", letterSpacing: "6px", fontSize: "12px", marginBottom: "20px" }}>ONBOARDING PRIME</p>
+        <FadeIn delay={0}>
+          <p style={label}>ONBOARDING PRIME</p>
 
-        <h1 style={{ fontSize: "46px", lineHeight: "50px", marginBottom: "18px" }}>
-          Construis ton profil<br />de trader.
-        </h1>
+          <h1 style={title}>
+            Créons ton
+            <br />
+            profil trader.
+          </h1>
 
-        <p style={{ color: "#8A8A8A", fontSize: "18px", lineHeight: "30px", marginBottom: "34px" }}>
-          Réponds à quelques questions pour personnaliser ta checklist, ton coaching et tes prescriptions.
-        </p>
+          <p style={subtitle}>
+            PRIME adapte son coaching, ses prescriptions et ses checklists selon
+            ton comportement réel.
+          </p>
+        </FadeIn>
 
-        {[
-          ["STYLE DE TRADING", "Scalping", "Day trading", "Swing trading"],
-          ["ERREUR DOMINANTE", "Overtrading", "Revenge trade", "Entrée prématurée"],
-          ["ÉTAT SOUS PRESSION", "Calme", "Impulsif", "Douteux"],
-          ["OBJECTIF PRINCIPAL", "Discipline", "Consistance", "Scaling"],
-        ].map(([title, option1, option2, option3]) => (
-          <div key={title} style={{ background: "#0D0D0D", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "30px", padding: "28px", marginBottom: "24px" }}>
-            <p style={{ color: "#777", fontSize: "13px", letterSpacing: "1px", marginBottom: "18px" }}>{title}</p>
+        <FadeIn delay={0.2}>
+          <PremiumCard>
+            <p style={question}>Quel est ton style principal ?</p>
 
-            {[option1, option2, option3].map((option) => (
-              <button key={option} style={{ width: "100%", background: "#111", color: "white", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "18px", padding: "16px", marginBottom: "12px", fontSize: "17px", textAlign: "left" }}>
-                {option}
-              </button>
-            ))}
-          </div>
-        ))}
+            <SelectField
+              value={profile.tradingStyle}
+              onChange={(value) =>
+                updateField("tradingStyle", value)
+              }
+              options={[
+                "SMC / Liquidité",
+                "Scalping",
+                "Breakout",
+                "Price Action",
+                "Trend Following",
+              ]}
+            />
+          </PremiumCard>
+        </FadeIn>
 
-        <button style={{ width: "100%", background: "#D4B06A", color: "black", border: "none", borderRadius: "22px", padding: "20px", fontSize: "18px", fontWeight: "700", cursor: "pointer" }}>
-          Générer mon profil PRIME
-        </button>
+        <FadeIn delay={0.35}>
+          <PremiumCard>
+            <p style={question}>Ton niveau d’expérience ?</p>
+
+            <SelectField
+              value={profile.experience}
+              onChange={(value) =>
+                updateField("experience", value)
+              }
+              options={[
+                "Débutant",
+                "Intermédiaire",
+                "Avancé",
+                "Prop Firm Trader",
+              ]}
+            />
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.5}>
+          <PremiumCard>
+            <p style={question}>Ton plus gros problème émotionnel ?</p>
+
+            <SelectField
+              value={profile.weakness}
+              onChange={(value) =>
+                updateField("weakness", value)
+              }
+              options={[
+                "Revenge trade",
+                "Overtrading",
+                "FOMO",
+                "Stop déplacé",
+                "Entrées impulsives",
+              ]}
+            />
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.65}>
+          <PremiumCard>
+            <p style={question}>Comment te décrirais-tu ?</p>
+
+            <SelectField
+              value={profile.psychology}
+              onChange={(value) =>
+                updateField("psychology", value)
+              }
+              options={[
+                "Patient",
+                "Impulsif",
+                "Discipliné",
+                "Stressé",
+                "Agressif",
+              ]}
+            />
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.8}>
+          <PrimaryButton>
+            Générer mon profil PRIME
+          </PrimaryButton>
+        </FadeIn>
+
+        <FadeIn delay={1}>
+          <PremiumCard>
+            <p style={resultLabel}>PROFIL EN COURS</p>
+
+            <p style={resultText}>
+              {profile.tradingStyle || "..."} •{" "}
+              {profile.psychology || "..."}
+            </p>
+
+            <p style={resultSub}>
+              Faiblesse dominante :{" "}
+              {profile.weakness || "..."}
+            </p>
+          </PremiumCard>
+        </FadeIn>
       </div>
 
       <BottomNav active="Profil" />
     </main>
   );
 }
+
+function SelectField({ value, onChange, options }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        width: "100%",
+        background: "rgba(15,15,15,0.8)",
+        color: "white",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: "18px",
+        padding: "18px",
+        fontSize: "16px",
+        marginTop: "18px",
+        outline: "none",
+      }}
+    >
+      <option value="">Choisir</option>
+
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+const label = {
+  color: "#D4B06A",
+  letterSpacing: "6px",
+  fontSize: "12px",
+  marginBottom: "24px",
+};
+
+const title = {
+  fontSize: "52px",
+  lineHeight: "0.96",
+  fontWeight: "700",
+  marginBottom: "24px",
+  letterSpacing: "-2px",
+};
+
+const subtitle = {
+  color: "rgba(255,255,255,0.64)",
+  fontSize: "19px",
+  lineHeight: "1.6",
+  marginBottom: "34px",
+};
+
+const question = {
+  fontSize: "22px",
+  margin: 0,
+};
+
+const resultLabel = {
+  color: "#D4B06A",
+  letterSpacing: "2px",
+  fontSize: "12px",
+  marginBottom: "14px",
+};
+
+const resultText = {
+  fontSize: "24px",
+  marginBottom: "10px",
+};
+
+const resultSub = {
+  color: "rgba(255,255,255,0.55)",
+  fontSize: "16px",
+};
