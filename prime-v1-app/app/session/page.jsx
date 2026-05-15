@@ -8,6 +8,7 @@ import PrimaryButton from "../components/PrimaryButton";
 
 export default function SessionPage() {
   const [primeProfile, setPrimeProfile] = useState(null);
+  const [checkedItems, setCheckedItems] = useState([]);
 
   useEffect(() => {
     const savedProfile = localStorage.getItem("primeProfile");
@@ -25,6 +26,48 @@ export default function SessionPage() {
     "Invalider clairement le trade",
   ];
 
+  const toggleItem = (item) => {
+    if (checkedItems.includes(item)) {
+      setCheckedItems(checkedItems.filter((i) => i !== item));
+    } else {
+      setCheckedItems([...checkedItems, item]);
+    }
+  };
+
+  const score = Math.round((checkedItems.length / checklist.length) * 100);
+
+  const status =
+    score >= 80
+      ? "Session validée"
+      : score >= 50
+      ? "Session fragile"
+      : "Risque élevé";
+
+  const saveSession = () => {
+    const sessionResult = {
+      date: new Date().toLocaleDateString("fr-FR"),
+      score,
+      status,
+      checklist,
+      checkedItems,
+      profile: primeProfile?.detectedProfile || "Profil standard",
+      risk: primeProfile?.risk || "Anticipation / impulsivité",
+      prescription:
+        primeProfile?.prescription ||
+        "Attendre une confirmation complète avant toute exécution.",
+    };
+
+    const existingSessions =
+      JSON.parse(localStorage.getItem("primeSessions")) || [];
+
+    localStorage.setItem(
+      "primeSessions",
+      JSON.stringify([sessionResult, ...existingSessions])
+    );
+
+    alert("Session PRIME sauvegardée.");
+  };
+
   return (
     <main style={main}>
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
@@ -38,8 +81,8 @@ export default function SessionPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME vérifie ton état, ton plan, ton risque et ton niveau de
-            discipline avant chaque trade.
+            Coche les éléments validés avant d’exécuter. PRIME calcule ton score
+            de discipline en temps réel.
           </p>
         </FadeIn>
 
@@ -60,18 +103,42 @@ export default function SessionPage() {
 
         <FadeIn delay={0.35}>
           <PremiumCard>
-            <p style={cardLabel}>CHECKLIST PERSONNALISÉE</p>
+            <p style={cardLabel}>SCORE DISCIPLINE</p>
 
-            {checklist.map((item) => (
-              <div key={item} style={checkItem}>
-                <span style={checkBox} />
-                <p style={checkText}>{item}</p>
-              </div>
-            ))}
+            <h2 style={scoreStyle}>{score}</h2>
+
+            <p style={text}>{status}</p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.5}>
+          <PremiumCard>
+            <p style={cardLabel}>CHECKLIST PERSONNALISÉE</p>
+
+            {checklist.map((item) => {
+              const isChecked = checkedItems.includes(item);
+
+              return (
+                <button
+                  key={item}
+                  onClick={() => toggleItem(item)}
+                  style={checkButton}
+                >
+                  <span
+                    style={{
+                      ...checkBox,
+                      background: isChecked ? "#D4B06A" : "transparent",
+                    }}
+                  />
+
+                  <p style={checkText}>{item}</p>
+                </button>
+              );
+            })}
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.65}>
           <PremiumCard>
             <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
 
@@ -82,8 +149,18 @@ export default function SessionPage() {
           </PremiumCard>
         </FadeIn>
 
-        <FadeIn delay={0.65}>
-          <PrimaryButton>Valider ma préparation</PrimaryButton>
+        <FadeIn delay={0.8}>
+          <button
+            onClick={saveSession}
+            style={{
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              width: "100%",
+            }}
+          >
+            <PrimaryButton>Sauvegarder ma session</PrimaryButton>
+          </button>
         </FadeIn>
       </div>
 
@@ -137,6 +214,13 @@ const goldTitle = {
   margin: "0 0 14px",
 };
 
+const scoreStyle = {
+  color: "#D4B06A",
+  fontSize: "84px",
+  lineHeight: "90px",
+  margin: "0 0 12px",
+};
+
 const cardTitle = {
   color: "white",
   fontSize: "24px",
@@ -150,11 +234,17 @@ const text = {
   lineHeight: "30px",
 };
 
-const checkItem = {
+const checkButton = {
+  width: "100%",
   display: "flex",
   alignItems: "center",
   gap: "14px",
-  marginBottom: "18px",
+  marginBottom: "16px",
+  background: "transparent",
+  border: "none",
+  padding: 0,
+  textAlign: "left",
+  cursor: "pointer",
 };
 
 const checkBox = {
@@ -163,6 +253,7 @@ const checkBox = {
   borderRadius: "7px",
   border: "1px solid rgba(212,176,106,0.75)",
   boxShadow: "0 0 18px rgba(212,176,106,0.10)",
+  flexShrink: 0,
 };
 
 const checkText = {
