@@ -1,21 +1,32 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import BottomNav from "../components/BottomNav";
 import FadeIn from "../components/FadeIn";
 import PremiumCard from "../components/PremiumCard";
 import PrimaryButton from "../components/PrimaryButton";
 
 export default function SessionPage() {
+  const [primeProfile, setPrimeProfile] = useState(null);
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("primeProfile");
+
+    if (savedProfile) {
+      setPrimeProfile(JSON.parse(savedProfile));
+    }
+  }, []);
+
+  const checklist = primeProfile?.checklist || [
+    "Contexte HTF validé",
+    "Liquidité identifiée",
+    "Setup conforme au plan",
+    "Risque défini avant l’entrée",
+    "Invalider clairement le trade",
+  ];
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
-        color: "white",
-        padding: "32px",
-        paddingBottom: "140px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <main style={main}>
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
         <FadeIn delay={0}>
           <p style={label}>SESSION PRIME</p>
@@ -27,33 +38,31 @@ export default function SessionPage() {
           </h1>
 
           <p style={subtitle}>
-            Avant chaque trade, PRIME vérifie ton état, ton plan, ton risque et
-            ton niveau de discipline.
+            PRIME vérifie ton état, ton plan, ton risque et ton niveau de
+            discipline avant chaque trade.
           </p>
         </FadeIn>
 
         <FadeIn delay={0.2}>
           <PremiumCard>
-            <p style={cardLabel}>ÉTAT DU TRADER</p>
-            <h2 style={goldTitle}>Focus</h2>
+            <p style={cardLabel}>PROFIL ACTIF</p>
+
+            <h2 style={goldTitle}>
+              {primeProfile?.detectedProfile || "Profil standard"}
+            </h2>
+
             <p style={text}>
-              Tu es dans une condition correcte pour analyser. Aucune alerte
-              émotionnelle forte détectée.
+              Risque surveillé :{" "}
+              <strong>{primeProfile?.risk || "Anticipation / impulsivité"}</strong>
             </p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.35}>
           <PremiumCard>
-            <p style={cardLabel}>CHECKLIST D’EXÉCUTION</p>
+            <p style={cardLabel}>CHECKLIST PERSONNALISÉE</p>
 
-            {[
-              "Contexte HTF validé",
-              "Liquidité identifiée",
-              "Setup conforme au plan",
-              "Risque défini avant l’entrée",
-              "Invalider clairement le trade",
-            ].map((item) => (
+            {checklist.map((item) => (
               <div key={item} style={checkItem}>
                 <span style={checkBox} />
                 <p style={checkText}>{item}</p>
@@ -64,12 +73,12 @@ export default function SessionPage() {
 
         <FadeIn delay={0.5}>
           <PremiumCard>
-            <p style={cardLabel}>ANALYSE PRIME</p>
-            <h2 style={cardTitle}>Risque comportemental faible.</h2>
-            <p style={text}>
-              Ton état est stable. Le seul point à surveiller : ne pas anticiper
-              l’entrée avant confirmation.
-            </p>
+            <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
+
+            <h2 style={cardTitle}>
+              {primeProfile?.prescription ||
+                "Attendre une confirmation complète avant toute exécution."}
+            </h2>
           </PremiumCard>
         </FadeIn>
 
@@ -82,6 +91,15 @@ export default function SessionPage() {
     </main>
   );
 }
+
+const main = {
+  minHeight: "100vh",
+  background: "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
+  color: "white",
+  padding: "32px",
+  paddingBottom: "140px",
+  fontFamily: "Arial, sans-serif",
+};
 
 const label = {
   color: "#D4B06A",
@@ -114,19 +132,20 @@ const cardLabel = {
 
 const goldTitle = {
   color: "#D4B06A",
-  fontSize: "36px",
+  fontSize: "34px",
+  lineHeight: "40px",
   margin: "0 0 14px",
 };
 
 const cardTitle = {
   color: "white",
-  fontSize: "28px",
+  fontSize: "24px",
   lineHeight: "36px",
-  margin: "0 0 14px",
+  margin: 0,
 };
 
 const text = {
-  color: "rgba(255,255,255,0.58)",
+  color: "rgba(255,255,255,0.62)",
   fontSize: "18px",
   lineHeight: "30px",
 };
@@ -150,4 +169,5 @@ const checkText = {
   margin: 0,
   color: "rgba(255,255,255,0.82)",
   fontSize: "17px",
+  lineHeight: "26px",
 };
