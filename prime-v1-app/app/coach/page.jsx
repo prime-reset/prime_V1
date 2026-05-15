@@ -7,22 +7,23 @@ import PremiumCard from "../components/PremiumCard";
 
 export default function CoachPage() {
   const [primeProfile, setPrimeProfile] = useState(null);
+  const [lastSession, setLastSession] = useState(null);
 
   useEffect(() => {
     const savedProfile = localStorage.getItem("primeProfile");
+    const savedSessions =
+      JSON.parse(localStorage.getItem("primeSessions")) || [];
 
     if (savedProfile) {
       setPrimeProfile(JSON.parse(savedProfile));
     }
+
+    if (savedSessions.length > 0) {
+      setLastSession(savedSessions[0]);
+    }
   }, []);
 
-  const risk = primeProfile?.risk || "Impulsivité après perte";
-
-  const prescription =
-    primeProfile?.prescription ||
-    "Maximum 1 trade après une perte pendant 7 jours.";
-
-  const errors = getErrorsByRisk(risk);
+  const analysis = getCoachAnalysis(lastSession, primeProfile);
 
   return (
     <main style={main}>
@@ -37,56 +38,60 @@ export default function CoachPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME transforme ton profil, tes risques et tes erreurs en coaching
-            comportemental personnalisé.
+            PRIME lit ton profil et ta dernière session pour ajuster ton
+            coaching comportemental.
           </p>
         </FadeIn>
 
         <FadeIn delay={0.2}>
           <PremiumCard>
-            <p style={cardLabel}>PROFIL ACTIF</p>
+            <p style={cardLabel}>ANALYSE COACH</p>
 
-            <h2 style={goldTitle}>
-              {primeProfile?.detectedProfile || "Profil standard"}
-            </h2>
+            <h2 style={goldTitle}>{analysis.title}</h2>
 
-            <p style={text}>
-              PRIME ajuste ses prescriptions selon ton comportement dominant.
-            </p>
+            <p style={text}>{analysis.message}</p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.35}>
           <PremiumCard>
-            <p style={cardLabel}>RISQUE DOMINANT</p>
+            <p style={cardLabel}>DERNIÈRE SESSION</p>
 
-            <h2 style={cardTitle}>{risk}</h2>
+            <h2 style={cardTitle}>
+              {lastSession ? `${lastSession.score}/100` : "Aucune session"}
+            </h2>
 
             <p style={text}>
-              C’est la zone que PRIME va surveiller en priorité pendant tes
-              prochaines sessions.
+              {lastSession
+                ? lastSession.status
+                : "Sauvegarde une session pour activer le coaching intelligent."}
             </p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.5}>
           <PremiumCard>
-            <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
+            <p style={cardLabel}>ERREUR DÉTECTÉE</p>
 
-            <h2 style={cardTitle}>{prescription}</h2>
+            <h2 style={cardTitle}>
+              {lastSession?.detectedError || primeProfile?.risk || "Profil en attente"}
+            </h2>
+
+            <p style={text}>
+              {analysis.errorExplanation}
+            </p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.65}>
           <PremiumCard>
-            <p style={cardLabel}>ERREURS À SURVEILLER</p>
+            <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
 
-            {errors.map((item) => (
-              <div key={item} style={listItem}>
-                <span style={dot} />
-                <p style={listText}>{item}</p>
-              </div>
-            ))}
+            <h2 style={cardTitle}>
+              {lastSession?.prescription ||
+                primeProfile?.prescription ||
+                "Créer ton profil PRIME pour générer une prescription personnalisée."}
+            </h2>
           </PremiumCard>
         </FadeIn>
       </div>
@@ -96,58 +101,104 @@ export default function CoachPage() {
   );
 }
 
-function getErrorsByRisk(risk) {
-  if (risk === "Revenge trade") {
-    return [
-      "Reprendre un trade pour se refaire",
-      "Augmenter le risque après une perte",
-      "Entrer sans nouvelle confirmation",
-      "Ignorer la pause obligatoire",
-    ];
+function getCoachAnalysis(lastSession, primeProfile) {
+  if (!primeProfile && !lastSession) {
+    return {
+      title: "Coach en attente",
+      message:
+        "Commence par créer ton profil PRIME puis sauvegarde une session pour activer l’analyse comportementale.",
+      errorExplanation:
+        "Aucune donnée comportementale n’est encore disponible.",
+    };
   }
 
-  if (risk === "Sur-exécution") {
-    return [
-      "Multiplier les entrées sans edge clair",
-      "Trader par ennui",
-      "Revenir trop vite après un trade",
-      "Confondre activité et discipline",
-    ];
+  if (!lastSession) {
+    return {
+      title: "Profil prêt",
+      message:
+        "Ton profil PRIME est généré. La prochaine étape est de sauvegarder une session pour que le coach analyse ton comportement réel.",
+      errorExplanation:
+        `Risque dominant identifié : ${primeProfile?.risk || "à préciser"}.`,
+    };
   }
 
-  if (risk === "Entrée impulsive") {
-    return [
-      "Entrer sur bougie d’impulsion",
-      "Acheter/vendre un mouvement déjà parti",
-      "Ignorer le pullback",
-      "Confondre urgence et opportunité",
-    ];
+  if (lastSession.detectedError === "Revenge trade détecté") {
+    return {
+      title: "Tu essayes de récupérer une émotion.",
+      message:
+        "Le problème n’est pas le marché. Le problème est que tu as cherché à reprendre le contrôle par l’action. PRIME te remet dans le process.",
+      errorExplanation:
+        "Le revenge trade apparaît quand la perte devient personnelle. La priorité est de couper la boucle émotionnelle.",
+    };
   }
 
-  if (risk === "Anticipation avant confirmation") {
-    return [
-      "Entrer avant BOS / confirmation",
-      "Anticiper la réaction sur zone",
-      "Forcer un setup incomplet",
-      "Prendre position sans invalidation nette",
-    ];
+  if (lastSession.detectedError === "Stop déplacé") {
+    return {
+      title: "Ton invalidation doit rester sacrée.",
+      message:
+        "Déplacer ton stop détruit la logique du trade. Le stop n’est pas une suggestion, c’est la frontière entre plan et émotion.",
+      errorExplanation:
+        "Stop déplacé = tu as modifié le risque après l’entrée. PRIME doit renforcer ton respect de l’invalidation.",
+    };
   }
 
-  if (risk === "Excès de confiance") {
-    return [
-      "Augmenter le risque après une série de gains",
-      "Relâcher la checklist",
-      "Multiplier les trades hors plan",
-      "Confondre confiance et maîtrise",
-    ];
+  if (lastSession.detectedError === "Entrée impulsive") {
+    return {
+      title: "Tu as confondu urgence et opportunité.",
+      message:
+        "Une impulsion du marché ne justifie pas une impulsion de ta part. Ton edge vient de l’attente, pas de la réaction.",
+      errorExplanation:
+        "L’entrée impulsive montre une difficulté à attendre la confirmation complète.",
+    };
   }
 
-  return [
-    "Entrée sans confirmation",
-    "Risque mal défini",
-    "Trade hors plan",
-    "Décision prise sous émotion",
-  ];
+  if (lastSession.detectedError === "Non-respect du plan") {
+    return {
+      title: "Tu ne peux pas scorer un plan que tu ne suis pas.",
+      message:
+        "Le but n’est pas d’avoir raison sur un trade. Le but est d’exécuter un système répétable. PRIME te ramène à la structure.",
+      errorExplanation:
+        "Le non-respect du plan empêche toute analyse fiable de ton edge.",
+    };
+  }
+
+  if (lastSession.detectedError === "Émotion dominante élevée") {
+    return {
+      title: "Ton état émotionnel a pris trop de place.",
+      message:
+        "Quand l’émotion monte, l’exécution baisse. Ta priorité n’est pas de trader plus, mais de redevenir neutre.",
+      errorExplanation:
+        "Un niveau émotionnel élevé augmente le risque d’erreurs de lecture, d’entrée et de gestion.",
+    };
+  }
+
+  if (lastSession.score >= 85) {
+    return {
+      title: "Ton edge commence à devenir répétable.",
+      message:
+        "Tu as protégé ton process. Ce type de session construit la consistance, même si le PnL varie.",
+      errorExplanation:
+        "Aucune dérive majeure détectée. Continue de protéger ce niveau d’exécution.",
+    };
+  }
+
+  if (lastSession.score >= 65) {
+    return {
+      title: "Base correcte, mais attention à la dérive.",
+      message:
+        "Tu as validé une partie du process, mais PRIME détecte encore une fragilité comportementale à surveiller.",
+      errorExplanation:
+        lastSession.detectedError || "Risque comportemental modéré.",
+    };
+  }
+
+  return {
+    title: "Session à risque.",
+    message:
+      "Ton score montre que la session n’était pas assez protégée par ton process. La priorité est de réduire l’exposition comportementale.",
+    errorExplanation:
+      lastSession.detectedError || "Plusieurs signaux de dérive sont possibles.",
+  };
 }
 
 const main = {
@@ -190,7 +241,7 @@ const cardLabel = {
 
 const goldTitle = {
   color: "#D4B06A",
-  fontSize: "34px",
+  fontSize: "32px",
   lineHeight: "40px",
   margin: "0 0 14px",
 };
@@ -206,26 +257,4 @@ const text = {
   color: "rgba(255,255,255,0.62)",
   fontSize: "18px",
   lineHeight: "30px",
-};
-
-const listItem = {
-  display: "flex",
-  alignItems: "center",
-  gap: "14px",
-  marginBottom: "16px",
-};
-
-const dot = {
-  width: "10px",
-  height: "10px",
-  borderRadius: "999px",
-  background: "#D4B06A",
-  boxShadow: "0 0 18px rgba(212,176,106,0.25)",
-};
-
-const listText = {
-  margin: 0,
-  color: "rgba(255,255,255,0.82)",
-  fontSize: "18px",
-  lineHeight: "28px",
 };
