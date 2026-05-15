@@ -1,20 +1,23 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import BottomNav from "../components/BottomNav";
 import FadeIn from "../components/FadeIn";
 import PremiumCard from "../components/PremiumCard";
 
 export default function ProfilePage() {
+  const [primeProfile, setPrimeProfile] = useState(null);
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("primeProfile");
+
+    if (savedProfile) {
+      setPrimeProfile(JSON.parse(savedProfile));
+    }
+  }, []);
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
-        color: "white",
-        padding: "32px",
-        paddingBottom: "140px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <main style={main}>
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
         <FadeIn delay={0}>
           <p style={label}>PROFIL PRIME</p>
@@ -26,61 +29,70 @@ export default function ProfilePage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME analyse ton comportement réel pour personnaliser ton coaching,
-            ta checklist et tes prescriptions.
+            PRIME adapte ton coaching, ta checklist et tes prescriptions selon ton comportement.
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.2}>
-          <PremiumCard>
-            <p style={cardLabel}>PROFIL DÉTECTÉ</p>
-            <h2 style={goldTitle}>Structure & Liquidité</h2>
-            <p style={text}>
-              Tu privilégies les sweeps, les BOS et les réactions propres sur
-              zones institutionnelles.
-            </p>
-          </PremiumCard>
-        </FadeIn>
+        {!primeProfile && (
+          <FadeIn delay={0.2}>
+            <PremiumCard>
+              <p style={cardLabel}>AUCUN PROFIL GÉNÉRÉ</p>
+              <h2 style={goldTitle}>Crée ton profil PRIME</h2>
+              <p style={text}>
+                Va dans l’onboarding pour générer ton profil trader personnalisé.
+              </p>
+            </PremiumCard>
+          </FadeIn>
+        )}
 
-        <FadeIn delay={0.35}>
-          <PremiumCard>
-            <p style={cardLabel}>FORCES DOMINANTES</p>
+        {primeProfile && (
+          <>
+            <FadeIn delay={0.2}>
+              <PremiumCard>
+                <p style={cardLabel}>PROFIL DÉTECTÉ</p>
+                <h2 style={goldTitle}>{primeProfile.detectedProfile}</h2>
+                <p style={text}>
+                  Risque dominant : <strong>{primeProfile.risk}</strong>
+                </p>
+              </PremiumCard>
+            </FadeIn>
 
-            {[
-              "Lecture structurelle",
-              "Patience avant exécution",
-              "Respect des zones HTF",
-            ].map((item) => (
-              <div key={item} style={listItem}>
-                <span style={goldDot} />
-                <p style={listText}>{item}</p>
-              </div>
-            ))}
-          </PremiumCard>
-        </FadeIn>
+            <FadeIn delay={0.35}>
+              <PremiumCard>
+                <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
+                <p style={prescription}>{primeProfile.prescription}</p>
+              </PremiumCard>
+            </FadeIn>
 
-        <FadeIn delay={0.5}>
-          <PremiumCard>
-            <p style={cardLabel}>POINTS À CORRIGER</p>
+            <FadeIn delay={0.5}>
+              <PremiumCard>
+                <p style={cardLabel}>CHECKLIST PERSONNALISÉE</p>
 
-            {[
-              "Impulsivité après perte",
-              "Entrée parfois prématurée",
-              "Risque d’overtrading",
-            ].map((item) => (
-              <div key={item} style={listItem}>
-                <span style={redDot} />
-                <p style={listText}>{item}</p>
-              </div>
-            ))}
-          </PremiumCard>
-        </FadeIn>
+                {primeProfile.checklist.map((item) => (
+                  <div key={item} style={listItem}>
+                    <span style={dot} />
+                    <p style={listText}>{item}</p>
+                  </div>
+                ))}
+              </PremiumCard>
+            </FadeIn>
+          </>
+        )}
       </div>
 
       <BottomNav active="Profil" />
     </main>
   );
 }
+
+const main = {
+  minHeight: "100vh",
+  background: "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
+  color: "white",
+  padding: "32px",
+  paddingBottom: "140px",
+  fontFamily: "Arial, sans-serif",
+};
 
 const label = {
   color: "#D4B06A",
@@ -119,9 +131,16 @@ const goldTitle = {
 };
 
 const text = {
-  color: "rgba(255,255,255,0.58)",
+  color: "rgba(255,255,255,0.62)",
   fontSize: "18px",
   lineHeight: "30px",
+};
+
+const prescription = {
+  color: "white",
+  fontSize: "24px",
+  lineHeight: "36px",
+  fontWeight: "700",
 };
 
 const listItem = {
@@ -131,20 +150,12 @@ const listItem = {
   marginBottom: "16px",
 };
 
-const goldDot = {
+const dot = {
   width: "10px",
   height: "10px",
   borderRadius: "999px",
   background: "#D4B06A",
   boxShadow: "0 0 18px rgba(212,176,106,0.25)",
-};
-
-const redDot = {
-  width: "10px",
-  height: "10px",
-  borderRadius: "999px",
-  background: "#B85C5C",
-  boxShadow: "0 0 18px rgba(184,92,92,0.25)",
 };
 
 const listText = {
