@@ -73,8 +73,7 @@ export default function OnboardingPage() {
     if (profile.weakness === "Revenge trade") {
       detectedProfile = "Trader émotionnel après perte";
       risk = "Revenge trade";
-      prescription =
-        "Maximum 1 trade après une perte pendant 7 jours.";
+      prescription = "Maximum 1 trade après une perte pendant 7 jours.";
       checklist = [
         "Ai-je perdu le trade précédent ?",
         "Ai-je attendu 5 minutes ?",
@@ -101,8 +100,7 @@ export default function OnboardingPage() {
     if (profile.psychology === "Discipliné" && profile.experience === "Avancé") {
       detectedProfile = "Exécutant discipliné";
       risk = "Excès de confiance";
-      prescription =
-        "Maintenir le même risque même après une série de gains.";
+      prescription = "Maintenir le même risque même après une série de gains.";
       checklist = [
         "Plan respecté",
         "Setup A ou A+ uniquement",
@@ -112,12 +110,17 @@ export default function OnboardingPage() {
       ];
     }
 
-    setResult({
+    const generatedProfile = {
       detectedProfile,
       risk,
       prescription,
       checklist,
-    });
+      answers: profile,
+    };
+
+    setResult(generatedProfile);
+
+    localStorage.setItem("primeProfile", JSON.stringify(generatedProfile));
   };
 
   const isComplete =
@@ -128,17 +131,7 @@ export default function OnboardingPage() {
     profile.goal;
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
-        color: "white",
-        padding: "32px",
-        paddingBottom: "140px",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
+    <main style={main}>
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
         <FadeIn delay={0}>
           <p style={label}>ONBOARDING PRIME</p>
@@ -211,13 +204,7 @@ export default function OnboardingPage() {
               title="Comment te décrirais-tu ?"
               value={profile.psychology}
               onChange={(value) => updateField("psychology", value)}
-              options={[
-                "Patient",
-                "Impulsif",
-                "Discipliné",
-                "Stressé",
-                "Agressif",
-              ]}
+              options={["Patient", "Impulsif", "Discipliné", "Stressé", "Agressif"]}
             />
           </PremiumCard>
         </FadeIn>
@@ -260,9 +247,7 @@ export default function OnboardingPage() {
           <FadeIn delay={0.1}>
             <PremiumCard>
               <p style={resultLabel}>PROFIL PRIME DÉTECTÉ</p>
-
               <h2 style={resultTitle}>{result.detectedProfile}</h2>
-
               <p style={resultText}>
                 Risque dominant : <strong>{result.risk}</strong>
               </p>
@@ -270,7 +255,6 @@ export default function OnboardingPage() {
 
             <PremiumCard>
               <p style={resultLabel}>PRESCRIPTION ACTIVE</p>
-
               <p style={prescriptionText}>{result.prescription}</p>
             </PremiumCard>
 
@@ -298,11 +282,7 @@ function Question({ title, value, onChange, options }) {
     <>
       <p style={question}>{title}</p>
 
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={select}
-      >
+      <select value={value} onChange={(e) => onChange(e.target.value)} style={select}>
         <option value="">Choisir</option>
 
         {options.map((option) => (
@@ -314,6 +294,15 @@ function Question({ title, value, onChange, options }) {
     </>
   );
 }
+
+const main = {
+  minHeight: "100vh",
+  background: "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
+  color: "white",
+  padding: "32px",
+  paddingBottom: "140px",
+  fontFamily: "Arial, sans-serif",
+};
 
 const label = {
   color: "#D4B06A",
