@@ -9,6 +9,9 @@ import PrimaryButton from "../components/PrimaryButton";
 export default function OnboardingPage() {
   const [profile, setProfile] = useState({
     tradingStyle: "",
+    customStyle: "",
+    entryCriteria: "",
+    invalidation: "",
     experience: "",
     psychology: "",
     weakness: "",
@@ -18,17 +21,13 @@ export default function OnboardingPage() {
   const [result, setResult] = useState(null);
 
   const updateField = (field, value) => {
-    setProfile({
-      ...profile,
-      [field]: value,
-    });
+    setProfile({ ...profile, [field]: value });
   };
 
   const generatePrimeProfile = () => {
     let detectedProfile = "Trader en construction";
     let risk = "Manque de structure";
-    let prescription =
-      "Respecter une checklist complète avant chaque entrée.";
+    let prescription = "Respecter une checklist complète avant chaque entrée.";
 
     let checklist = [
       "Contexte marché validé",
@@ -38,16 +37,29 @@ export default function OnboardingPage() {
       "Invalidation claire",
     ];
 
+    if (profile.tradingStyle === "Autre / personnalisé") {
+      detectedProfile = profile.customStyle || "Trader personnalisé";
+      risk = profile.weakness || "Risque comportemental à surveiller";
+
+      prescription =
+        "Respecter tes critères d’entrée personnels avant toute exécution.";
+
+      checklist = [
+        profile.entryCriteria || "Critères d’entrée personnels validés",
+        profile.invalidation || "Invalidation clairement définie",
+        "Risque défini avant l’entrée",
+        "État émotionnel stable",
+        "Trade conforme à TA méthode",
+      ];
+    }
+
     if (
       profile.tradingStyle === "SMC / Liquidité" &&
       profile.psychology === "Patient"
     ) {
       detectedProfile = "Structure & Liquidité";
       risk = "Anticipation avant confirmation";
-
-      prescription =
-        "Attendre une confirmation complète avant toute exécution.";
-
+      prescription = "Attendre une confirmation complète avant toute exécution.";
       checklist = [
         "Biais HTF validé",
         "Liquidité identifiée",
@@ -62,12 +74,9 @@ export default function OnboardingPage() {
       profile.weakness === "Overtrading"
     ) {
       detectedProfile = "Scalper sous pression";
-
       risk = "Sur-exécution";
-
       prescription =
         "Limiter la session à 2 trades maximum et imposer 5 minutes de pause après chaque perte.";
-
       checklist = [
         "Setup rapide mais validé",
         "Pas d’entrée par ennui",
@@ -79,12 +88,8 @@ export default function OnboardingPage() {
 
     if (profile.weakness === "Revenge trade") {
       detectedProfile = "Trader émotionnel après perte";
-
       risk = "Revenge trade";
-
-      prescription =
-        "Maximum 1 trade après une perte pendant 7 jours.";
-
+      prescription = "Maximum 1 trade après une perte pendant 7 jours.";
       checklist = [
         "Ai-je perdu le trade précédent ?",
         "Ai-je attendu 5 minutes ?",
@@ -103,19 +108,19 @@ export default function OnboardingPage() {
     };
 
     setResult(generatedProfile);
-
-    localStorage.setItem(
-      "primeProfile",
-      JSON.stringify(generatedProfile)
-    );
+    localStorage.setItem("primeProfile", JSON.stringify(generatedProfile));
   };
+
+  const isCustom = profile.tradingStyle === "Autre / personnalisé";
 
   const isComplete =
     profile.tradingStyle &&
     profile.experience &&
     profile.psychology &&
     profile.weakness &&
-    profile.goal;
+    profile.goal &&
+    (!isCustom ||
+      (profile.customStyle && profile.entryCriteria && profile.invalidation));
 
   return (
     <main style={main}>
@@ -130,8 +135,8 @@ export default function OnboardingPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME analyse ton comportement pour générer un coaching
-            personnalisé.
+            PRIME s’adapte à ta méthode, même si ton système ne rentre dans
+            aucune case.
           </p>
         </FadeIn>
 
@@ -140,28 +145,52 @@ export default function OnboardingPage() {
             <Question
               title="Quel est ton style principal ?"
               value={profile.tradingStyle}
-              onChange={(value) =>
-                updateField("tradingStyle", value)
-              }
+              onChange={(value) => updateField("tradingStyle", value)}
               options={[
                 "SMC / Liquidité",
                 "Scalping",
                 "Breakout",
                 "Price Action",
                 "Trend Following",
+                "Autre / personnalisé",
               ]}
             />
           </PremiumCard>
         </FadeIn>
+
+        {isCustom && (
+          <FadeIn delay={0.2}>
+            <PremiumCard>
+              <TextInput
+                title="Décris ta stratégie"
+                value={profile.customStyle}
+                onChange={(value) => updateField("customStyle", value)}
+                placeholder="Ex : VWAP + volume profile + rejet sur niveau clé"
+              />
+
+              <TextInput
+                title="Tes critères d’entrée obligatoires"
+                value={profile.entryCriteria}
+                onChange={(value) => updateField("entryCriteria", value)}
+                placeholder="Ex : confirmation M5 + volume + rejet propre"
+              />
+
+              <TextInput
+                title="Qu’est-ce qui invalide ton setup ?"
+                value={profile.invalidation}
+                onChange={(value) => updateField("invalidation", value)}
+                placeholder="Ex : clôture au-dessus du niveau invalidant"
+              />
+            </PremiumCard>
+          </FadeIn>
+        )}
 
         <FadeIn delay={0.25}>
           <PremiumCard>
             <Question
               title="Ton niveau d’expérience ?"
               value={profile.experience}
-              onChange={(value) =>
-                updateField("experience", value)
-              }
+              onChange={(value) => updateField("experience", value)}
               options={[
                 "Débutant",
                 "Intermédiaire",
@@ -177,9 +206,7 @@ export default function OnboardingPage() {
             <Question
               title="Ton plus gros problème émotionnel ?"
               value={profile.weakness}
-              onChange={(value) =>
-                updateField("weakness", value)
-              }
+              onChange={(value) => updateField("weakness", value)}
               options={[
                 "Revenge trade",
                 "Overtrading",
@@ -196,9 +223,7 @@ export default function OnboardingPage() {
             <Question
               title="Comment te décrirais-tu ?"
               value={profile.psychology}
-              onChange={(value) =>
-                updateField("psychology", value)
-              }
+              onChange={(value) => updateField("psychology", value)}
               options={[
                 "Patient",
                 "Impulsif",
@@ -215,9 +240,7 @@ export default function OnboardingPage() {
             <Question
               title="Ton objectif principal ?"
               value={profile.goal}
-              onChange={(value) =>
-                updateField("goal", value)
-              }
+              onChange={(value) => updateField("goal", value)}
               options={[
                 "Discipline",
                 "Consistance",
@@ -242,9 +265,7 @@ export default function OnboardingPage() {
               padding: 0,
             }}
           >
-            <PrimaryButton>
-              Générer mon profil PRIME
-            </PrimaryButton>
+            <PrimaryButton>Générer mon profil PRIME</PrimaryButton>
           </button>
         </FadeIn>
 
@@ -253,18 +274,13 @@ export default function OnboardingPage() {
             <PremiumCard>
               <p style={resultLabel}>PROFIL PRIME DÉTECTÉ</p>
 
-              <h2 style={resultTitle}>
-                {result.detectedProfile}
-              </h2>
+              <h2 style={resultTitle}>{result.detectedProfile}</h2>
 
               <p style={resultText}>
-                Risque dominant :{" "}
-                <strong>{result.risk}</strong>
+                Risque dominant : <strong>{result.risk}</strong>
               </p>
 
-              <p style={resultSub}>
-                Prescription : {result.prescription}
-              </p>
+              <p style={resultSub}>Prescription : {result.prescription}</p>
             </PremiumCard>
           </FadeIn>
         )}
@@ -294,6 +310,21 @@ function Question({ title, value, onChange, options }) {
         ))}
       </select>
     </>
+  );
+}
+
+function TextInput({ title, value, onChange, placeholder }) {
+  return (
+    <div style={{ marginTop: "22px" }}>
+      <p style={question}>{title}</p>
+
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={textarea}
+      />
+    </div>
   );
 }
 
@@ -331,6 +362,7 @@ const subtitle = {
 
 const question = {
   fontSize: "22px",
+  lineHeight: "30px",
   margin: 0,
 };
 
@@ -344,6 +376,21 @@ const select = {
   fontSize: "16px",
   marginTop: "18px",
   outline: "none",
+};
+
+const textarea = {
+  width: "100%",
+  minHeight: "110px",
+  background: "rgba(15,15,15,0.8)",
+  color: "white",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "18px",
+  padding: "18px",
+  fontSize: "16px",
+  marginTop: "18px",
+  outline: "none",
+  resize: "vertical",
+  fontFamily: "Arial, sans-serif",
 };
 
 const resultLabel = {
