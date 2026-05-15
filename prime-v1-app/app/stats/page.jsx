@@ -1,76 +1,196 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import BottomNav from "../components/BottomNav";
+import FadeIn from "../components/FadeIn";
+import PremiumCard from "../components/PremiumCard";
 
 export default function StatsPage() {
+  const [primeProfile, setPrimeProfile] = useState(null);
+
+  useEffect(() => {
+    const savedProfile = localStorage.getItem("primeProfile");
+
+    if (savedProfile) {
+      setPrimeProfile(JSON.parse(savedProfile));
+    }
+  }, []);
+
+  const disciplineScore = getDisciplineScore(primeProfile?.risk);
+  const disciplineLevel = getDisciplineLevel(disciplineScore);
+
   return (
-    <main style={{ background: "#050505", color: "white", minHeight: "100vh", padding: "24px", paddingBottom: "120px", fontFamily: "Arial, sans-serif" }}>
+    <main style={main}>
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
-        <p style={{ color: "#D4B06A", letterSpacing: "6px", fontSize: "12px", marginBottom: "20px" }}>
-          STATS PRIME
-        </p>
+        <FadeIn delay={0}>
+          <p style={label}>STATS PRIME</p>
 
-        <h1 style={{ fontSize: "46px", lineHeight: "50px", marginBottom: "18px" }}>
-          Ta discipline<br />en données.
-        </h1>
+          <h1 style={title}>
+            Ta discipline
+            <br />
+            en données.
+          </h1>
 
-        <p style={{ color: "#8A8A8A", fontSize: "18px", lineHeight: "30px", marginBottom: "34px" }}>
-          Suis ton évolution, tes erreurs dominantes et ton niveau d’exécution.
-        </p>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
-          <div style={{ background: "#0D0D0D", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "28px", padding: "24px" }}>
-            <p style={{ color: "#777", fontSize: "13px" }}>MOYENNE</p>
-            <h2 style={{ color: "#D4B06A", fontSize: "42px", margin: "12px 0" }}>84</h2>
-            <p style={{ color: "#999" }}>Score discipline</p>
-          </div>
-
-          <div style={{ background: "#0D0D0D", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "28px", padding: "24px" }}>
-            <p style={{ color: "#777", fontSize: "13px" }}>STREAK</p>
-            <h2 style={{ color: "#D4B06A", fontSize: "42px", margin: "12px 0" }}>12j</h2>
-            <p style={{ color: "#999" }}>Routine active</p>
-          </div>
-        </div>
-
-        <div style={{ background: "linear-gradient(180deg,#141414,#0A0A0A)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "30px", padding: "28px", marginBottom: "24px" }}>
-          <p style={{ color: "#777", fontSize: "13px", letterSpacing: "1px", marginBottom: "18px" }}>ERREUR DOMINANTE</p>
-          <h2 style={{ color: "#D4B06A", fontSize: "32px", marginBottom: "14px" }}>Entrée prématurée</h2>
-          <p style={{ color: "#A0A0A0", fontSize: "18px", lineHeight: "30px" }}>
-            Cette erreur apparaît dans 38% de tes sessions récentes.
+          <p style={subtitle}>
+            PRIME transforme ton profil, ton risque dominant et tes habitudes en indicateurs de progression.
           </p>
-        </div>
+        </FadeIn>
 
-        <div style={{ background: "#0D0D0D", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "30px", padding: "28px", marginBottom: "24px" }}>
-          <p style={{ color: "#777", fontSize: "13px", letterSpacing: "1px", marginBottom: "20px" }}>PROGRESSION HEBDO</p>
+        <FadeIn delay={0.2}>
+          <PremiumCard>
+            <p style={cardLabel}>SCORE DISCIPLINE ESTIMÉ</p>
+            <h2 style={score}>{disciplineScore}</h2>
+            <p style={text}>{disciplineLevel}</p>
+          </PremiumCard>
+        </FadeIn>
 
-          {[
-            ["Lun", "78%"],
-            ["Mar", "82%"],
-            ["Mer", "69%"],
-            ["Jeu", "91%"],
-            ["Ven", "84%"],
-          ].map(([day, value]) => (
-            <div key={day} style={{ marginBottom: "18px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                <p style={{ margin: 0, color: "#EAEAEA" }}>{day}</p>
-                <p style={{ margin: 0, color: "#D4B06A" }}>{value}</p>
+        <FadeIn delay={0.35}>
+          <PremiumCard>
+            <p style={cardLabel}>PROFIL ACTIF</p>
+            <h2 style={goldTitle}>
+              {primeProfile?.detectedProfile || "Profil standard"}
+            </h2>
+            <p style={text}>
+              Risque dominant :{" "}
+              <strong>{primeProfile?.risk || "Anticipation / impulsivité"}</strong>
+            </p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.5}>
+          <PremiumCard>
+            <p style={cardLabel}>PRESCRIPTION ACTIVE</p>
+            <h2 style={cardTitle}>
+              {primeProfile?.prescription ||
+                "Respecter une checklist complète avant chaque entrée."}
+            </h2>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.65}>
+          <PremiumCard>
+            <p style={cardLabel}>CHECKLIST SUIVIE</p>
+
+            {(primeProfile?.checklist || [
+              "Contexte marché validé",
+              "Setup conforme au plan",
+              "Risque défini avant l’entrée",
+              "État émotionnel stable",
+              "Invalidation claire",
+            ]).map((item) => (
+              <div key={item} style={listItem}>
+                <span style={dot} />
+                <p style={listText}>{item}</p>
               </div>
-
-              <div style={{ height: "8px", background: "#1A1A1A", borderRadius: "999px", overflow: "hidden" }}>
-                <div style={{ width: value, height: "100%", background: "#D4B06A", borderRadius: "999px" }} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ background: "#0D0D0D", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "30px", padding: "28px" }}>
-          <p style={{ color: "#777", fontSize: "13px", letterSpacing: "1px", marginBottom: "16px" }}>NIVEAU PRIME</p>
-          <h2 style={{ fontSize: "34px", color: "#D4B06A", marginBottom: "14px" }}>Exécutante disciplinée</h2>
-          <p style={{ color: "#A0A0A0", fontSize: "18px", lineHeight: "30px" }}>
-            Ton score montre une vraie progression dans le respect du plan.
-          </p>
-        </div>
+            ))}
+          </PremiumCard>
+        </FadeIn>
       </div>
 
-      <BottomNav active="Prime" />
+      <BottomNav active="Setup" />
     </main>
   );
 }
+
+function getDisciplineScore(risk) {
+  if (risk === "Revenge trade") return 62;
+  if (risk === "Sur-exécution") return 68;
+  if (risk === "Entrée impulsive") return 70;
+  if (risk === "Anticipation avant confirmation") return 76;
+  if (risk === "Excès de confiance") return 82;
+  return 74;
+}
+
+function getDisciplineLevel(score) {
+  if (score >= 85) return "Discipline solide. Continue de stabiliser ton process.";
+  if (score >= 75) return "Bonne base. Ton enjeu est de rester constante.";
+  if (score >= 65) return "Zone fragile. PRIME doit renforcer tes garde-fous.";
+  return "Risque élevé. Priorité au contrôle émotionnel.";
+}
+
+const main = {
+  minHeight: "100vh",
+  background: "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
+  color: "white",
+  padding: "32px",
+  paddingBottom: "140px",
+  fontFamily: "Arial, sans-serif",
+};
+
+const label = {
+  color: "#D4B06A",
+  letterSpacing: "6px",
+  fontSize: "12px",
+  marginBottom: "24px",
+};
+
+const title = {
+  fontSize: "52px",
+  lineHeight: "0.96",
+  fontWeight: "700",
+  marginBottom: "24px",
+  letterSpacing: "-2px",
+};
+
+const subtitle = {
+  color: "rgba(255,255,255,0.64)",
+  fontSize: "19px",
+  lineHeight: "1.6",
+  marginBottom: "34px",
+};
+
+const cardLabel = {
+  color: "rgba(255,255,255,0.45)",
+  fontSize: "13px",
+  letterSpacing: "2px",
+  marginBottom: "14px",
+};
+
+const score = {
+  color: "#D4B06A",
+  fontSize: "84px",
+  lineHeight: "90px",
+  margin: "0 0 16px",
+};
+
+const goldTitle = {
+  color: "#D4B06A",
+  fontSize: "34px",
+  lineHeight: "40px",
+  margin: "0 0 14px",
+};
+
+const cardTitle = {
+  color: "white",
+  fontSize: "24px",
+  lineHeight: "36px",
+  margin: 0,
+};
+
+const text = {
+  color: "rgba(255,255,255,0.62)",
+  fontSize: "18px",
+  lineHeight: "30px",
+};
+
+const listItem = {
+  display: "flex",
+  alignItems: "center",
+  gap: "14px",
+  marginBottom: "16px",
+};
+
+const dot = {
+  width: "10px",
+  height: "10px",
+  borderRadius: "999px",
+  background: "#D4B06A",
+  boxShadow: "0 0 18px rgba(212,176,106,0.25)",
+};
+
+const listText = {
+  margin: 0,
+  color: "rgba(255,255,255,0.82)",
+  fontSize: "18px",
+  lineHeight: "28px",
+};
