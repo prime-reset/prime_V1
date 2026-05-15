@@ -27,7 +27,9 @@ export default function OnboardingPage() {
   const generatePrimeProfile = () => {
     let detectedProfile = "Trader en construction";
     let risk = "Manque de structure";
-    let prescription = "Respecter une checklist complète avant chaque entrée.";
+    let prescription =
+      "Respecter une checklist complète avant chaque entrée.";
+
     let checklist = [
       "Contexte marché validé",
       "Setup conforme au plan",
@@ -42,8 +44,10 @@ export default function OnboardingPage() {
     ) {
       detectedProfile = "Structure & Liquidité";
       risk = "Anticipation avant confirmation";
+
       prescription =
         "Attendre une confirmation complète avant toute exécution.";
+
       checklist = [
         "Biais HTF validé",
         "Liquidité identifiée",
@@ -58,9 +62,12 @@ export default function OnboardingPage() {
       profile.weakness === "Overtrading"
     ) {
       detectedProfile = "Scalper sous pression";
+
       risk = "Sur-exécution";
+
       prescription =
         "Limiter la session à 2 trades maximum et imposer 5 minutes de pause après chaque perte.";
+
       checklist = [
         "Setup rapide mais validé",
         "Pas d’entrée par ennui",
@@ -72,41 +79,18 @@ export default function OnboardingPage() {
 
     if (profile.weakness === "Revenge trade") {
       detectedProfile = "Trader émotionnel après perte";
+
       risk = "Revenge trade";
-      prescription = "Maximum 1 trade après une perte pendant 7 jours.";
+
+      prescription =
+        "Maximum 1 trade après une perte pendant 7 jours.";
+
       checklist = [
         "Ai-je perdu le trade précédent ?",
         "Ai-je attendu 5 minutes ?",
         "Le setup est-il réellement valide ?",
         "Mon risque est-il réduit ?",
         "Suis-je en train de me refaire ?",
-      ];
-    }
-
-    if (profile.weakness === "FOMO") {
-      detectedProfile = "Trader réactif au mouvement";
-      risk = "Entrée impulsive";
-      prescription =
-        "Interdiction d’entrer sur bougie d’impulsion sans pullback ou confirmation.";
-      checklist = [
-        "Le mouvement est-il déjà parti ?",
-        "Ai-je une zone claire ?",
-        "Ai-je attendu un pullback ?",
-        "Le R:R est-il encore valable ?",
-        "Est-ce mon plan ou mon émotion ?",
-      ];
-    }
-
-    if (profile.psychology === "Discipliné" && profile.experience === "Avancé") {
-      detectedProfile = "Exécutant discipliné";
-      risk = "Excès de confiance";
-      prescription = "Maintenir le même risque même après une série de gains.";
-      checklist = [
-        "Plan respecté",
-        "Setup A ou A+ uniquement",
-        "Risque stable",
-        "Pas d’augmentation après gain",
-        "Journal rempli après session",
       ];
     }
 
@@ -120,7 +104,10 @@ export default function OnboardingPage() {
 
     setResult(generatedProfile);
 
-    localStorage.setItem("primeProfile", JSON.stringify(generatedProfile));
+    localStorage.setItem(
+      "primeProfile",
+      JSON.stringify(generatedProfile)
+    );
   };
 
   const isComplete =
@@ -143,8 +130,8 @@ export default function OnboardingPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME analyse ton style, ta psychologie et tes erreurs dominantes
-            pour générer un coaching personnalisé.
+            PRIME analyse ton comportement pour générer un coaching
+            personnalisé.
           </p>
         </FadeIn>
 
@@ -153,7 +140,9 @@ export default function OnboardingPage() {
             <Question
               title="Quel est ton style principal ?"
               value={profile.tradingStyle}
-              onChange={(value) => updateField("tradingStyle", value)}
+              onChange={(value) =>
+                updateField("tradingStyle", value)
+              }
               options={[
                 "SMC / Liquidité",
                 "Scalping",
@@ -170,7 +159,9 @@ export default function OnboardingPage() {
             <Question
               title="Ton niveau d’expérience ?"
               value={profile.experience}
-              onChange={(value) => updateField("experience", value)}
+              onChange={(value) =>
+                updateField("experience", value)
+              }
               options={[
                 "Débutant",
                 "Intermédiaire",
@@ -186,7 +177,9 @@ export default function OnboardingPage() {
             <Question
               title="Ton plus gros problème émotionnel ?"
               value={profile.weakness}
-              onChange={(value) => updateField("weakness", value)}
+              onChange={(value) =>
+                updateField("weakness", value)
+              }
               options={[
                 "Revenge trade",
                 "Overtrading",
@@ -203,8 +196,16 @@ export default function OnboardingPage() {
             <Question
               title="Comment te décrirais-tu ?"
               value={profile.psychology}
-              onChange={(value) => updateField("psychology", value)}
-              options={["Patient", "Impulsif", "Discipliné", "Stressé", "Agressif"]}
+              onChange={(value) =>
+                updateField("psychology", value)
+              }
+              options={[
+                "Patient",
+                "Impulsif",
+                "Discipliné",
+                "Stressé",
+                "Agressif",
+              ]}
             />
           </PremiumCard>
         </FadeIn>
@@ -214,7 +215,9 @@ export default function OnboardingPage() {
             <Question
               title="Ton objectif principal ?"
               value={profile.goal}
-              onChange={(value) => updateField("goal", value)}
+              onChange={(value) =>
+                updateField("goal", value)
+              }
               options={[
                 "Discipline",
                 "Consistance",
@@ -239,40 +242,35 @@ export default function OnboardingPage() {
               padding: 0,
             }}
           >
-            <PrimaryButton>Générer mon profil PRIME</PrimaryButton>
+            <PrimaryButton>
+              Générer mon profil PRIME
+            </PrimaryButton>
           </button>
         </FadeIn>
 
         {result && (
-          <FadeIn delay={0.1}>
+          <FadeIn delay={0.8}>
             <PremiumCard>
               <p style={resultLabel}>PROFIL PRIME DÉTECTÉ</p>
-              <h2 style={resultTitle}>{result.detectedProfile}</h2>
+
+              <h2 style={resultTitle}>
+                {result.detectedProfile}
+              </h2>
+
               <p style={resultText}>
-                Risque dominant : <strong>{result.risk}</strong>
+                Risque dominant :{" "}
+                <strong>{result.risk}</strong>
               </p>
-            </PremiumCard>
 
-            <PremiumCard>
-              <p style={resultLabel}>PRESCRIPTION ACTIVE</p>
-              <p style={prescriptionText}>{result.prescription}</p>
-            </PremiumCard>
-
-            <PremiumCard>
-              <p style={resultLabel}>CHECKLIST PERSONNALISÉE</p>
-
-              {result.checklist.map((item) => (
-                <div key={item} style={checkItem}>
-                  <span style={checkDot} />
-                  <p style={checkText}>{item}</p>
-                </div>
-              ))}
+              <p style={resultSub}>
+                Prescription : {result.prescription}
+              </p>
             </PremiumCard>
           </FadeIn>
         )}
       </div>
 
-      <BottomNav active="Profil" />
+      <BottomNav active="Setup" />
     </main>
   );
 }
@@ -282,7 +280,11 @@ function Question({ title, value, onChange, options }) {
     <>
       <p style={question}>{title}</p>
 
-      <select value={value} onChange={(e) => onChange(e.target.value)} style={select}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={select}
+      >
         <option value="">Choisir</option>
 
         {options.map((option) => (
@@ -297,7 +299,8 @@ function Question({ title, value, onChange, options }) {
 
 const main = {
   minHeight: "100vh",
-  background: "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
+  background:
+    "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
   color: "white",
   padding: "32px",
   paddingBottom: "140px",
@@ -328,7 +331,6 @@ const subtitle = {
 
 const question = {
   fontSize: "22px",
-  lineHeight: "30px",
   margin: 0,
 };
 
@@ -354,41 +356,17 @@ const resultLabel = {
 const resultTitle = {
   color: "#D4B06A",
   fontSize: "34px",
-  lineHeight: "40px",
-  margin: "0 0 16px",
+  marginBottom: "12px",
 };
 
 const resultText = {
-  color: "rgba(255,255,255,0.65)",
+  color: "rgba(255,255,255,0.72)",
   fontSize: "18px",
   lineHeight: "30px",
 };
 
-const prescriptionText = {
-  color: "white",
-  fontSize: "24px",
-  lineHeight: "36px",
-  fontWeight: "700",
-};
-
-const checkItem = {
-  display: "flex",
-  alignItems: "center",
-  gap: "14px",
-  marginBottom: "16px",
-};
-
-const checkDot = {
-  width: "10px",
-  height: "10px",
-  borderRadius: "999px",
-  background: "#D4B06A",
-  boxShadow: "0 0 18px rgba(212,176,106,0.25)",
-};
-
-const checkText = {
-  margin: 0,
-  color: "rgba(255,255,255,0.82)",
-  fontSize: "18px",
+const resultSub = {
+  color: "rgba(255,255,255,0.55)",
+  fontSize: "16px",
   lineHeight: "28px",
 };
