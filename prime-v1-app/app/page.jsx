@@ -1,4 +1,4 @@
-"use client";
+         "use client";
 
 import Link from "next/link";
 import {
@@ -42,8 +42,8 @@ export default function HomePage() {
             linear-gradient(
               180deg,
               rgba(0,0,0,0.12) 0%,
-              rgba(0,0,0,0.22) 28%,
-              rgba(0,0,0,0.70) 64%,
+              rgba(0,0,0,0.14) 28%,
+              rgba(0,0,0,0.74) 64%,
               rgba(0,0,0,0.98) 100%
             ),
             url("/prime-panther-bg.png.png");
@@ -52,14 +52,17 @@ export default function HomePage() {
             cover,
             min(120vw, 860px) auto;
 
-        background-position:
-  center top,
-  center -155px;
+          background-position:
+            center top,
+            center -225px;
+
           background-repeat: no-repeat;
           background-attachment: scroll;
 
           overflow-x: hidden;
           position: relative;
+
+          animation: fadeIn 0.8s ease both;
         }
 
         .prime-home::before {
@@ -69,13 +72,13 @@ export default function HomePage() {
           background:
             radial-gradient(
               circle at 50% 10%,
-              rgba(214,178,95,0.18),
-              transparent 30%
+              rgba(214,178,95,0.16),
+              transparent 32%
             ),
             linear-gradient(
               180deg,
               rgba(0,0,0,0) 0%,
-              rgba(0,0,0,0.35) 48%,
+              rgba(0,0,0,0.32) 48%,
               rgba(0,0,0,0.92) 100%
             );
           pointer-events: none;
@@ -152,14 +155,16 @@ export default function HomePage() {
           backdrop-filter: blur(20px);
           animation: fadeUp 0.75s ease both;
           transition:
-            transform 0.25s ease,
-            border-color 0.25s ease,
-            background 0.25s ease;
+            transform 0.28s ease,
+            border-color 0.28s ease,
+            background 0.28s ease,
+            box-shadow 0.28s ease;
         }
 
         .action-card:hover {
-          transform: translateY(-3px);
+          transform: translateY(-3px) scale(1.02);
           border-color: rgba(214,178,95,0.75);
+          box-shadow: 0 0 28px rgba(214,178,95,0.13), 0 20px 60px rgba(0,0,0,0.55);
           background:
             linear-gradient(145deg, rgba(214,178,95,0.18), rgba(255,255,255,0.04)),
             rgba(0,0,0,0.50);
@@ -219,6 +224,17 @@ export default function HomePage() {
           box-shadow: 0 24px 70px rgba(0,0,0,0.52);
           backdrop-filter: blur(22px);
           animation: fadeUp 0.85s ease both;
+          transition:
+            transform 0.32s ease,
+            border-color 0.32s ease,
+            box-shadow 0.32s ease,
+            background 0.32s ease;
+        }
+
+        .card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(214,178,95,0.48);
+          box-shadow: 0 0 40px rgba(214,178,95,0.10), 0 24px 70px rgba(0,0,0,0.58);
         }
 
         .card::before {
@@ -363,6 +379,18 @@ export default function HomePage() {
           font-size: 30px;
           font-weight: 850;
           color: #d6b25f;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         @keyframes fadeUp {
