@@ -46,16 +46,14 @@ export default function HomePage() {
               rgba(0,0,0,0.68) 62%,
               rgba(0,0,0,0.96) 100%
             ),
-            url("/background.jpg");
-
+            url("/prime-panther-bg.png"),
           background-size:
-            cover,
-            min(100vw, 720px) auto;
+  cover,
+  min(115vw, 820px) auto;
 
-          background-position:
-            center top,
-            center -20px;
-
+background-position:
+  center top,
+  center -40px;
           background-repeat: no-repeat;
           background-attachment: scroll;
 
