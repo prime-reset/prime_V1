@@ -7,8 +7,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import BottomNav from "@/components/BottomNav";
-import StreakCard from "@/components/StreakCard";
+import BottomNav from "./components/BottomNav";
+import StreakCard from "./components/StreakCard";
 
 export default function HomePage() {
   return (
@@ -64,8 +64,15 @@ export default function HomePage() {
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
                 <ShieldCheck size={20} />
               </div>
-              <p className="text-xs text-white/40">Score discipline</p>
-              <p className="mt-1 text-2xl font-semibold">82%</p>
+
+              <p className="text-xs text-white/40">
+                Score discipline
+              </p>
+
+              <p className="mt-1 text-2xl font-semibold">
+                82%
+              </p>
+
               <p className="mt-2 text-xs text-white/45">
                 Très bon contrôle aujourd’hui.
               </p>
@@ -75,8 +82,15 @@ export default function HomePage() {
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
                 <Flame size={20} />
               </div>
-              <p className="text-xs text-white/40">État mental</p>
-              <p className="mt-1 text-2xl font-semibold">Stable</p>
+
+              <p className="text-xs text-white/40">
+                État mental
+              </p>
+
+              <p className="mt-1 text-2xl font-semibold">
+                Stable
+              </p>
+
               <p className="mt-2 text-xs text-white/45">
                 Tu peux trader avec clarté.
               </p>
@@ -88,8 +102,12 @@ export default function HomePage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
                 <Target size={20} />
               </div>
+
               <div>
-                <p className="text-xs text-white/40">Prescription active</p>
+                <p className="text-xs text-white/40">
+                  Prescription active
+                </p>
+
                 <h3 className="font-semibold">
                   Maximum 2 trades aujourd’hui
                 </h3>
@@ -107,9 +125,15 @@ export default function HomePage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
                 <BarChart3 size={20} />
               </div>
+
               <div>
-                <p className="text-xs text-white/40">Progression PRIME</p>
-                <h3 className="font-semibold">Niveau 3 — Trader structuré</h3>
+                <p className="text-xs text-white/40">
+                  Progression PRIME
+                </p>
+
+                <h3 className="font-semibold">
+                  Niveau 3 — Trader structuré
+                </h3>
               </div>
             </div>
 
