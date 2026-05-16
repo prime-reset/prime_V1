@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Flame,
   ShieldCheck,
@@ -7,180 +9,436 @@ import {
   Sparkles,
   Trophy,
   CalendarCheck,
+  Zap,
+  Crown,
 } from "lucide-react";
 
 import BottomNav from "./components/BottomNav";
 
 export default function HomePage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top, rgba(255,255,255,0.12), transparent 30%), #000",
-        color: "white",
-        padding: "28px 18px 110px",
-        fontFamily: "Inter, Arial, sans-serif",
-      }}
-    >
-      <div style={{ maxWidth: 430, margin: "0 auto" }}>
-        <header
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 28,
-          }}
-        >
+    <main className="prime-home">
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          background: #030303;
+        }
+
+        .prime-home {
+          min-height: 100vh;
+          color: white;
+          padding: 28px 18px 120px;
+          font-family: Inter, Arial, sans-serif;
+          background:
+            radial-gradient(circle at 20% 0%, rgba(214,178,95,0.22), transparent 28%),
+            radial-gradient(circle at 90% 20%, rgba(255,255,255,0.12), transparent 22%),
+            linear-gradient(180deg, #101010 0%, #050505 42%, #000 100%);
+          overflow-x: hidden;
+          position: relative;
+        }
+
+        .prime-home::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+          background-size: 42px 42px;
+          mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 75%);
+          pointer-events: none;
+        }
+
+        .page {
+          max-width: 430px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 2;
+        }
+
+        .hero {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 26px;
+          animation: fadeUp 0.7s ease both;
+        }
+
+        .brand {
+          margin: 0;
+          font-size: 12px;
+          letter-spacing: 7px;
+          color: rgba(214,178,95,0.8);
+        }
+
+        .title {
+          margin: 8px 0 0;
+          font-size: 38px;
+          line-height: 1;
+          font-weight: 800;
+          letter-spacing: -1.4px;
+        }
+
+        .premium-icon {
+          width: 62px;
+          height: 62px;
+          border-radius: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+          border: 1px solid rgba(255,255,255,0.14);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 50px rgba(0,0,0,0.45);
+        }
+
+        .card {
+          position: relative;
+          overflow: hidden;
+          border-radius: 32px;
+          padding: 22px;
+          margin-bottom: 18px;
+          background:
+            linear-gradient(145deg, rgba(255,255,255,0.105), rgba(255,255,255,0.035)),
+            rgba(255,255,255,0.035);
+          border: 1px solid rgba(255,255,255,0.12);
+          box-shadow: 0 22px 70px rgba(0,0,0,0.46);
+          backdrop-filter: blur(22px);
+          animation: fadeUp 0.75s ease both;
+        }
+
+        .card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at top left, rgba(214,178,95,0.15), transparent 42%);
+          pointer-events: none;
+        }
+
+        .card > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .gold-card {
+          background:
+            linear-gradient(145deg, rgba(214,178,95,0.18), rgba(255,255,255,0.04)),
+            rgba(255,255,255,0.04);
+        }
+
+        .row {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .between {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .icon-box {
+          width: 52px;
+          height: 52px;
+          min-width: 52px;
+          border-radius: 20px;
+          background: rgba(255,255,255,0.09);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+        }
+
+        .icon-box.light {
+          background: linear-gradient(145deg, #ffffff, #d8d8d8);
+          color: black;
+        }
+
+        .label {
+          margin: 0;
+          font-size: 12px;
+          color: rgba(255,255,255,0.46);
+        }
+
+        .gold {
+          color: rgba(214,178,95,0.92);
+        }
+
+        .card-title {
+          margin: 2px 0 0;
+          font-size: 21px;
+          font-weight: 800;
+          letter-spacing: -0.5px;
+        }
+
+        .big-title {
+          margin: 8px 0 0;
+          font-size: 32px;
+          font-weight: 850;
+          letter-spacing: -0.8px;
+        }
+
+        .text {
+          margin: 18px 0 0;
+          color: rgba(255,255,255,0.64);
+          font-size: 15px;
+          line-height: 1.65;
+        }
+
+        .progress-head {
+          display: flex;
+          justify-content: space-between;
+          margin: 20px 0 7px;
+          font-size: 12px;
+          color: rgba(255,255,255,0.48);
+        }
+
+        .progress {
+          height: 9px;
+          width: 100%;
+          background: rgba(255,255,255,0.11);
+          border-radius: 999px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #d6b25f, #ffffff);
+          box-shadow: 0 0 24px rgba(214,178,95,0.42);
+          animation: loadBar 1.2s ease both;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-top: 20px;
+        }
+
+        .mini {
+          border-radius: 22px;
+          padding: 14px;
+          background: rgba(0,0,0,0.22);
+          border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .mini p {
+          margin: 0;
+        }
+
+        .mini-value {
+          margin-top: 4px !important;
+          font-size: 21px;
+          font-weight: 800;
+        }
+
+        .two-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+        }
+
+        .small-card {
+          min-height: 170px;
+          border-radius: 30px;
+          padding: 20px;
+          background:
+            linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.025));
+          border: 1px solid rgba(255,255,255,0.11);
+          box-shadow: 0 20px 55px rgba(0,0,0,0.44);
+          animation: fadeUp 0.8s ease both;
+        }
+
+        .small-value {
+          margin: 8px 0;
+          font-size: 30px;
+          font-weight: 850;
+          letter-spacing: -0.8px;
+        }
+
+        .mission {
+          margin-top: 18px;
+          border-radius: 24px;
+          padding: 16px;
+          background: rgba(0,0,0,0.25);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          margin-top: 16px;
+          padding: 9px 12px;
+          border-radius: 999px;
+          background: rgba(214,178,95,0.13);
+          border: 1px solid rgba(214,178,95,0.24);
+          color: rgba(255,255,255,0.82);
+          font-size: 12px;
+        }
+
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes loadBar {
+          from {
+            width: 0%;
+          }
+        }
+      `}</style>
+
+      <div className="page">
+        <header className="hero">
           <div>
-            <p
-              style={{
-                fontSize: 12,
-                letterSpacing: 4,
-                color: "rgba(255,255,255,0.45)",
-                margin: 0,
-              }}
-            >
-              PRIME.
-            </p>
-            <h1 style={{ fontSize: 34, margin: "8px 0 0", fontWeight: 700 }}>
-              Discipline Mode
-            </h1>
+            <p className="brand">PRIME.</p>
+            <h1 className="title">Discipline Mode</h1>
           </div>
 
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 18,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.06)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Sparkles size={22} />
+          <div className="premium-icon">
+            <Sparkles size={26} />
           </div>
         </header>
 
-        <Card>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <IconBox light>
-              <Brain size={22} />
-            </IconBox>
+        <section className="card gold-card">
+          <div className="row">
+            <div className="icon-box light">
+              <Brain size={25} />
+            </div>
+
             <div>
-              <p style={label}>Coach PRIME</p>
-              <h2 style={{ margin: 0, fontSize: 19 }}>
+              <p className="label gold">Coach PRIME</p>
+              <h2 className="card-title">
                 Les choses sérieuses commencent.
               </h2>
             </div>
           </div>
 
-          <p style={text}>
-            Ton objectif est simple : maintenir une discipline constante. PRIME
-            t’aide à identifier tes erreurs, corriger ton comportement et
-            construire le trader que tu deviens.
+          <p className="text">
+            Ton objectif est simple : maintenir une discipline constante.
+            PRIME t’aide à identifier tes erreurs, corriger ton comportement
+            et construire le trader que tu deviens.
           </p>
-        </Card>
 
-        <Card>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div className="pill">
+            <Zap size={14} />
+            Mode exécution activé
+          </div>
+        </section>
+
+        <section className="card">
+          <div className="between">
             <div>
-              <p style={label}>Streak PRIME</p>
-              <h2 style={{ fontSize: 28, margin: "8px 0 0" }}>
-                4 jours disciplinés
-              </h2>
+              <p className="label gold">Streak PRIME</p>
+              <h2 className="big-title">4 jours disciplinés</h2>
             </div>
 
-            <IconBox light>
-              <Flame size={28} />
-            </IconBox>
+            <div className="icon-box light">
+              <Flame size={29} />
+            </div>
           </div>
 
-          <p style={text}>
+          <p className="text">
             Tu construis ta régularité. Chaque journée où tu respectes ton plan
             renforce ton identité de trader discipliné.
           </p>
 
-          <div style={{ marginTop: 20 }}>
-            <div style={rowBetween}>
-              <span>Objectif semaine</span>
-              <span>4/5 jours</span>
-            </div>
-
-            <div style={progressBg}>
-              <div style={{ ...progressFill, width: "80%" }} />
-            </div>
+          <div className="progress-head">
+            <span>Objectif semaine</span>
+            <span>4/5 jours</span>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 12,
-              marginTop: 18,
-            }}
-          >
+          <div className="progress">
+            <div className="progress-fill" style={{ width: "80%" }} />
+          </div>
+
+          <div className="stats-grid">
             <MiniStat icon={<CalendarCheck size={18} />} title="Série" value="4j" />
             <MiniStat icon={<Trophy size={18} />} title="Record" value="12j" />
             <MiniStat icon={<ShieldCheck size={18} />} title="Statut" value="Actif" />
           </div>
-        </Card>
+        </section>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="two-grid">
           <SmallCard
-            icon={<ShieldCheck size={20} />}
+            icon={<ShieldCheck size={21} />}
             title="Score discipline"
             value="82%"
             desc="Très bon contrôle aujourd’hui."
           />
 
           <SmallCard
-            icon={<Flame size={20} />}
+            icon={<Flame size={21} />}
             title="État mental"
             value="Stable"
             desc="Tu peux trader avec clarté."
           />
         </div>
 
-        <Card>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <IconBox>
-              <Target size={20} />
-            </IconBox>
+        <section className="card">
+          <div className="row">
+            <div className="icon-box">
+              <Target size={22} />
+            </div>
+
             <div>
-              <p style={label}>Prescription active</p>
-              <h3 style={{ margin: 0 }}>Maximum 2 trades aujourd’hui</h3>
+              <p className="label gold">Prescription active</p>
+              <h3 className="card-title">
+                Maximum 2 trades aujourd’hui
+              </h3>
             </div>
           </div>
 
-          <p style={text}>
+          <p className="text">
             Ta priorité n’est pas de faire plus. Ta priorité est de respecter
             ton plan, limiter l’impulsivité et protéger ton capital mental.
           </p>
-        </Card>
+        </section>
 
-        <Card>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <IconBox>
-              <BarChart3 size={20} />
-            </IconBox>
+        <section className="card">
+          <div className="row">
+            <div className="icon-box">
+              <BarChart3 size={22} />
+            </div>
+
             <div>
-              <p style={label}>Progression PRIME</p>
-              <h3 style={{ margin: 0 }}>Niveau 3 — Trader structuré</h3>
+              <p className="label gold">Progression PRIME</p>
+              <h3 className="card-title">
+                Niveau 3 — Trader structuré
+              </h3>
             </div>
           </div>
 
-          <div style={{ ...progressBg, marginTop: 20 }}>
-            <div style={{ ...progressFill, width: "64%" }} />
-          </div>
-
-          <div style={rowBetween}>
+          <div className="progress-head">
             <span>640 XP</span>
             <span>1000 XP</span>
           </div>
-        </Card>
+
+          <div className="progress">
+            <div className="progress-fill" style={{ width: "64%" }} />
+          </div>
+
+          <div className="mission">
+            <div className="row">
+              <Crown size={20} color="#d6b25f" />
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.72)" }}>
+                Prochain objectif : débloquer le niveau Trader discipliné.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
 
       <BottomNav />
@@ -188,110 +446,29 @@ export default function HomePage() {
   );
 }
 
-function Card({ children }) {
-  return (
-    <div
-      style={{
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.045)",
-        borderRadius: 28,
-        padding: 20,
-        marginBottom: 18,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.45)",
-        backdropFilter: "blur(18px)",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function IconBox({ children, light }) {
-  return (
-    <div
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: 18,
-        background: light ? "white" : "rgba(255,255,255,0.08)",
-        color: light ? "black" : "white",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function MiniStat({ icon, title, value }) {
   return (
-    <div
-      style={{
-        border: "1px solid rgba(255,255,255,0.10)",
-        borderRadius: 20,
-        padding: 12,
-        background: "rgba(255,255,255,0.035)",
-      }}
-    >
-      <div style={{ color: "rgba(255,255,255,0.7)" }}>{icon}</div>
-      <p style={{ ...label, marginTop: 8 }}>{title}</p>
-      <p style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{value}</p>
+    <div className="mini">
+      <div style={{ color: "rgba(255,255,255,0.68)", marginBottom: 12 }}>
+        {icon}
+      </div>
+      <p className="label">{title}</p>
+      <p className="mini-value">{value}</p>
     </div>
   );
 }
 
 function SmallCard({ icon, title, value, desc }) {
   return (
-    <div
-      style={{
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.045)",
-        borderRadius: 26,
-        padding: 16,
-        marginBottom: 18,
-      }}
-    >
-      <IconBox>{icon}</IconBox>
-      <p style={{ ...label, marginTop: 14 }}>{title}</p>
-      <p style={{ margin: "4px 0", fontSize: 26, fontWeight: 700 }}>{value}</p>
-      <p style={{ ...text, fontSize: 12 }}>{desc}</p>
+    <div className="small-card">
+      <div className="icon-box">{icon}</div>
+      <p className="label gold" style={{ marginTop: 18 }}>
+        {title}
+      </p>
+      <p className="small-value">{value}</p>
+      <p className="text" style={{ fontSize: 13, marginTop: 0 }}>
+        {desc}
+      </p>
     </div>
   );
 }
-
-const label = {
-  margin: 0,
-  fontSize: 12,
-  color: "rgba(255,255,255,0.45)",
-};
-
-const text = {
-  fontSize: 14,
-  lineHeight: 1.6,
-  color: "rgba(255,255,255,0.62)",
-  marginTop: 16,
-};
-
-const rowBetween = {
-  display: "flex",
-  justifyContent: "space-between",
-  fontSize: 12,
-  color: "rgba(255,255,255,0.45)",
-  marginTop: 10,
-};
-
-const progressBg = {
-  width: "100%",
-  height: 8,
-  borderRadius: 999,
-  background: "rgba(255,255,255,0.10)",
-  overflow: "hidden",
-};
-
-const progressFill = {
-  height: "100%",
-  borderRadius: 999,
-  background: "white",
-};
