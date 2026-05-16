@@ -35,18 +35,30 @@ export default function HomePage() {
           color: white;
           padding: 34px 18px 125px;
           font-family: Inter, Arial, sans-serif;
-          background:
+
+          background-color: #000;
+
+          background-image:
             linear-gradient(
               180deg,
-              rgba(0,0,0,0.18) 0%,
-              rgba(0,0,0,0.32) 35%,
-              rgba(0,0,0,0.92) 100%
+              rgba(0,0,0,0.05) 0%,
+              rgba(0,0,0,0.20) 28%,
+              rgba(0,0,0,0.68) 62%,
+              rgba(0,0,0,0.96) 100%
             ),
             url("/background.jpg");
-          background-size: cover;
-          background-position: center top;
+
+          background-size:
+            cover,
+            min(100vw, 720px) auto;
+
+          background-position:
+            center top,
+            center -20px;
+
           background-repeat: no-repeat;
-          background-attachment: fixed;
+          background-attachment: scroll;
+
           overflow-x: hidden;
           position: relative;
         }
@@ -55,9 +67,20 @@ export default function HomePage() {
           content: "";
           position: fixed;
           inset: 0;
+
           background:
-            radial-gradient(circle at top, rgba(214,178,95,0.18), transparent 34%),
-            radial-gradient(circle at 50% 20%, rgba(255,255,255,0.08), transparent 26%);
+            radial-gradient(
+              circle at 50% 12%,
+              rgba(214,178,95,0.20),
+              transparent 28%
+            ),
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0) 0%,
+              rgba(0,0,0,0.28) 45%,
+              rgba(0,0,0,0.88) 100%
+            );
+
           pointer-events: none;
         }
 
@@ -131,7 +154,10 @@ export default function HomePage() {
           box-shadow: 0 20px 60px rgba(0,0,0,0.46);
           backdrop-filter: blur(20px);
           animation: fadeUp 0.75s ease both;
-          transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+          transition:
+            transform 0.25s ease,
+            border-color 0.25s ease,
+            background 0.25s ease;
         }
 
         .action-card:hover {
@@ -202,7 +228,12 @@ export default function HomePage() {
           content: "";
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at top left, rgba(214,178,95,0.18), transparent 42%);
+          background:
+            radial-gradient(
+              circle at top left,
+              rgba(214,178,95,0.18),
+              transparent 42%
+            );
           pointer-events: none;
         }
 
@@ -287,7 +318,12 @@ export default function HomePage() {
         .progress-fill {
           height: 100%;
           border-radius: 999px;
-          background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
+          background: linear-gradient(
+            90deg,
+            #9d742f,
+            #d6b25f,
+            #fff2b8
+          );
           box-shadow: 0 0 24px rgba(214,178,95,0.55);
           animation: loadBar 1.15s ease both;
         }
@@ -337,6 +373,7 @@ export default function HomePage() {
             opacity: 0;
             transform: translateY(18px) scale(0.985);
           }
+
           to {
             opacity: 1;
             transform: translateY(0) scale(1);
@@ -417,7 +454,10 @@ export default function HomePage() {
 
               <div>
                 <p className="label">Streak PRIME</p>
-                <h2 className="card-title">4 jours disciplinés</h2>
+
+                <h2 className="card-title">
+                  4 jours disciplinés
+                </h2>
               </div>
             </div>
           </div>
@@ -433,13 +473,30 @@ export default function HomePage() {
           </div>
 
           <div className="progress">
-            <div className="progress-fill" style={{ width: "80%" }} />
+            <div
+              className="progress-fill"
+              style={{ width: "80%" }}
+            />
           </div>
 
           <div className="stats-grid">
-            <MiniStat icon={<CalendarDays size={19} />} title="Série" value="4j" />
-            <MiniStat icon={<Trophy size={19} />} title="Record" value="12j" />
-            <MiniStat icon={<ShieldCheck size={19} />} title="Statut" value="Actif" />
+            <MiniStat
+              icon={<CalendarDays size={19} />}
+              title="Série"
+              value="4j"
+            />
+
+            <MiniStat
+              icon={<Trophy size={19} />}
+              title="Record"
+              value="12j"
+            />
+
+            <MiniStat
+              icon={<ShieldCheck size={19} />}
+              title="Statut"
+              value="Actif"
+            />
           </div>
         </section>
 
@@ -466,8 +523,13 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="label">Prescription active</p>
-              <h2 className="card-title">Maximum 2 trades aujourd’hui</h2>
+              <p className="label">
+                Prescription active
+              </p>
+
+              <h2 className="card-title">
+                Maximum 2 trades aujourd’hui
+              </h2>
             </div>
           </div>
 
@@ -484,7 +546,10 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="label">Progression PRIME</p>
+              <p className="label">
+                Progression PRIME
+              </p>
+
               <h2 className="card-title white-title">
                 Niveau 3 — Trader structuré
               </h2>
@@ -497,7 +562,10 @@ export default function HomePage() {
           </div>
 
           <div className="progress">
-            <div className="progress-fill" style={{ width: "64%" }} />
+            <div
+              className="progress-fill"
+              style={{ width: "64%" }}
+            />
           </div>
         </section>
       </div>
@@ -511,7 +579,9 @@ function ActionButton({ href, icon, label, title }) {
   return (
     <Link href={href} className="action-card">
       <div className="row">
-        <div className="action-icon">{icon}</div>
+        <div className="action-icon">
+          {icon}
+        </div>
 
         <div>
           <p className="action-label">{label}</p>
@@ -529,8 +599,12 @@ function ActionButton({ href, icon, label, title }) {
 function MiniStat({ icon, title, value }) {
   return (
     <div className="mini-card">
-      <div style={{ color: "#d6b25f" }}>{icon}</div>
+      <div style={{ color: "#d6b25f" }}>
+        {icon}
+      </div>
+
       <p className="mini-label">{title}</p>
+
       <p className="mini-value">{value}</p>
     </div>
   );
@@ -539,12 +613,23 @@ function MiniStat({ icon, title, value }) {
 function SmallMetric({ icon, title, value, text }) {
   return (
     <section className="card">
-      <div className="gold-icon">{icon}</div>
-      <p className="label" style={{ marginTop: 14 }}>
+      <div className="gold-icon">
+        {icon}
+      </div>
+
+      <p
+        className="label"
+        style={{ marginTop: 14 }}
+      >
         {title}
       </p>
+
       <p className="small-title">{value}</p>
-      <p className="text" style={{ marginTop: 8 }}>
+
+      <p
+        className="text"
+        style={{ marginTop: 8 }}
+      >
         {text}
       </p>
     </section>
