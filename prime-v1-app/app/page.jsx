@@ -5,151 +5,293 @@ import {
   BarChart3,
   Target,
   Sparkles,
+  Trophy,
+  CalendarCheck,
 } from "lucide-react";
 
 import BottomNav from "./components/BottomNav";
-import StreakCard from "./components/StreakCard";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-black text-white pb-28">
-      <section className="relative min-h-screen overflow-hidden px-5 pt-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_35%)]" />
-        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-20 -left-24 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+    <main
+      style={{
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at top, rgba(255,255,255,0.12), transparent 30%), #000",
+        color: "white",
+        padding: "28px 18px 110px",
+        fontFamily: "Inter, Arial, sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: 430, margin: "0 auto" }}>
+        <header
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 28,
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: 12,
+                letterSpacing: 4,
+                color: "rgba(255,255,255,0.45)",
+                margin: 0,
+              }}
+            >
+              PRIME.
+            </p>
+            <h1 style={{ fontSize: 34, margin: "8px 0 0", fontWeight: 700 }}>
+              Discipline Mode
+            </h1>
+          </div>
 
-        <div className="relative z-10 mx-auto max-w-md">
-          <div className="mb-8 flex items-center justify-between">
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 18,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.06)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Sparkles size={22} />
+          </div>
+        </header>
+
+        <Card>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <IconBox light>
+              <Brain size={22} />
+            </IconBox>
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-white/40">
-                PRIME.
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-                Discipline Mode
-              </h1>
-            </div>
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-              <Sparkles size={22} />
+              <p style={label}>Coach PRIME</p>
+              <h2 style={{ margin: 0, fontSize: 19 }}>
+                Les choses sérieuses commencent.
+              </h2>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-black">
-                <Brain size={22} />
-              </div>
+          <p style={text}>
+            Ton objectif est simple : maintenir une discipline constante. PRIME
+            t’aide à identifier tes erreurs, corriger ton comportement et
+            construire le trader que tu deviens.
+          </p>
+        </Card>
 
-              <div>
-                <p className="text-sm text-white/50">Coach PRIME</p>
-                <h2 className="text-lg font-semibold">
-                  Les choses sérieuses commencent.
-                </h2>
-              </div>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div>
+              <p style={label}>Streak PRIME</p>
+              <h2 style={{ fontSize: 28, margin: "8px 0 0" }}>
+                4 jours disciplinés
+              </h2>
             </div>
 
-            <p className="mt-4 text-sm leading-relaxed text-white/60">
-              Ton objectif est simple : maintenir une discipline constante.
-              PRIME t’aide à identifier tes erreurs, corriger ton comportement
-              et construire le trader que tu deviens.
-            </p>
+            <IconBox light>
+              <Flame size={28} />
+            </IconBox>
           </div>
 
-          <div className="mt-5">
-            <StreakCard />
-          </div>
+          <p style={text}>
+            Tu construis ta régularité. Chaque journée où tu respectes ton plan
+            renforce ton identité de trader discipliné.
+          </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-4">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
-                <ShieldCheck size={20} />
-              </div>
-
-              <p className="text-xs text-white/40">
-                Score discipline
-              </p>
-
-              <p className="mt-1 text-2xl font-semibold">
-                82%
-              </p>
-
-              <p className="mt-2 text-xs text-white/45">
-                Très bon contrôle aujourd’hui.
-              </p>
+          <div style={{ marginTop: 20 }}>
+            <div style={rowBetween}>
+              <span>Objectif semaine</span>
+              <span>4/5 jours</span>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
-                <Flame size={20} />
-              </div>
-
-              <p className="text-xs text-white/40">
-                État mental
-              </p>
-
-              <p className="mt-1 text-2xl font-semibold">
-                Stable
-              </p>
-
-              <p className="mt-2 text-xs text-white/45">
-                Tu peux trader avec clarté.
-              </p>
+            <div style={progressBg}>
+              <div style={{ ...progressFill, width: "80%" }} />
             </div>
           </div>
 
-          <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
-                <Target size={20} />
-              </div>
-
-              <div>
-                <p className="text-xs text-white/40">
-                  Prescription active
-                </p>
-
-                <h3 className="font-semibold">
-                  Maximum 2 trades aujourd’hui
-                </h3>
-              </div>
-            </div>
-
-            <p className="mt-4 text-sm leading-relaxed text-white/55">
-              Ta priorité n’est pas de faire plus. Ta priorité est de respecter
-              ton plan, limiter l’impulsivité et protéger ton capital mental.
-            </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 12,
+              marginTop: 18,
+            }}
+          >
+            <MiniStat icon={<CalendarCheck size={18} />} title="Série" value="4j" />
+            <MiniStat icon={<Trophy size={18} />} title="Record" value="12j" />
+            <MiniStat icon={<ShieldCheck size={18} />} title="Statut" value="Actif" />
           </div>
+        </Card>
 
-          <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
-                <BarChart3 size={20} />
-              </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <SmallCard
+            icon={<ShieldCheck size={20} />}
+            title="Score discipline"
+            value="82%"
+            desc="Très bon contrôle aujourd’hui."
+          />
 
-              <div>
-                <p className="text-xs text-white/40">
-                  Progression PRIME
-                </p>
-
-                <h3 className="font-semibold">
-                  Niveau 3 — Trader structuré
-                </h3>
-              </div>
-            </div>
-
-            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-[64%] rounded-full bg-white" />
-            </div>
-
-            <div className="mt-2 flex justify-between text-xs text-white/40">
-              <span>640 XP</span>
-              <span>1000 XP</span>
-            </div>
-          </div>
+          <SmallCard
+            icon={<Flame size={20} />}
+            title="État mental"
+            value="Stable"
+            desc="Tu peux trader avec clarté."
+          />
         </div>
-      </section>
+
+        <Card>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <IconBox>
+              <Target size={20} />
+            </IconBox>
+            <div>
+              <p style={label}>Prescription active</p>
+              <h3 style={{ margin: 0 }}>Maximum 2 trades aujourd’hui</h3>
+            </div>
+          </div>
+
+          <p style={text}>
+            Ta priorité n’est pas de faire plus. Ta priorité est de respecter
+            ton plan, limiter l’impulsivité et protéger ton capital mental.
+          </p>
+        </Card>
+
+        <Card>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <IconBox>
+              <BarChart3 size={20} />
+            </IconBox>
+            <div>
+              <p style={label}>Progression PRIME</p>
+              <h3 style={{ margin: 0 }}>Niveau 3 — Trader structuré</h3>
+            </div>
+          </div>
+
+          <div style={{ ...progressBg, marginTop: 20 }}>
+            <div style={{ ...progressFill, width: "64%" }} />
+          </div>
+
+          <div style={rowBetween}>
+            <span>640 XP</span>
+            <span>1000 XP</span>
+          </div>
+        </Card>
+      </div>
 
       <BottomNav />
     </main>
   );
 }
+
+function Card({ children }) {
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.045)",
+        borderRadius: 28,
+        padding: 20,
+        marginBottom: 18,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.45)",
+        backdropFilter: "blur(18px)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function IconBox({ children, light }) {
+  return (
+    <div
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 18,
+        background: light ? "white" : "rgba(255,255,255,0.08)",
+        color: light ? "black" : "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function MiniStat({ icon, title, value }) {
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: 20,
+        padding: 12,
+        background: "rgba(255,255,255,0.035)",
+      }}
+    >
+      <div style={{ color: "rgba(255,255,255,0.7)" }}>{icon}</div>
+      <p style={{ ...label, marginTop: 8 }}>{title}</p>
+      <p style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{value}</p>
+    </div>
+  );
+}
+
+function SmallCard({ icon, title, value, desc }) {
+  return (
+    <div
+      style={{
+        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.045)",
+        borderRadius: 26,
+        padding: 16,
+        marginBottom: 18,
+      }}
+    >
+      <IconBox>{icon}</IconBox>
+      <p style={{ ...label, marginTop: 14 }}>{title}</p>
+      <p style={{ margin: "4px 0", fontSize: 26, fontWeight: 700 }}>{value}</p>
+      <p style={{ ...text, fontSize: 12 }}>{desc}</p>
+    </div>
+  );
+}
+
+const label = {
+  margin: 0,
+  fontSize: 12,
+  color: "rgba(255,255,255,0.45)",
+};
+
+const text = {
+  fontSize: 14,
+  lineHeight: 1.6,
+  color: "rgba(255,255,255,0.62)",
+  marginTop: 16,
+};
+
+const rowBetween = {
+  display: "flex",
+  justifyContent: "space-between",
+  fontSize: 12,
+  color: "rgba(255,255,255,0.45)",
+  marginTop: 10,
+};
+
+const progressBg = {
+  width: "100%",
+  height: 8,
+  borderRadius: 999,
+  background: "rgba(255,255,255,0.10)",
+  overflow: "hidden",
+};
+
+const progressFill = {
+  height: "100%",
+  borderRadius: 999,
+  background: "white",
+};
