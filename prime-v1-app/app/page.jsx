@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import BottomNav from "./components/BottomNav";
-
+import PrimeLevelCard from "./components/PrimeLevelCard";
 export default function HomePage() {
   return (
     <main className="prime-home">
@@ -471,27 +471,7 @@ export default function HomePage() {
           </p>
         </section>
 
-        <section className="card">
-          <div className="row">
-            <div className="gold-icon">
-              <Crown size={25} />
-            </div>
-
-            <div>
-              <p className="label">Progression PRIME</p>
-              <h2 className="card-title white-title">Niveau 3 — Trader structuré</h2>
-            </div>
-          </div>
-
-          <div className="progress-head">
-            <span>640 XP</span>
-            <span>1000 XP</span>
-          </div>
-
-          <div className="progress">
-            <div className="progress-fill" style={{ width: "64%" }} />
-          </div>
-        </section>
+       <PrimeLevelCard />
       </div>
 
       <BottomNav />
