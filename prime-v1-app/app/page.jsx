@@ -1,4 +1,4 @@
-         "use client";
+"use client";
 
 import Link from "next/link";
 import {
@@ -21,9 +21,7 @@ export default function HomePage() {
   return (
     <main className="prime-home">
       <style>{`
-        * {
-          box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
           margin: 0;
@@ -35,33 +33,26 @@ export default function HomePage() {
           color: white;
           padding: 34px 18px 125px;
           font-family: Inter, Arial, sans-serif;
-
           background-color: #000;
-
           background-image:
             linear-gradient(
               180deg,
-              rgba(0,0,0,0.12) 0%,
-              rgba(0,0,0,0.14) 28%,
-              rgba(0,0,0,0.74) 64%,
+              rgba(0,0,0,0.08) 0%,
+              rgba(0,0,0,0.16) 28%,
+              rgba(0,0,0,0.66) 64%,
               rgba(0,0,0,0.98) 100%
             ),
             url("/prime-panther-bg.png.png");
-
           background-size:
             cover,
             min(120vw, 860px) auto;
-
           background-position:
             center top,
             center -225px;
-
           background-repeat: no-repeat;
           background-attachment: scroll;
-
           overflow-x: hidden;
           position: relative;
-
           animation: fadeIn 0.8s ease both;
         }
 
@@ -70,18 +61,25 @@ export default function HomePage() {
           position: fixed;
           inset: 0;
           background:
-            radial-gradient(
-              circle at 50% 10%,
-              rgba(214,178,95,0.16),
-              transparent 32%
-            ),
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0) 0%,
-              rgba(0,0,0,0.32) 48%,
-              rgba(0,0,0,0.92) 100%
-            );
+            radial-gradient(circle at 50% 10%, rgba(214,178,95,0.16), transparent 32%),
+            radial-gradient(circle at 50% 22%, rgba(255,255,255,0.05), transparent 28%),
+            linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.28) 48%, rgba(0,0,0,0.92) 100%);
           pointer-events: none;
+          z-index: 0;
+        }
+
+        .prime-home::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          opacity: 0.045;
+          pointer-events: none;
+          z-index: 1;
+          background-image:
+            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.5) 0 1px, transparent 1px),
+            radial-gradient(circle at 80% 70%, rgba(255,255,255,0.35) 0 1px, transparent 1px);
+          background-size: 7px 7px, 11px 11px;
+          mix-blend-mode: screen;
         }
 
         .page {
@@ -149,25 +147,26 @@ export default function HomePage() {
           gap: 12px;
           background:
             linear-gradient(145deg, rgba(255,255,255,0.105), rgba(255,255,255,0.03)),
-            rgba(0,0,0,0.42);
+            rgba(0,0,0,0.34);
           border: 1px solid rgba(214,178,95,0.36);
           box-shadow: 0 20px 60px rgba(0,0,0,0.46);
           backdrop-filter: blur(20px);
           animation: fadeUp 0.75s ease both;
-          transition:
-            transform 0.28s ease,
-            border-color 0.28s ease,
-            background 0.28s ease,
-            box-shadow 0.28s ease;
+          transition: transform 0.28s ease, border-color 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
         }
+
+        .action-card:nth-child(1) { animation-delay: 0.08s; }
+        .action-card:nth-child(2) { animation-delay: 0.14s; }
+        .action-card:nth-child(3) { animation-delay: 0.20s; }
+        .action-card:nth-child(4) { animation-delay: 0.26s; }
 
         .action-card:hover {
           transform: translateY(-3px) scale(1.02);
-          border-color: rgba(214,178,95,0.75);
-          box-shadow: 0 0 28px rgba(214,178,95,0.13), 0 20px 60px rgba(0,0,0,0.55);
+          border-color: rgba(214,178,95,0.78);
+          box-shadow: 0 0 30px rgba(214,178,95,0.16), 0 20px 60px rgba(0,0,0,0.58);
           background:
             linear-gradient(145deg, rgba(214,178,95,0.18), rgba(255,255,255,0.04)),
-            rgba(0,0,0,0.50);
+            rgba(0,0,0,0.44);
         }
 
         .action-icon {
@@ -219,34 +218,32 @@ export default function HomePage() {
           margin-bottom: 16px;
           background:
             linear-gradient(145deg, rgba(255,255,255,0.095), rgba(255,255,255,0.025)),
-            rgba(0,0,0,0.48);
+            rgba(8,8,8,0.72);
           border: 1px solid rgba(214,178,95,0.32);
           box-shadow: 0 24px 70px rgba(0,0,0,0.52);
           backdrop-filter: blur(22px);
           animation: fadeUp 0.85s ease both;
-          transition:
-            transform 0.32s ease,
-            border-color 0.32s ease,
-            box-shadow 0.32s ease,
-            background 0.32s ease;
+          transition: transform 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease, background 0.32s ease;
         }
 
+        .card:nth-of-type(3) { animation-delay: 0.34s; }
+        .card:nth-of-type(4) { animation-delay: 0.42s; }
+        .card:nth-of-type(5) { animation-delay: 0.50s; }
+
         .card:hover {
-          transform: translateY(-2px);
-          border-color: rgba(214,178,95,0.48);
-          box-shadow: 0 0 40px rgba(214,178,95,0.10), 0 24px 70px rgba(0,0,0,0.58);
+          transform: translateY(-2px) scale(1.01);
+          border-color: rgba(214,178,95,0.52);
+          background:
+            linear-gradient(145deg, rgba(214,178,95,0.10), rgba(255,255,255,0.025)),
+            rgba(8,8,8,0.68);
+          box-shadow: 0 0 42px rgba(214,178,95,0.12), 0 24px 70px rgba(0,0,0,0.60);
         }
 
         .card::before {
           content: "";
           position: absolute;
           inset: 0;
-          background:
-            radial-gradient(
-              circle at top left,
-              rgba(214,178,95,0.18),
-              transparent 42%
-            );
+          background: radial-gradient(circle at top left, rgba(214,178,95,0.18), transparent 42%);
           pointer-events: none;
         }
 
@@ -331,12 +328,7 @@ export default function HomePage() {
         .progress-fill {
           height: 100%;
           border-radius: 999px;
-          background: linear-gradient(
-            90deg,
-            #9d742f,
-            #d6b25f,
-            #fff2b8
-          );
+          background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
           box-shadow: 0 0 24px rgba(214,178,95,0.55);
           animation: loadBar 1.15s ease both;
         }
@@ -382,47 +374,23 @@ export default function HomePage() {
         }
 
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(18px) scale(0.985);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+          from { opacity: 0; transform: translateY(18px) scale(0.985); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         @keyframes loadBar {
-          from {
-            width: 0%;
-          }
+          from { width: 0%; }
         }
 
         @media (max-width: 390px) {
-          .title {
-            font-size: 36px;
-          }
-
-          .actions-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .two-grid {
-            grid-template-columns: 1fr;
-          }
+          .title { font-size: 36px; }
+          .actions-grid { grid-template-columns: 1fr; }
+          .two-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -435,39 +403,14 @@ export default function HomePage() {
             <span>Discipline OS</span>
           </h1>
 
-          <p className="subtitle">
-            Discipline. Contrôle. Performance.
-          </p>
+          <p className="subtitle">Discipline. Contrôle. Performance.</p>
         </section>
 
         <section className="actions-grid">
-          <ActionButton
-            href="/session"
-            icon={<Target size={26} />}
-            label="Commencer"
-            title="Ma session"
-          />
-
-          <ActionButton
-            href="/stats"
-            icon={<BarChart3 size={26} />}
-            label="Voir"
-            title="Mes stats"
-          />
-
-          <ActionButton
-            href="/reset"
-            icon={<RotateCcw size={26} />}
-            label="Mode"
-            title="Reset"
-          />
-
-          <ActionButton
-            href="/onboarding"
-            icon={<User size={26} />}
-            label="Créer mon"
-            title="Profil PRIME"
-          />
+          <ActionButton href="/session" icon={<Target size={26} />} label="Commencer" title="Ma session" />
+          <ActionButton href="/stats" icon={<BarChart3 size={26} />} label="Voir" title="Mes stats" />
+          <ActionButton href="/reset" icon={<RotateCcw size={26} />} label="Mode" title="Reset" />
+          <ActionButton href="/onboarding" icon={<User size={26} />} label="Créer mon" title="Profil PRIME" />
         </section>
 
         <section className="card">
@@ -506,19 +449,8 @@ export default function HomePage() {
         </section>
 
         <section className="two-grid">
-          <SmallMetric
-            icon={<ShieldCheck size={24} />}
-            title="Score discipline"
-            value="82%"
-            text="Très bon contrôle aujourd’hui."
-          />
-
-          <SmallMetric
-            icon={<Brain size={24} />}
-            title="État mental"
-            value="Stable"
-            text="Tu peux trader avec clarté."
-          />
+          <SmallMetric icon={<ShieldCheck size={24} />} title="Score discipline" value="82%" text="Très bon contrôle aujourd’hui." />
+          <SmallMetric icon={<Brain size={24} />} title="État mental" value="Stable" text="Tu peux trader avec clarté." />
         </section>
 
         <section className="card">
@@ -529,9 +461,7 @@ export default function HomePage() {
 
             <div>
               <p className="label">Prescription active</p>
-              <h2 className="card-title">
-                Maximum 2 trades aujourd’hui
-              </h2>
+              <h2 className="card-title">Maximum 2 trades aujourd’hui</h2>
             </div>
           </div>
 
@@ -549,9 +479,7 @@ export default function HomePage() {
 
             <div>
               <p className="label">Progression PRIME</p>
-              <h2 className="card-title white-title">
-                Niveau 3 — Trader structuré
-              </h2>
+              <h2 className="card-title white-title">Niveau 3 — Trader structuré</h2>
             </div>
           </div>
 
@@ -576,7 +504,6 @@ function ActionButton({ href, icon, label, title }) {
     <Link href={href} className="action-card">
       <div className="row">
         <div className="action-icon">{icon}</div>
-
         <div>
           <p className="action-label">{label}</p>
           <p className="action-title">{title}</p>
