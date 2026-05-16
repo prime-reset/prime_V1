@@ -1,173 +1,131 @@
-"use client";
+import {
+  Flame,
+  ShieldCheck,
+  Brain,
+  BarChart3,
+  Target,
+  Sparkles,
+} from "lucide-react";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import BottomNav from "./components/BottomNav";
-import FadeIn from "./components/FadeIn";
-import PrimaryButton from "./components/PrimaryButton";
-import ActionCard from "./components/ActionCard";
+import BottomNav from "@/components/BottomNav";
+import StreakCard from "@/components/StreakCard";
 
-export default function Home() {
-  const [primeProfile, setPrimeProfile] = useState(null);
-
-  useEffect(() => {
-    const savedProfile = localStorage.getItem("primeProfile");
-
-    if (savedProfile) {
-      setPrimeProfile(JSON.parse(savedProfile));
-    }
-  }, []);
-
+export default function HomePage() {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        color: "white",
-        padding: "32px",
-        paddingBottom: "140px",
-        fontFamily: "Arial, sans-serif",
-        position: "relative",
-        overflow: "hidden",
-        backgroundImage: `
-          linear-gradient(
-            to bottom,
-            rgba(0,0,0,0.50),
-            rgba(0,0,0,0.82),
-            rgba(0,0,0,0.96)
-          ),
-          url('/background.jpg')
-        `,
-        backgroundSize: "cover",
-        backgroundPosition: "center top",
-        backgroundRepeat: "no-repeat",
-        animation: "backgroundMove 14s ease-in-out infinite",
-      }}
-    >
-      <div style={goldGlow} />
+    <main className="min-h-screen bg-black text-white pb-28">
+      <section className="relative min-h-screen overflow-hidden px-5 pt-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_35%)]" />
+        <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute bottom-20 -left-24 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
 
-      <div style={container}>
-        <FadeIn delay={0}>
-          <p style={logo}>PRIME.</p>
-        </FadeIn>
+        <div className="relative z-10 mx-auto max-w-md">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-white/40">
+                PRIME.
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+                Discipline Mode
+              </h1>
+            </div>
 
-        <FadeIn delay={0.15}>
-          <h1 style={title}>
-            Trading
-            <br />
-            Discipline OS
-          </h1>
-        </FadeIn>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+              <Sparkles size={22} />
+            </div>
+          </div>
 
-        <FadeIn delay={0.3}>
-          <p style={subtitle}>
-            {primeProfile
-              ? `Profil actif : ${primeProfile.detectedProfile}. PRIME adapte ta session selon ton risque dominant.`
-              : "PRIME transforme ton comportement de trader en système d’exécution discipliné."}
-          </p>
-        </FadeIn>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-black">
+                <Brain size={22} />
+              </div>
 
-        <FadeIn delay={0.45}>
-          <Link href="/session" style={{ textDecoration: "none" }}>
-            <PrimaryButton>
-              {primeProfile
-                ? "Lancer ma session personnalisée"
-                : "Commencer ma session"}
-            </PrimaryButton>
-          </Link>
-        </FadeIn>
+              <div>
+                <p className="text-sm text-white/50">Coach PRIME</p>
+                <h2 className="text-lg font-semibold">
+                  Les choses sérieuses commencent.
+                </h2>
+              </div>
+            </div>
 
-        {primeProfile && (
-          <FadeIn delay={0.55}>
-            <ActionCard
-              href="/profile"
-              title={primeProfile.detectedProfile}
-              subtitle={`Risque dominant : ${primeProfile.risk}`}
-            />
-          </FadeIn>
-        )}
+            <p className="mt-4 text-sm leading-relaxed text-white/60">
+              Ton objectif est simple : maintenir une discipline constante.
+              PRIME t’aide à identifier tes erreurs, corriger ton comportement
+              et construire le trader que tu deviens.
+            </p>
+          </div>
 
-        {primeProfile && (
-          <FadeIn delay={0.65}>
-            <ActionCard
-              href="/coach"
-              title="Prescription active"
-              subtitle={primeProfile.prescription}
-            />
-          </FadeIn>
-        )}
+          <div className="mt-5">
+            <StreakCard />
+          </div>
 
-        {!primeProfile && (
-          <FadeIn delay={0.6}>
-            <ActionCard
-              href="/onboarding"
-              title="Créer mon profil PRIME"
-              subtitle="Personnalise ton coaching, ta checklist et tes prescriptions."
-            />
-          </FadeIn>
-        )}
+          <div className="mt-5 grid grid-cols-2 gap-4">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                <ShieldCheck size={20} />
+              </div>
+              <p className="text-xs text-white/40">Score discipline</p>
+              <p className="mt-1 text-2xl font-semibold">82%</p>
+              <p className="mt-2 text-xs text-white/45">
+                Très bon contrôle aujourd’hui.
+              </p>
+            </div>
 
-        <FadeIn delay={0.75}>
-          <ActionCard
-            href="/stats"
-            title="Voir mes stats"
-            subtitle="Suis ta discipline, ton streak et tes erreurs dominantes."
-          />
-        </FadeIn>
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                <Flame size={20} />
+              </div>
+              <p className="text-xs text-white/40">État mental</p>
+              <p className="mt-1 text-2xl font-semibold">Stable</p>
+              <p className="mt-2 text-xs text-white/45">
+                Tu peux trader avec clarté.
+              </p>
+            </div>
+          </div>
 
-        <FadeIn delay={0.9}>
-          <ActionCard
-            href="/reset"
-            title="Mode Reset"
-            subtitle="Stoppe la dérive émotionnelle avant qu’elle ne coûte cher."
-          />
-        </FadeIn>
-      </div>
+          <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                <Target size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-white/40">Prescription active</p>
+                <h3 className="font-semibold">
+                  Maximum 2 trades aujourd’hui
+                </h3>
+              </div>
+            </div>
 
-      <BottomNav active="Prime" />
+            <p className="mt-4 text-sm leading-relaxed text-white/55">
+              Ta priorité n’est pas de faire plus. Ta priorité est de respecter
+              ton plan, limiter l’impulsivité et protéger ton capital mental.
+            </p>
+          </div>
+
+          <div className="mt-5 rounded-3xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">
+                <BarChart3 size={20} />
+              </div>
+              <div>
+                <p className="text-xs text-white/40">Progression PRIME</p>
+                <h3 className="font-semibold">Niveau 3 — Trader structuré</h3>
+              </div>
+            </div>
+
+            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-[64%] rounded-full bg-white" />
+            </div>
+
+            <div className="mt-2 flex justify-between text-xs text-white/40">
+              <span>640 XP</span>
+              <span>1000 XP</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <BottomNav />
     </main>
   );
 }
-
-const goldGlow = {
-  position: "absolute",
-  top: "-120px",
-  left: "50%",
-  transform: "translateX(-50%)",
-  width: "420px",
-  height: "420px",
-  background:
-    "radial-gradient(circle, rgba(212,176,106,0.14), transparent 70%)",
-  filter: "blur(60px)",
-  zIndex: 0,
-  animation: "pulseGlow 5s ease-in-out infinite",
-};
-
-const container = {
-  position: "relative",
-  zIndex: 2,
-  maxWidth: "430px",
-  margin: "0 auto",
-};
-
-const logo = {
-  color: "#D4B06A",
-  letterSpacing: "10px",
-  fontSize: "15px",
-  marginBottom: "42px",
-};
-
-const title = {
-  fontSize: "60px",
-  lineHeight: "0.92",
-  fontWeight: "700",
-  marginBottom: "34px",
-  letterSpacing: "-4px",
-};
-
-const subtitle = {
-  color: "rgba(255,255,255,0.72)",
-  fontSize: "21px",
-  lineHeight: "1.6",
-  marginBottom: "42px",
-  maxWidth: "380px",
-};
