@@ -41,19 +41,21 @@ export default function HomePage() {
           background-image:
             linear-gradient(
               180deg,
-              rgba(0,0,0,0.05) 0%,
-              rgba(0,0,0,0.20) 28%,
-              rgba(0,0,0,0.68) 62%,
-              rgba(0,0,0,0.96) 100%
+              rgba(0,0,0,0.12) 0%,
+              rgba(0,0,0,0.22) 28%,
+              rgba(0,0,0,0.70) 64%,
+              rgba(0,0,0,0.98) 100%
             ),
-            url("/prime-panther-bg.png"),
-          background-size:
-  cover,
-  min(115vw, 820px) auto;
+            url("/prime-panther-bg.png.png");
 
-background-position:
-  center top,
-  center -40px;
+          background-size:
+            cover,
+            min(120vw, 860px) auto;
+
+          background-position:
+            center top,
+            center -85px;
+
           background-repeat: no-repeat;
           background-attachment: scroll;
 
@@ -65,20 +67,18 @@ background-position:
           content: "";
           position: fixed;
           inset: 0;
-
           background:
             radial-gradient(
-              circle at 50% 12%,
-              rgba(214,178,95,0.20),
-              transparent 28%
+              circle at 50% 10%,
+              rgba(214,178,95,0.18),
+              transparent 30%
             ),
             linear-gradient(
               180deg,
               rgba(0,0,0,0) 0%,
-              rgba(0,0,0,0.28) 45%,
-              rgba(0,0,0,0.88) 100%
+              rgba(0,0,0,0.35) 48%,
+              rgba(0,0,0,0.92) 100%
             );
-
           pointer-events: none;
         }
 
@@ -452,10 +452,7 @@ background-position:
 
               <div>
                 <p className="label">Streak PRIME</p>
-
-                <h2 className="card-title">
-                  4 jours disciplinés
-                </h2>
+                <h2 className="card-title">4 jours disciplinés</h2>
               </div>
             </div>
           </div>
@@ -471,30 +468,13 @@ background-position:
           </div>
 
           <div className="progress">
-            <div
-              className="progress-fill"
-              style={{ width: "80%" }}
-            />
+            <div className="progress-fill" style={{ width: "80%" }} />
           </div>
 
           <div className="stats-grid">
-            <MiniStat
-              icon={<CalendarDays size={19} />}
-              title="Série"
-              value="4j"
-            />
-
-            <MiniStat
-              icon={<Trophy size={19} />}
-              title="Record"
-              value="12j"
-            />
-
-            <MiniStat
-              icon={<ShieldCheck size={19} />}
-              title="Statut"
-              value="Actif"
-            />
+            <MiniStat icon={<CalendarDays size={19} />} title="Série" value="4j" />
+            <MiniStat icon={<Trophy size={19} />} title="Record" value="12j" />
+            <MiniStat icon={<ShieldCheck size={19} />} title="Statut" value="Actif" />
           </div>
         </section>
 
@@ -521,10 +501,7 @@ background-position:
             </div>
 
             <div>
-              <p className="label">
-                Prescription active
-              </p>
-
+              <p className="label">Prescription active</p>
               <h2 className="card-title">
                 Maximum 2 trades aujourd’hui
               </h2>
@@ -544,10 +521,7 @@ background-position:
             </div>
 
             <div>
-              <p className="label">
-                Progression PRIME
-              </p>
-
+              <p className="label">Progression PRIME</p>
               <h2 className="card-title white-title">
                 Niveau 3 — Trader structuré
               </h2>
@@ -560,10 +534,7 @@ background-position:
           </div>
 
           <div className="progress">
-            <div
-              className="progress-fill"
-              style={{ width: "64%" }}
-            />
+            <div className="progress-fill" style={{ width: "64%" }} />
           </div>
         </section>
       </div>
@@ -577,9 +548,7 @@ function ActionButton({ href, icon, label, title }) {
   return (
     <Link href={href} className="action-card">
       <div className="row">
-        <div className="action-icon">
-          {icon}
-        </div>
+        <div className="action-icon">{icon}</div>
 
         <div>
           <p className="action-label">{label}</p>
@@ -597,12 +566,8 @@ function ActionButton({ href, icon, label, title }) {
 function MiniStat({ icon, title, value }) {
   return (
     <div className="mini-card">
-      <div style={{ color: "#d6b25f" }}>
-        {icon}
-      </div>
-
+      <div style={{ color: "#d6b25f" }}>{icon}</div>
       <p className="mini-label">{title}</p>
-
       <p className="mini-value">{value}</p>
     </div>
   );
@@ -611,23 +576,15 @@ function MiniStat({ icon, title, value }) {
 function SmallMetric({ icon, title, value, text }) {
   return (
     <section className="card">
-      <div className="gold-icon">
-        {icon}
-      </div>
+      <div className="gold-icon">{icon}</div>
 
-      <p
-        className="label"
-        style={{ marginTop: 14 }}
-      >
+      <p className="label" style={{ marginTop: 14 }}>
         {title}
       </p>
 
       <p className="small-title">{value}</p>
 
-      <p
-        className="text"
-        style={{ marginTop: 8 }}
-      >
+      <p className="text" style={{ marginTop: 8 }}>
         {text}
       </p>
     </section>
