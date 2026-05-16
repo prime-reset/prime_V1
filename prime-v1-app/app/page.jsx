@@ -52,10 +52,9 @@ export default function HomePage() {
             cover,
             min(120vw, 860px) auto;
 
-          background-position:
-            center top,
-            center -85px;
-
+        background-position:
+  center top,
+  center -155px;
           background-repeat: no-repeat;
           background-attachment: scroll;
 
