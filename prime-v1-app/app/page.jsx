@@ -25,7 +25,7 @@ export default function HomePage() {
 
         body {
           margin: 0;
-          background: #030303;
+          background: #000;
         }
 
         .prime-home {
@@ -33,10 +33,21 @@ export default function HomePage() {
           color: white;
           padding: 28px 18px 120px;
           font-family: Inter, Arial, sans-serif;
+
           background:
-            radial-gradient(circle at 20% 0%, rgba(214,178,95,0.22), transparent 28%),
-            radial-gradient(circle at 90% 20%, rgba(255,255,255,0.12), transparent 22%),
-            linear-gradient(180deg, #101010 0%, #050505 42%, #000 100%);
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.18) 0%,
+              rgba(0,0,0,0.42) 35%,
+              rgba(0,0,0,0.92) 100%
+            ),
+            url("/background.jpg");
+
+          background-size: cover;
+          background-position: center top;
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+
           overflow-x: hidden;
           position: relative;
         }
@@ -45,11 +56,14 @@ export default function HomePage() {
           content: "";
           position: fixed;
           inset: 0;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-          background-size: 42px 42px;
-          mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent 75%);
+
+          background:
+            radial-gradient(
+              circle at top left,
+              rgba(214,178,95,0.16),
+              transparent 28%
+            );
+
           pointer-events: none;
         }
 
@@ -72,7 +86,7 @@ export default function HomePage() {
           margin: 0;
           font-size: 12px;
           letter-spacing: 7px;
-          color: rgba(214,178,95,0.8);
+          color: rgba(214,178,95,0.82);
         }
 
         .title {
@@ -90,9 +104,19 @@ export default function HomePage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04));
+          background: linear-gradient(
+            145deg,
+            rgba(255,255,255,0.16),
+            rgba(255,255,255,0.04)
+          );
+
           border: 1px solid rgba(255,255,255,0.14);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 20px 50px rgba(0,0,0,0.45);
+
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.12),
+            0 20px 50px rgba(0,0,0,0.45);
+
+          backdrop-filter: blur(14px);
         }
 
         .card {
@@ -101,12 +125,22 @@ export default function HomePage() {
           border-radius: 32px;
           padding: 22px;
           margin-bottom: 18px;
+
           background:
-            linear-gradient(145deg, rgba(255,255,255,0.105), rgba(255,255,255,0.035)),
+            linear-gradient(
+              145deg,
+              rgba(255,255,255,0.105),
+              rgba(255,255,255,0.035)
+            ),
             rgba(255,255,255,0.035);
+
           border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: 0 22px 70px rgba(0,0,0,0.46);
+
+          box-shadow:
+            0 22px 70px rgba(0,0,0,0.46);
+
           backdrop-filter: blur(22px);
+
           animation: fadeUp 0.75s ease both;
         }
 
@@ -114,7 +148,14 @@ export default function HomePage() {
           content: "";
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at top left, rgba(214,178,95,0.15), transparent 42%);
+
+          background:
+            radial-gradient(
+              circle at top left,
+              rgba(214,178,95,0.12),
+              transparent 42%
+            );
+
           pointer-events: none;
         }
 
@@ -125,7 +166,11 @@ export default function HomePage() {
 
         .gold-card {
           background:
-            linear-gradient(145deg, rgba(214,178,95,0.18), rgba(255,255,255,0.04)),
+            linear-gradient(
+              145deg,
+              rgba(214,178,95,0.16),
+              rgba(255,255,255,0.04)
+            ),
             rgba(255,255,255,0.04);
         }
 
@@ -145,11 +190,15 @@ export default function HomePage() {
           width: 52px;
           height: 52px;
           min-width: 52px;
+
           border-radius: 20px;
+
           background: rgba(255,255,255,0.09);
+
           display: flex;
           align-items: center;
           justify-content: center;
+
           color: white;
         }
 
@@ -200,7 +249,9 @@ export default function HomePage() {
         .progress {
           height: 9px;
           width: 100%;
+
           background: rgba(255,255,255,0.11);
+
           border-radius: 999px;
           overflow: hidden;
         }
@@ -208,8 +259,16 @@ export default function HomePage() {
         .progress-fill {
           height: 100%;
           border-radius: 999px;
-          background: linear-gradient(90deg, #d6b25f, #ffffff);
-          box-shadow: 0 0 24px rgba(214,178,95,0.42);
+
+          background: linear-gradient(
+            90deg,
+            #d6b25f,
+            #ffffff
+          );
+
+          box-shadow:
+            0 0 24px rgba(214,178,95,0.42);
+
           animation: loadBar 1.2s ease both;
         }
 
@@ -223,7 +282,9 @@ export default function HomePage() {
         .mini {
           border-radius: 22px;
           padding: 14px;
+
           background: rgba(0,0,0,0.22);
+
           border: 1px solid rgba(255,255,255,0.10);
         }
 
@@ -245,12 +306,22 @@ export default function HomePage() {
 
         .small-card {
           min-height: 170px;
+
           border-radius: 30px;
           padding: 20px;
+
           background:
-            linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.025));
+            linear-gradient(
+              145deg,
+              rgba(255,255,255,0.09),
+              rgba(255,255,255,0.025)
+            );
+
           border: 1px solid rgba(255,255,255,0.11);
-          box-shadow: 0 20px 55px rgba(0,0,0,0.44);
+
+          box-shadow:
+            0 20px 55px rgba(0,0,0,0.44);
+
           animation: fadeUp 0.8s ease both;
         }
 
@@ -263,9 +334,12 @@ export default function HomePage() {
 
         .mission {
           margin-top: 18px;
+
           border-radius: 24px;
           padding: 16px;
+
           background: rgba(0,0,0,0.25);
+
           border: 1px solid rgba(255,255,255,0.08);
         }
 
@@ -273,12 +347,19 @@ export default function HomePage() {
           display: inline-flex;
           align-items: center;
           gap: 7px;
+
           margin-top: 16px;
+
           padding: 9px 12px;
+
           border-radius: 999px;
+
           background: rgba(214,178,95,0.13);
+
           border: 1px solid rgba(214,178,95,0.24);
+
           color: rgba(255,255,255,0.82);
+
           font-size: 12px;
         }
 
@@ -287,6 +368,7 @@ export default function HomePage() {
             opacity: 0;
             transform: translateY(18px);
           }
+
           to {
             opacity: 1;
             transform: translateY(0);
@@ -320,6 +402,7 @@ export default function HomePage() {
 
             <div>
               <p className="label gold">Coach PRIME</p>
+
               <h2 className="card-title">
                 Les choses sérieuses commencent.
               </h2>
@@ -342,7 +425,10 @@ export default function HomePage() {
           <div className="between">
             <div>
               <p className="label gold">Streak PRIME</p>
-              <h2 className="big-title">4 jours disciplinés</h2>
+
+              <h2 className="big-title">
+                4 jours disciplinés
+              </h2>
             </div>
 
             <div className="icon-box light">
@@ -361,13 +447,30 @@ export default function HomePage() {
           </div>
 
           <div className="progress">
-            <div className="progress-fill" style={{ width: "80%" }} />
+            <div
+              className="progress-fill"
+              style={{ width: "80%" }}
+            />
           </div>
 
           <div className="stats-grid">
-            <MiniStat icon={<CalendarCheck size={18} />} title="Série" value="4j" />
-            <MiniStat icon={<Trophy size={18} />} title="Record" value="12j" />
-            <MiniStat icon={<ShieldCheck size={18} />} title="Statut" value="Actif" />
+            <MiniStat
+              icon={<CalendarCheck size={18} />}
+              title="Série"
+              value="4j"
+            />
+
+            <MiniStat
+              icon={<Trophy size={18} />}
+              title="Record"
+              value="12j"
+            />
+
+            <MiniStat
+              icon={<ShieldCheck size={18} />}
+              title="Statut"
+              value="Actif"
+            />
           </div>
         </section>
 
@@ -394,7 +497,10 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="label gold">Prescription active</p>
+              <p className="label gold">
+                Prescription active
+              </p>
+
               <h3 className="card-title">
                 Maximum 2 trades aujourd’hui
               </h3>
@@ -414,7 +520,10 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="label gold">Progression PRIME</p>
+              <p className="label gold">
+                Progression PRIME
+              </p>
+
               <h3 className="card-title">
                 Niveau 3 — Trader structuré
               </h3>
@@ -427,13 +536,23 @@ export default function HomePage() {
           </div>
 
           <div className="progress">
-            <div className="progress-fill" style={{ width: "64%" }} />
+            <div
+              className="progress-fill"
+              style={{ width: "64%" }}
+            />
           </div>
 
           <div className="mission">
             <div className="row">
               <Crown size={20} color="#d6b25f" />
-              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.72)" }}>
+
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14,
+                  color: "rgba(255,255,255,0.72)",
+                }}
+              >
                 Prochain objectif : débloquer le niveau Trader discipliné.
               </p>
             </div>
@@ -449,10 +568,17 @@ export default function HomePage() {
 function MiniStat({ icon, title, value }) {
   return (
     <div className="mini">
-      <div style={{ color: "rgba(255,255,255,0.68)", marginBottom: 12 }}>
+      <div
+        style={{
+          color: "rgba(255,255,255,0.68)",
+          marginBottom: 12,
+        }}
+      >
         {icon}
       </div>
+
       <p className="label">{title}</p>
+
       <p className="mini-value">{value}</p>
     </div>
   );
@@ -461,12 +587,26 @@ function MiniStat({ icon, title, value }) {
 function SmallCard({ icon, title, value, desc }) {
   return (
     <div className="small-card">
-      <div className="icon-box">{icon}</div>
-      <p className="label gold" style={{ marginTop: 18 }}>
+      <div className="icon-box">
+        {icon}
+      </div>
+
+      <p
+        className="label gold"
+        style={{ marginTop: 18 }}
+      >
         {title}
       </p>
+
       <p className="small-value">{value}</p>
-      <p className="text" style={{ fontSize: 13, marginTop: 0 }}>
+
+      <p
+        className="text"
+        style={{
+          fontSize: 13,
+          marginTop: 0,
+        }}
+      >
         {desc}
       </p>
     </div>
