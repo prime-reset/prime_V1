@@ -10,13 +10,14 @@ import {
   CalendarDays,
   Trophy,
   ShieldCheck,
-  Brain,
   Crown,
   ChevronRight,
 } from "lucide-react";
 
 import BottomNav from "./components/BottomNav";
 import PrimeLevelCard from "./components/PrimeLevelCard";
+import DisciplineScoreCard from "./components/DisciplineScoreCard";
+
 export default function HomePage() {
   return (
     <main className="prime-home">
@@ -226,10 +227,6 @@ export default function HomePage() {
           transition: transform 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease, background 0.32s ease;
         }
 
-        .card:nth-of-type(3) { animation-delay: 0.34s; }
-        .card:nth-of-type(4) { animation-delay: 0.42s; }
-        .card:nth-of-type(5) { animation-delay: 0.50s; }
-
         .card:hover {
           transform: translateY(-2px) scale(1.01);
           border-color: rgba(214,178,95,0.52);
@@ -296,11 +293,6 @@ export default function HomePage() {
           text-transform: uppercase;
         }
 
-        .white-title {
-          color: white;
-          text-transform: none;
-        }
-
         .text {
           margin: 16px 0 0;
           color: rgba(255,255,255,0.68);
@@ -360,19 +352,6 @@ export default function HomePage() {
           font-weight: 850;
         }
 
-        .two-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .small-title {
-          margin: 8px 0 0;
-          font-size: 30px;
-          font-weight: 850;
-          color: #d6b25f;
-        }
-
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
@@ -390,7 +369,6 @@ export default function HomePage() {
         @media (max-width: 390px) {
           .title { font-size: 36px; }
           .actions-grid { grid-template-columns: 1fr; }
-          .two-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -448,10 +426,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="two-grid">
-          <SmallMetric icon={<ShieldCheck size={24} />} title="Score discipline" value="82%" text="Très bon contrôle aujourd’hui." />
-          <SmallMetric icon={<Brain size={24} />} title="État mental" value="Stable" text="Tu peux trader avec clarté." />
-        </section>
+        <DisciplineScoreCard />
 
         <section className="card">
           <div className="row">
@@ -471,7 +446,7 @@ export default function HomePage() {
           </p>
         </section>
 
-       <PrimeLevelCard />
+        <PrimeLevelCard />
       </div>
 
       <BottomNav />
@@ -504,23 +479,5 @@ function MiniStat({ icon, title, value }) {
       <p className="mini-label">{title}</p>
       <p className="mini-value">{value}</p>
     </div>
-  );
-}
-
-function SmallMetric({ icon, title, value, text }) {
-  return (
-    <section className="card">
-      <div className="gold-icon">{icon}</div>
-
-      <p className="label" style={{ marginTop: 14 }}>
-        {title}
-      </p>
-
-      <p className="small-title">{value}</p>
-
-      <p className="text" style={{ marginTop: 8 }}>
-        {text}
-      </p>
-    </section>
   );
 }
