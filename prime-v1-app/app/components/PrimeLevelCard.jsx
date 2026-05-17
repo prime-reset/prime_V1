@@ -1,11 +1,18 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Crown, Zap, Lock } from "lucide-react";
 
 export default function PrimeLevelCard() {
-  const level = 3;
-  const xp = 640;
+  const [xp, setXp] = useState(640);
+
+  useEffect(() => {
+    const savedXp = localStorage.getItem("prime_xp");
+    if (savedXp) setXp(Number(savedXp));
+  }, []);
+
   const nextLevelXp = 1000;
+  const level = Math.max(1, Math.floor(xp / 300) + 1);
   const progress = Math.min((xp / nextLevelXp) * 100, 100);
 
   return (
@@ -23,7 +30,6 @@ export default function PrimeLevelCard() {
           border: 1px solid rgba(214,178,95,0.32);
           box-shadow: 0 24px 70px rgba(0,0,0,0.52);
           backdrop-filter: blur(22px);
-          animation: fadeUp 0.85s ease both;
         }
 
         .level-row {
@@ -56,7 +62,6 @@ export default function PrimeLevelCard() {
         .level-title {
           margin: 6px 0 0;
           font-size: 24px;
-          line-height: 1.05;
           font-weight: 850;
           color: white;
         }
@@ -140,17 +145,13 @@ export default function PrimeLevelCard() {
         <div className="reward">
           <Zap size={18} color="#d6b25f" />
           <p className="reward-title">Gain XP</p>
-          <p className="reward-text">
-            +40 XP si session complète aujourd’hui.
-          </p>
+          <p className="reward-text">+40 XP par session disciplinée.</p>
         </div>
 
         <div className="reward">
           <Lock size={18} color="#d6b25f" />
           <p className="reward-title">Prochain unlock</p>
-          <p className="reward-text">
-            Niveau 4 : badge Discipline Core.
-          </p>
+          <p className="reward-text">Niveau 4 : Discipline Core.</p>
         </div>
       </div>
     </section>
