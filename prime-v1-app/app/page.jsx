@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Target,
@@ -10,15 +11,42 @@ import {
   CalendarDays,
   Trophy,
   ShieldCheck,
-  Crown,
+  Brain,
+  AlertTriangle,
   ChevronRight,
 } from "lucide-react";
-import PrimeCoachInsight from "./components/PrimeCoachInsight";
+
 import BottomNav from "./components/BottomNav";
 import PrimeLevelCard from "./components/PrimeLevelCard";
 import DisciplineScoreCard from "./components/DisciplineScoreCard";
 import PrimeBadgesCard from "./components/PrimeBadgesCard";
+import PrimeCoachInsight from "./components/PrimeCoachInsight";
+
 export default function HomePage() {
+  const [disciplineActive, setDisciplineActive] = useState(false);
+  const [resetActive, setResetActive] = useState(false);
+  const [streak, setStreak] = useState(4);
+  const [xp, setXp] = useState(640);
+
+  useEffect(() => {
+    setDisciplineActive(localStorage.getItem("prime_discipline_active") === "true");
+    setResetActive(localStorage.getItem("prime_reset_active") === "true");
+    setStreak(Number(localStorage.getItem("prime_streak") || 4));
+    setXp(Number(localStorage.getItem("prime_xp") || 640));
+  }, []);
+
+  const homeStatus = resetActive
+    ? "Mode reset actif"
+    : disciplineActive
+    ? "Discipline activée"
+    : "Prête à exécuter";
+
+  const homeMessage = resetActive
+    ? "PRIME a suspendu l’exécution. Priorité : retrouver ton calme avant tout nouveau trade."
+    : disciplineActive
+    ? "Ta session est verrouillée. PRIME suit ton respect du plan, ton streak et ton XP."
+    : "Lance ta session pour activer le suivi discipline, XP, streak et coaching PRIME.";
+
   return (
     <main className="prime-home">
       <style>{`
@@ -38,18 +66,18 @@ export default function HomePage() {
           background-image:
             linear-gradient(
               180deg,
-              rgba(0,0,0,0.08) 0%,
-              rgba(0,0,0,0.16) 28%,
-              rgba(0,0,0,0.66) 64%,
-              rgba(0,0,0,0.98) 100%
+              rgba(0,0,0,0.36) 0%,
+              rgba(0,0,0,0.48) 28%,
+              rgba(0,0,0,0.78) 64%,
+              rgba(0,0,0,0.99) 100%
             ),
             url("/prime-panther-bg.png.png");
           background-size:
             cover,
-            min(120vw, 860px) auto;
+            min(112vw, 760px) auto;
           background-position:
             center top,
-            center -225px;
+            center -175px;
           background-repeat: no-repeat;
           background-attachment: scroll;
           overflow-x: hidden;
@@ -62,9 +90,8 @@ export default function HomePage() {
           position: fixed;
           inset: 0;
           background:
-            radial-gradient(circle at 50% 10%, rgba(214,178,95,0.16), transparent 32%),
-            radial-gradient(circle at 50% 22%, rgba(255,255,255,0.05), transparent 28%),
-            linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.28) 48%, rgba(0,0,0,0.92) 100%);
+            radial-gradient(circle at 50% 10%, rgba(214,178,95,0.08), transparent 30%),
+            linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.42) 45%, rgba(0,0,0,0.96) 100%);
           pointer-events: none;
           z-index: 0;
         }
@@ -73,7 +100,7 @@ export default function HomePage() {
           content: "";
           position: fixed;
           inset: 0;
-          opacity: 0.045;
+          opacity: 0.035;
           pointer-events: none;
           z-index: 1;
           background-image:
@@ -92,17 +119,17 @@ export default function HomePage() {
 
         .hero {
           text-align: center;
-          padding-top: 8px;
-          margin-bottom: 28px;
+          padding-top: 4px;
+          margin-bottom: 26px;
           animation: fadeUp 0.7s ease both;
         }
 
         .brand {
           margin: 0;
-          font-size: 18px;
-          letter-spacing: 9px;
-          color: rgba(214,178,95,0.95);
-          font-weight: 500;
+          font-size: 28px;
+          letter-spacing: 12px;
+          color: rgba(214,178,95,0.98);
+          font-weight: 700;
         }
 
         .title {
@@ -129,6 +156,34 @@ export default function HomePage() {
           color: rgba(255,255,255,0.62);
         }
 
+        .live-card,
+        .card {
+          position: relative;
+          overflow: hidden;
+          border-radius: 28px;
+          padding: 22px;
+          margin-bottom: 16px;
+          background:
+            linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.02)),
+            rgba(5,5,5,0.78);
+          border: 1px solid rgba(214,178,95,0.30);
+          box-shadow: 0 24px 70px rgba(0,0,0,0.56);
+          backdrop-filter: blur(22px);
+          animation: fadeUp 0.85s ease both;
+          transition: transform 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease, background 0.32s ease;
+        }
+
+        .live-card {
+          border-color: ${resetActive ? "rgba(255,180,80,0.48)" : disciplineActive ? "rgba(214,178,95,0.52)" : "rgba(214,178,95,0.30)"};
+        }
+
+        .card:hover,
+        .live-card:hover {
+          transform: translateY(-2px) scale(1.01);
+          border-color: rgba(214,178,95,0.52);
+          box-shadow: 0 0 42px rgba(214,178,95,0.10), 0 24px 70px rgba(0,0,0,0.62);
+        }
+
         .actions-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -147,106 +202,22 @@ export default function HomePage() {
           justify-content: space-between;
           gap: 12px;
           background:
-            linear-gradient(145deg, rgba(255,255,255,0.105), rgba(255,255,255,0.03)),
-            rgba(0,0,0,0.34);
-          border: 1px solid rgba(214,178,95,0.36);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.46);
+            linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.025)),
+            rgba(0,0,0,0.48);
+          border: 1px solid rgba(214,178,95,0.34);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.50);
           backdrop-filter: blur(20px);
           animation: fadeUp 0.75s ease both;
           transition: transform 0.28s ease, border-color 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
         }
 
-        .action-card:nth-child(1) { animation-delay: 0.08s; }
-        .action-card:nth-child(2) { animation-delay: 0.14s; }
-        .action-card:nth-child(3) { animation-delay: 0.20s; }
-        .action-card:nth-child(4) { animation-delay: 0.26s; }
-
         .action-card:hover {
           transform: translateY(-3px) scale(1.02);
           border-color: rgba(214,178,95,0.78);
-          box-shadow: 0 0 30px rgba(214,178,95,0.16), 0 20px 60px rgba(0,0,0,0.58);
+          box-shadow: 0 0 30px rgba(214,178,95,0.13), 0 20px 60px rgba(0,0,0,0.62);
           background:
-            linear-gradient(145deg, rgba(214,178,95,0.18), rgba(255,255,255,0.04)),
-            rgba(0,0,0,0.44);
-        }
-
-        .action-icon {
-          width: 46px;
-          height: 46px;
-          min-width: 46px;
-          border-radius: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #d6b25f;
-          background: rgba(214,178,95,0.12);
-          border: 1px solid rgba(214,178,95,0.22);
-        }
-
-        .action-label {
-          margin: 0;
-          font-size: 11px;
-          color: rgba(214,178,95,0.92);
-          text-transform: uppercase;
-          letter-spacing: 1.2px;
-        }
-
-        .action-title {
-          margin: 4px 0 0;
-          font-size: 17px;
-          line-height: 1.15;
-          font-weight: 700;
-          text-transform: uppercase;
-        }
-
-        .chevron {
-          width: 28px;
-          height: 28px;
-          min-width: 28px;
-          border-radius: 50%;
-          border: 1px solid rgba(214,178,95,0.65);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #d6b25f;
-        }
-
-        .card {
-          position: relative;
-          overflow: hidden;
-          border-radius: 28px;
-          padding: 22px;
-          margin-bottom: 16px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.095), rgba(255,255,255,0.025)),
-            rgba(8,8,8,0.72);
-          border: 1px solid rgba(214,178,95,0.32);
-          box-shadow: 0 24px 70px rgba(0,0,0,0.52);
-          backdrop-filter: blur(22px);
-          animation: fadeUp 0.85s ease both;
-          transition: transform 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease, background 0.32s ease;
-        }
-
-        .card:hover {
-          transform: translateY(-2px) scale(1.01);
-          border-color: rgba(214,178,95,0.52);
-          background:
-            linear-gradient(145deg, rgba(214,178,95,0.10), rgba(255,255,255,0.025)),
-            rgba(8,8,8,0.68);
-          box-shadow: 0 0 42px rgba(214,178,95,0.12), 0 24px 70px rgba(0,0,0,0.60);
-        }
-
-        .card::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at top left, rgba(214,178,95,0.18), transparent 42%);
-          pointer-events: none;
-        }
-
-        .card > * {
-          position: relative;
-          z-index: 1;
+            linear-gradient(145deg, rgba(214,178,95,0.14), rgba(255,255,255,0.035)),
+            rgba(0,0,0,0.55);
         }
 
         .row {
@@ -262,7 +233,8 @@ export default function HomePage() {
           gap: 16px;
         }
 
-        .gold-icon {
+        .gold-icon,
+        .action-icon {
           width: 54px;
           height: 54px;
           min-width: 54px;
@@ -275,12 +247,24 @@ export default function HomePage() {
           border: 1px solid rgba(214,178,95,0.22);
         }
 
-        .label {
+        .action-icon {
+          width: 46px;
+          height: 46px;
+          min-width: 46px;
+          border-radius: 18px;
+        }
+
+        .label,
+        .action-label {
           margin: 0;
           font-size: 13px;
           text-transform: uppercase;
           letter-spacing: 1.2px;
           color: rgba(214,178,95,0.95);
+        }
+
+        .action-label {
+          font-size: 11px;
         }
 
         .card-title {
@@ -293,11 +277,31 @@ export default function HomePage() {
           text-transform: uppercase;
         }
 
+        .action-title {
+          margin: 4px 0 0;
+          font-size: 17px;
+          line-height: 1.15;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
         .text {
           margin: 16px 0 0;
-          color: rgba(255,255,255,0.68);
+          color: rgba(255,255,255,0.70);
           font-size: 14px;
           line-height: 1.6;
+        }
+
+        .chevron {
+          width: 28px;
+          height: 28px;
+          min-width: 28px;
+          border-radius: 50%;
+          border: 1px solid rgba(214,178,95,0.65);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #d6b25f;
         }
 
         .progress-head {
@@ -321,7 +325,7 @@ export default function HomePage() {
           height: 100%;
           border-radius: 999px;
           background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
-          box-shadow: 0 0 24px rgba(214,178,95,0.55);
+          box-shadow: 0 0 24px rgba(214,178,95,0.45);
           animation: loadBar 1.15s ease both;
         }
 
@@ -335,7 +339,7 @@ export default function HomePage() {
         .mini-card {
           border-radius: 18px;
           padding: 13px;
-          background: rgba(0,0,0,0.34);
+          background: rgba(0,0,0,0.38);
           border: 1px solid rgba(255,255,255,0.10);
         }
 
@@ -366,9 +370,34 @@ export default function HomePage() {
           from { width: 0%; }
         }
 
+        @media (max-width: 430px) {
+          .prime-home {
+            background-size:
+              cover,
+              148vw auto;
+            background-position:
+              center top,
+              center -135px;
+          }
+
+          .brand {
+            font-size: 26px;
+            letter-spacing: 10px;
+          }
+        }
+
         @media (max-width: 390px) {
           .title { font-size: 36px; }
           .actions-grid { grid-template-columns: 1fr; }
+
+          .prime-home {
+            background-size:
+              cover,
+              158vw auto;
+            background-position:
+              center top,
+              center -115px;
+          }
         }
       `}</style>
 
@@ -382,6 +411,21 @@ export default function HomePage() {
           </h1>
 
           <p className="subtitle">Discipline. Contrôle. Performance.</p>
+        </section>
+
+        <section className="live-card">
+          <div className="row">
+            <div className="gold-icon">
+              {resetActive ? <AlertTriangle size={25} /> : disciplineActive ? <ShieldCheck size={25} /> : <Brain size={25} />}
+            </div>
+
+            <div>
+              <p className="label">Home vivante</p>
+              <h2 className="card-title">{homeStatus}</h2>
+            </div>
+          </div>
+
+          <p className="text">{homeMessage}</p>
         </section>
 
         <section className="actions-grid">
@@ -400,57 +444,41 @@ export default function HomePage() {
 
               <div>
                 <p className="label">Streak PRIME</p>
-                <h2 className="card-title">4 jours disciplinés</h2>
+                <h2 className="card-title">{streak} jours disciplinés</h2>
               </div>
             </div>
           </div>
 
           <p className="text">
-            Tu construis ta régularité. Chaque journée où tu respectes ton plan
-            renforce ton identité de trader discipliné.
+            Ta série se met à jour quand tu actives une session disciplinée.
+            PRIME suit ta régularité, pas seulement ton résultat.
           </p>
 
           <div className="progress-head">
             <span>Objectif semaine</span>
-            <span>4/5 jours</span>
+            <span>{Math.min(streak, 5)}/5 jours</span>
           </div>
 
           <div className="progress">
-            <div className="progress-fill" style={{ width: "80%" }} />
+            <div className="progress-fill" style={{ width: `${Math.min((streak / 5) * 100, 100)}%` }} />
           </div>
 
           <div className="stats-grid">
-            <MiniStat icon={<CalendarDays size={19} />} title="Série" value="4j" />
-            <MiniStat icon={<Trophy size={19} />} title="Record" value="12j" />
-            <MiniStat icon={<ShieldCheck size={19} />} title="Statut" value="Actif" />
+            <MiniStat icon={<CalendarDays size={19} />} title="Série" value={`${streak}j`} />
+            <MiniStat icon={<Trophy size={19} />} title="XP" value={xp} />
+            <MiniStat icon={<ShieldCheck size={19} />} title="Statut" value={resetActive ? "Reset" : "Actif"} />
           </div>
         </section>
 
         <DisciplineScoreCard />
 
-        <section className="card">
-          <div className="row">
-            <div className="gold-icon">
-              <Target size={25} />
-            </div>
+        <PrimeLevelCard />
 
-            <div>
-              <p className="label">Prescription active</p>
-              <h2 className="card-title">Maximum 2 trades aujourd’hui</h2>
-            </div>
-          </div>
+        <PrimeBadgesCard />
 
-          <p className="text">
-            Ta priorité n’est pas de faire plus. Ta priorité est de respecter
-            ton plan, limiter l’impulsivité et protéger ton capital mental.
-          </p>
-        </section>
+        <PrimeCoachInsight />
+      </div>
 
-       <PrimeLevelCard />
-<DisciplineScoreCard />
-<PrimeBadgesCard />
-<PrimeCoachInsight />
-</div>
       <BottomNav />
     </main>
   );
