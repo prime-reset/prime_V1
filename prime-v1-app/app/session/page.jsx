@@ -26,10 +26,22 @@ export default function SessionPage() {
   }, []);
 
   function activateDiscipline() {
-    setDisciplineActive(true);
-    localStorage.setItem("prime_discipline_active", "true");
-    localStorage.setItem("prime_session_started_at", new Date().toISOString());
+  const today = new Date().toISOString().split("T")[0];
+  const lastXpDate = localStorage.getItem("prime_last_xp_date");
+
+  setDisciplineActive(true);
+  localStorage.setItem("prime_discipline_active", "true");
+  localStorage.setItem("prime_session_started_at", new Date().toISOString());
+
+  if (lastXpDate !== today) {
+    const currentXp = Number(localStorage.getItem("prime_xp") || 640);
+    const currentStreak = Number(localStorage.getItem("prime_streak") || 4);
+
+    localStorage.setItem("prime_xp", String(currentXp + 40));
+    localStorage.setItem("prime_streak", String(currentStreak + 1));
+    localStorage.setItem("prime_last_xp_date", today);
   }
+}
 
   return (
     <main className="session-page">
