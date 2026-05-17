@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Brain,
@@ -9,11 +10,27 @@ import {
   AlertTriangle,
   ArrowLeft,
   Play,
+  Lock,
 } from "lucide-react";
 
 import BottomNav from "../components/BottomNav";
 
 export default function SessionPage() {
+  const [disciplineActive, setDisciplineActive] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("prime_discipline_active");
+    if (saved === "true") {
+      setDisciplineActive(true);
+    }
+  }, []);
+
+  function activateDiscipline() {
+    setDisciplineActive(true);
+    localStorage.setItem("prime_discipline_active", "true");
+    localStorage.setItem("prime_session_started_at", new Date().toISOString());
+  }
+
   return (
     <main className="session-page">
       <style>{`
@@ -133,6 +150,13 @@ export default function SessionPage() {
           animation: fadeUp 0.75s ease both;
         }
 
+        .card.active-card {
+          border-color: rgba(214,178,95,0.58);
+          box-shadow:
+            0 0 40px rgba(214,178,95,0.14),
+            0 24px 70px rgba(0,0,0,0.60);
+        }
+
         .card::before {
           content: "";
           position: absolute;
@@ -247,18 +271,29 @@ export default function SessionPage() {
           color: rgba(255,255,255,0.56);
         }
 
-        .warning {
+        .warning,
+        .confirmation {
           margin-top: 16px;
           border-radius: 20px;
           padding: 15px;
           display: flex;
           gap: 12px;
           align-items: flex-start;
+        }
+
+        .warning {
           background: rgba(214,178,95,0.10);
           border: 1px solid rgba(214,178,95,0.22);
         }
 
-        .warning p {
+        .confirmation {
+          background: rgba(214,178,95,0.14);
+          border: 1px solid rgba(214,178,95,0.42);
+          box-shadow: 0 0 28px rgba(214,178,95,0.10);
+        }
+
+        .warning p,
+        .confirmation p {
           margin: 0;
           color: rgba(255,255,255,0.78);
           font-size: 13px;
@@ -283,6 +318,13 @@ export default function SessionPage() {
           background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
           box-shadow: 0 0 32px rgba(214,178,95,0.22);
           cursor: pointer;
+        }
+
+        .primary-button.active {
+          color: #d6b25f;
+          background: rgba(0,0,0,0.42);
+          border: 1px solid rgba(214,178,95,0.38);
+          box-shadow: 0 0 30px rgba(214,178,95,0.12);
         }
 
         @keyframes fadeIn {
@@ -319,23 +361,39 @@ export default function SessionPage() {
           </p>
         </section>
 
-        <section className="card">
+        <section className={`card ${disciplineActive ? "active-card" : ""}`}>
           <div className="row">
             <div className="gold-icon">
-              <Brain size={25} />
+              {disciplineActive ? <Lock size={25} /> : <Brain size={25} />}
             </div>
 
             <div>
-              <p className="label">État mental</p>
-              <h2 className="card-title">Comment tu arrives aujourd’hui ?</h2>
+              <p className="label">
+                {disciplineActive ? "Discipline activée" : "État mental"}
+              </p>
+              <h2 className="card-title">
+                {disciplineActive
+                  ? "Session verrouillée PRIME"
+                  : "Comment tu arrives aujourd’hui ?"}
+              </h2>
             </div>
           </div>
 
-          <div className="mental-grid">
-            <div className="mental-option">Fatiguée</div>
-            <div className="mental-option active">Stable</div>
-            <div className="mental-option">Tendue</div>
-          </div>
+          {!disciplineActive ? (
+            <div className="mental-grid">
+              <div className="mental-option">Fatiguée</div>
+              <div className="mental-option active">Stable</div>
+              <div className="mental-option">Tendue</div>
+            </div>
+          ) : (
+            <div className="confirmation">
+              <ShieldCheck size={18} color="#d6b25f" />
+              <p>
+                Ton mode discipline est actif. PRIME considérera cette session
+                comme engagée et suivra ton respect du plan.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="card">
@@ -363,7 +421,7 @@ export default function SessionPage() {
           </div>
         </section>
 
-        <section className="card">
+        <section className={`card ${disciplineActive ? "active-card" : ""}`}>
           <div className="row">
             <div className="gold-icon">
               <ShieldCheck size={25} />
@@ -397,13 +455,37 @@ export default function SessionPage() {
             <CheckItem
               title="Pas de trade émotionnel"
               desc="Aucune entrée pour compenser, prouver ou forcer."
+              done={disciplineActive}
             />
           </div>
 
-          <button className="primary-button">
-            <Play size={18} />
-            Activer ma discipline
+          <button
+            className={`primary-button ${disciplineActive ? "active" : ""}`}
+            onClick={activateDiscipline}
+            disabled={disciplineActive}
+          >
+            {disciplineActive ? (
+              <>
+                <Lock size={18} />
+                Discipline activée
+              </>
+            ) : (
+              <>
+                <Play size={18} />
+                Activer ma discipline
+              </>
+            )}
           </button>
+
+          {disciplineActive && (
+            <div className="confirmation">
+              <ShieldCheck size={18} color="#d6b25f" />
+              <p>
+                Session lancée. Prochaine étape : chaque action pourra alimenter
+                ton score discipline, ton streak et tes XP.
+              </p>
+            </div>
+          )}
         </section>
       </div>
 
@@ -415,7 +497,10 @@ export default function SessionPage() {
 function CheckItem({ title, desc, done }) {
   return (
     <div className={`check-item ${done ? "done" : ""}`}>
-      <CheckCircle2 size={20} color={done ? "#d6b25f" : "rgba(255,255,255,0.35)"} />
+      <CheckCircle2
+        size={20}
+        color={done ? "#d6b25f" : "rgba(255,255,255,0.35)"}
+      />
       <div>
         <p className="check-title">{title}</p>
         <p className="check-desc">{desc}</p>
