@@ -17,7 +17,7 @@ import {
 import BottomNav from "./components/BottomNav";
 import PrimeLevelCard from "./components/PrimeLevelCard";
 import DisciplineScoreCard from "./components/DisciplineScoreCard";
-
+import PrimeBadgesCard from "./components/PrimeBadgesCard";
 export default function HomePage() {
   return (
     <main className="prime-home">
@@ -446,7 +446,9 @@ export default function HomePage() {
           </p>
         </section>
 
-        <PrimeLevelCard />
+       <PrimeLevelCard />
+<DisciplineScoreCard />
+<PrimeBadgesCard />
       </div>
 
       <BottomNav />
