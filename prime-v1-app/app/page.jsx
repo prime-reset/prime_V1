@@ -13,7 +13,7 @@ import {
   Crown,
   ChevronRight,
 } from "lucide-react";
-
+import PrimeCoachInsight from "./components/PrimeCoachInsight";
 import BottomNav from "./components/BottomNav";
 import PrimeLevelCard from "./components/PrimeLevelCard";
 import DisciplineScoreCard from "./components/DisciplineScoreCard";
@@ -449,8 +449,8 @@ export default function HomePage() {
        <PrimeLevelCard />
 <DisciplineScoreCard />
 <PrimeBadgesCard />
-      </div>
-
+<PrimeCoachInsight />
+</div>
       <BottomNav />
     </main>
   );
