@@ -1,445 +1,425 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Brain,
+  ShieldCheck,
+  Target,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowLeft,
+  Play,
+} from "lucide-react";
+
 import BottomNav from "../components/BottomNav";
-import FadeIn from "../components/FadeIn";
-import PremiumCard from "../components/PremiumCard";
-import PrimaryButton from "../components/PrimaryButton";
 
 export default function SessionPage() {
-  const [primeProfile, setPrimeProfile] = useState(null);
-  const [checkedItems, setCheckedItems] = useState([]);
-
-  const [review, setReview] = useState({
-    respectedPlan: "",
-    movedStop: "",
-    revengeTrade: "",
-    emotionalLevel: "",
-    impulsiveEntry: "",
-  });
-
-  useEffect(() => {
-    const savedProfile = localStorage.getItem("primeProfile");
-
-    if (savedProfile) {
-      setPrimeProfile(JSON.parse(savedProfile));
-    }
-  }, []);
-
-  const checklist = primeProfile?.checklist || [
-    "Contexte HTF validé",
-    "Liquidité identifiée",
-    "Setup conforme au plan",
-    "Risque défini avant l’entrée",
-    "Invalidation claire",
-  ];
-
-  const toggleItem = (item) => {
-    if (checkedItems.includes(item)) {
-      setCheckedItems(checkedItems.filter((i) => i !== item));
-    } else {
-      setCheckedItems([...checkedItems, item]);
-    }
-  };
-
-  const updateReview = (field, value) => {
-    setReview({
-      ...review,
-      [field]: value,
-    });
-  };
-
-  const checklistScore = Math.round(
-    (checkedItems.length / checklist.length) * 100
-  );
-
-  const reviewPenalty = calculateReviewPenalty(review);
-
-  const finalScore = Math.max(0, checklistScore - reviewPenalty);
-
-  const status =
-    finalScore >= 80
-      ? "Session disciplinée"
-      : finalScore >= 50
-      ? "Session fragile"
-      : "Dérive comportementale";
-
-  const detectedError = detectBehavioralError(review);
-
-  const prescription = generatePrescription(detectedError, primeProfile);
-
-  const isReviewComplete =
-    review.respectedPlan &&
-    review.movedStop &&
-    review.revengeTrade &&
-    review.emotionalLevel &&
-    review.impulsiveEntry;
-
-  const saveSession = () => {
-    const sessionResult = {
-      date: new Date().toLocaleDateString("fr-FR"),
-      score: finalScore,
-      checklistScore,
-      reviewPenalty,
-      status,
-      checklist,
-      checkedItems,
-      review,
-      detectedError,
-      prescription,
-      profile: primeProfile?.detectedProfile || "Profil standard",
-      risk: primeProfile?.risk || "Anticipation / impulsivité",
-    };
-
-    const existingSessions =
-      JSON.parse(localStorage.getItem("primeSessions")) || [];
-
-    localStorage.setItem(
-      "primeSessions",
-      JSON.stringify([sessionResult, ...existingSessions])
-    );
-
-    alert("Session PRIME sauvegardée avec analyse comportementale.");
-  };
-
   return (
-    <main style={main}>
-      <div style={{ maxWidth: "430px", margin: "0 auto" }}>
-        <FadeIn delay={0}>
-          <p style={label}>SESSION PRIME</p>
+    <main className="session-page">
+      <style>{`
+        * { box-sizing: border-box; }
 
-          <h1 style={title}>
+        body {
+          margin: 0;
+          background: #000;
+        }
+
+        .session-page {
+          min-height: 100vh;
+          color: white;
+          padding: 28px 18px 125px;
+          font-family: Inter, Arial, sans-serif;
+          background:
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.12) 0%,
+              rgba(0,0,0,0.40) 42%,
+              rgba(0,0,0,0.98) 100%
+            ),
+            url("/prime-panther-bg.png.png");
+          background-size: cover, min(120vw, 860px) auto;
+          background-position: center top, center -220px;
+          background-repeat: no-repeat;
+          overflow-x: hidden;
+          position: relative;
+        }
+
+        .session-page::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          background:
+            radial-gradient(circle at 50% 10%, rgba(214,178,95,0.16), transparent 32%),
+            linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.95) 100%);
+          pointer-events: none;
+        }
+
+        .page {
+          max-width: 460px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 2;
+          animation: fadeIn 0.8s ease both;
+        }
+
+        .topbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 26px;
+        }
+
+        .back {
+          width: 44px;
+          height: 44px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          text-decoration: none;
+          background: rgba(0,0,0,0.38);
+          border: 1px solid rgba(214,178,95,0.28);
+          backdrop-filter: blur(18px);
+        }
+
+        .brand {
+          margin: 0;
+          font-size: 12px;
+          letter-spacing: 5px;
+          color: rgba(214,178,95,0.95);
+          text-transform: uppercase;
+        }
+
+        .hero {
+          margin-bottom: 18px;
+        }
+
+        .title {
+          margin: 0;
+          font-size: 38px;
+          line-height: 0.98;
+          font-weight: 900;
+          letter-spacing: -1.2px;
+          text-transform: uppercase;
+        }
+
+        .title span {
+          display: block;
+          background: linear-gradient(180deg, #fff 0%, #d6b25f 82%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+          margin: 14px 0 0;
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .card {
+          position: relative;
+          overflow: hidden;
+          border-radius: 28px;
+          padding: 22px;
+          margin-bottom: 16px;
+          background:
+            linear-gradient(145deg, rgba(255,255,255,0.095), rgba(255,255,255,0.025)),
+            rgba(8,8,8,0.74);
+          border: 1px solid rgba(214,178,95,0.32);
+          box-shadow: 0 24px 70px rgba(0,0,0,0.52);
+          backdrop-filter: blur(22px);
+          animation: fadeUp 0.75s ease both;
+        }
+
+        .card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at top left, rgba(214,178,95,0.16), transparent 42%);
+          pointer-events: none;
+        }
+
+        .card > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .row {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .gold-icon {
+          width: 54px;
+          height: 54px;
+          min-width: 54px;
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #d6b25f;
+          background: rgba(214,178,95,0.12);
+          border: 1px solid rgba(214,178,95,0.22);
+        }
+
+        .label {
+          margin: 0;
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          color: rgba(214,178,95,0.95);
+        }
+
+        .card-title {
+          margin: 6px 0 0;
+          font-size: 24px;
+          line-height: 1.05;
+          font-weight: 850;
+          color: white;
+        }
+
+        .text {
+          margin: 16px 0 0;
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.6;
+        }
+
+        .mental-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-top: 18px;
+        }
+
+        .mental-option {
+          border-radius: 18px;
+          padding: 13px 10px;
+          text-align: center;
+          background: rgba(0,0,0,0.34);
+          border: 1px solid rgba(255,255,255,0.10);
+          color: rgba(255,255,255,0.72);
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .mental-option.active {
+          color: #d6b25f;
+          border-color: rgba(214,178,95,0.42);
+          background: rgba(214,178,95,0.10);
+          box-shadow: 0 0 24px rgba(214,178,95,0.10);
+        }
+
+        .checklist {
+          display: grid;
+          gap: 10px;
+          margin-top: 18px;
+        }
+
+        .check-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          border-radius: 18px;
+          padding: 14px;
+          background: rgba(0,0,0,0.34);
+          border: 1px solid rgba(255,255,255,0.10);
+        }
+
+        .check-item.done {
+          border-color: rgba(214,178,95,0.34);
+        }
+
+        .check-title {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 800;
+          color: white;
+        }
+
+        .check-desc {
+          margin: 4px 0 0;
+          font-size: 12px;
+          line-height: 1.45;
+          color: rgba(255,255,255,0.56);
+        }
+
+        .warning {
+          margin-top: 16px;
+          border-radius: 20px;
+          padding: 15px;
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          background: rgba(214,178,95,0.10);
+          border: 1px solid rgba(214,178,95,0.22);
+        }
+
+        .warning p {
+          margin: 0;
+          color: rgba(255,255,255,0.78);
+          font-size: 13px;
+          line-height: 1.45;
+        }
+
+        .primary-button {
+          width: 100%;
+          margin-top: 18px;
+          border: none;
+          border-radius: 22px;
+          padding: 17px 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          color: #000;
+          font-size: 15px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
+          box-shadow: 0 0 32px rgba(214,178,95,0.22);
+          cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px) scale(0.985); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
+
+      <div className="page">
+        <div className="topbar">
+          <Link href="/" className="back">
+            <ArrowLeft size={20} />
+          </Link>
+
+          <p className="brand">PRIME SESSION</p>
+
+          <div style={{ width: 44 }} />
+        </div>
+
+        <section className="hero">
+          <h1 className="title">
             Prépare
-            <br />
-            ton exécution.
+            <span>ta session</span>
           </h1>
 
-          <p style={subtitle}>
-            Coche ta checklist puis renseigne ton comportement post-session.
-            PRIME calcule ton score réel de discipline.
+          <p className="subtitle">
+            Avant d’entrer en marché, PRIME vérifie ton état mental, ton intention
+            et ton respect du process.
           </p>
-        </FadeIn>
+        </section>
 
-        <FadeIn delay={0.2}>
-          <PremiumCard>
-            <p style={cardLabel}>PROFIL ACTIF</p>
+        <section className="card">
+          <div className="row">
+            <div className="gold-icon">
+              <Brain size={25} />
+            </div>
 
-            <h2 style={goldTitle}>
-              {primeProfile?.detectedProfile || "Profil standard"}
-            </h2>
+            <div>
+              <p className="label">État mental</p>
+              <h2 className="card-title">Comment tu arrives aujourd’hui ?</h2>
+            </div>
+          </div>
 
-            <p style={text}>
-              Risque surveillé :{" "}
-              <strong>
-                {primeProfile?.risk || "Anticipation / impulsivité"}
-              </strong>
+          <div className="mental-grid">
+            <div className="mental-option">Fatiguée</div>
+            <div className="mental-option active">Stable</div>
+            <div className="mental-option">Tendue</div>
+          </div>
+        </section>
+
+        <section className="card">
+          <div className="row">
+            <div className="gold-icon">
+              <Target size={25} />
+            </div>
+
+            <div>
+              <p className="label">Intention</p>
+              <h2 className="card-title">Objectif comportemental</h2>
+            </div>
+          </div>
+
+          <p className="text">
+            Aujourd’hui, ton objectif n’est pas de gagner plus. Ton objectif est
+            de respecter ton plan, ton risque et ton nombre maximal de trades.
+          </p>
+
+          <div className="warning">
+            <AlertTriangle size={18} color="#d6b25f" />
+            <p>
+              Si tu ressens le besoin de te refaire, PRIME te recommandera le mode reset.
             </p>
-          </PremiumCard>
-        </FadeIn>
+          </div>
+        </section>
 
-        <FadeIn delay={0.35}>
-          <PremiumCard>
-            <p style={cardLabel}>SCORE DISCIPLINE FINAL</p>
+        <section className="card">
+          <div className="row">
+            <div className="gold-icon">
+              <ShieldCheck size={25} />
+            </div>
 
-            <h2 style={scoreStyle}>{finalScore}</h2>
+            <div>
+              <p className="label">Checklist pré-trade</p>
+              <h2 className="card-title">Verrou de discipline</h2>
+            </div>
+          </div>
 
-            <p style={text}>{status}</p>
-
-            <p style={smallText}>
-              Checklist : {checklistScore}/100 · Pénalité comportementale : -
-              {reviewPenalty}
-            </p>
-          </PremiumCard>
-        </FadeIn>
-
-        <FadeIn delay={0.5}>
-          <PremiumCard>
-            <p style={cardLabel}>CHECKLIST PERSONNALISÉE</p>
-
-            {checklist.map((item) => {
-              const isChecked = checkedItems.includes(item);
-
-              return (
-                <button
-                  key={item}
-                  onClick={() => toggleItem(item)}
-                  style={checkButton}
-                >
-                  <span
-                    style={{
-                      ...checkBox,
-                      background: isChecked ? "#D4B06A" : "transparent",
-                    }}
-                  />
-
-                  <p style={checkText}>{item}</p>
-                </button>
-              );
-            })}
-          </PremiumCard>
-        </FadeIn>
-
-        <FadeIn delay={0.65}>
-          <PremiumCard>
-            <p style={cardLabel}>REVIEW COMPORTEMENTALE</p>
-
-            <ReviewSelect
-              label="As-tu respecté ton plan ?"
-              value={review.respectedPlan}
-              onChange={(value) => updateReview("respectedPlan", value)}
-              options={["Oui", "Partiellement", "Non"]}
+          <div className="checklist">
+            <CheckItem
+              title="Biais HTF identifié"
+              desc="Structure, liquidité, zones clés et contexte global validés."
+              done
             />
 
-            <ReviewSelect
-              label="As-tu déplacé ton stop ?"
-              value={review.movedStop}
-              onChange={(value) => updateReview("movedStop", value)}
-              options={["Non", "Oui"]}
+            <CheckItem
+              title="Session highs/lows repérés"
+              desc="Asian / London / premarket visibles avant l’exécution."
+              done
             />
 
-            <ReviewSelect
-              label="As-tu fait un revenge trade ?"
-              value={review.revengeTrade}
-              onChange={(value) => updateReview("revengeTrade", value)}
-              options={["Non", "Oui"]}
+            <CheckItem
+              title="Risque défini"
+              desc="Stop, invalidation et perte maximale acceptée avant entrée."
+              done
             />
 
-            <ReviewSelect
-              label="Ton niveau émotionnel ?"
-              value={review.emotionalLevel}
-              onChange={(value) => updateReview("emotionalLevel", value)}
-              options={["Calme", "Tendu", "Élevé"]}
+            <CheckItem
+              title="Pas de trade émotionnel"
+              desc="Aucune entrée pour compenser, prouver ou forcer."
             />
+          </div>
 
-            <ReviewSelect
-              label="As-tu pris une entrée impulsive ?"
-              value={review.impulsiveEntry}
-              onChange={(value) => updateReview("impulsiveEntry", value)}
-              options={["Non", "Oui"]}
-            />
-          </PremiumCard>
-        </FadeIn>
-
-        <FadeIn delay={0.8}>
-          <PremiumCard>
-            <p style={cardLabel}>ANALYSE PRIME</p>
-
-            <h2 style={cardTitle}>{detectedError}</h2>
-
-            <p style={text}>{prescription}</p>
-          </PremiumCard>
-        </FadeIn>
-
-        <FadeIn delay={0.95}>
-          <button
-            onClick={saveSession}
-            disabled={!isReviewComplete}
-            style={{
-              background: "transparent",
-              border: "none",
-              padding: 0,
-              width: "100%",
-              opacity: isReviewComplete ? 1 : 0.35,
-              cursor: isReviewComplete ? "pointer" : "not-allowed",
-            }}
-          >
-            <PrimaryButton>Sauvegarder ma session</PrimaryButton>
+          <button className="primary-button">
+            <Play size={18} />
+            Activer ma discipline
           </button>
-        </FadeIn>
+        </section>
       </div>
 
-      <BottomNav active="Session" />
+      <BottomNav />
     </main>
   );
 }
 
-function ReviewSelect({ label, value, onChange, options }) {
+function CheckItem({ title, desc, done }) {
   return (
-    <div style={{ marginBottom: "22px" }}>
-      <p style={reviewLabel}>{label}</p>
-
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={select}
-      >
-        <option value="">Choisir</option>
-
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+    <div className={`check-item ${done ? "done" : ""}`}>
+      <CheckCircle2 size={20} color={done ? "#d6b25f" : "rgba(255,255,255,0.35)"} />
+      <div>
+        <p className="check-title">{title}</p>
+        <p className="check-desc">{desc}</p>
+      </div>
     </div>
   );
 }
-
-function calculateReviewPenalty(review) {
-  let penalty = 0;
-
-  if (review.respectedPlan === "Partiellement") penalty += 10;
-  if (review.respectedPlan === "Non") penalty += 25;
-  if (review.movedStop === "Oui") penalty += 15;
-  if (review.revengeTrade === "Oui") penalty += 25;
-  if (review.emotionalLevel === "Tendu") penalty += 8;
-  if (review.emotionalLevel === "Élevé") penalty += 18;
-  if (review.impulsiveEntry === "Oui") penalty += 15;
-
-  return penalty;
-}
-
-function detectBehavioralError(review) {
-  if (review.revengeTrade === "Oui") return "Revenge trade détecté";
-  if (review.movedStop === "Oui") return "Stop déplacé";
-  if (review.impulsiveEntry === "Oui") return "Entrée impulsive";
-  if (review.respectedPlan === "Non") return "Non-respect du plan";
-  if (review.emotionalLevel === "Élevé") return "Émotion dominante élevée";
-
-  return "Comportement stable";
-}
-
-function generatePrescription(error, primeProfile) {
-  if (error === "Revenge trade détecté") {
-    return "Prescription : maximum 1 trade après une perte pendant 7 jours.";
-  }
-
-  if (error === "Stop déplacé") {
-    return "Prescription : interdiction de modifier le stop une fois le trade lancé.";
-  }
-
-  if (error === "Entrée impulsive") {
-    return "Prescription : attendre une confirmation complète avant toute exécution.";
-  }
-
-  if (error === "Non-respect du plan") {
-    return "Prescription : réduire le nombre de trades et valider la checklist avant chaque entrée.";
-  }
-
-  if (error === "Émotion dominante élevée") {
-    return "Prescription : activer le Mode Reset avant toute nouvelle décision.";
-  }
-
-  return (
-    primeProfile?.prescription ||
-    "Prescription : conserver le même niveau d’exigence sur la prochaine session."
-  );
-}
-
-const main = {
-  minHeight: "100vh",
-  background: "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
-  color: "white",
-  padding: "32px",
-  paddingBottom: "140px",
-  fontFamily: "Arial, sans-serif",
-};
-
-const label = {
-  color: "#D4B06A",
-  letterSpacing: "6px",
-  fontSize: "12px",
-  marginBottom: "24px",
-};
-
-const title = {
-  fontSize: "52px",
-  lineHeight: "0.96",
-  fontWeight: "700",
-  marginBottom: "24px",
-  letterSpacing: "-2px",
-};
-
-const subtitle = {
-  color: "rgba(255,255,255,0.64)",
-  fontSize: "19px",
-  lineHeight: "1.6",
-  marginBottom: "34px",
-};
-
-const cardLabel = {
-  color: "rgba(255,255,255,0.45)",
-  fontSize: "13px",
-  letterSpacing: "2px",
-  marginBottom: "14px",
-};
-
-const goldTitle = {
-  color: "#D4B06A",
-  fontSize: "34px",
-  lineHeight: "40px",
-  margin: "0 0 14px",
-};
-
-const scoreStyle = {
-  color: "#D4B06A",
-  fontSize: "84px",
-  lineHeight: "90px",
-  margin: "0 0 12px",
-};
-
-const cardTitle = {
-  color: "white",
-  fontSize: "26px",
-  lineHeight: "36px",
-  margin: "0 0 14px",
-};
-
-const text = {
-  color: "rgba(255,255,255,0.62)",
-  fontSize: "18px",
-  lineHeight: "30px",
-};
-
-const smallText = {
-  color: "rgba(255,255,255,0.42)",
-  fontSize: "15px",
-  lineHeight: "24px",
-};
-
-const checkButton = {
-  width: "100%",
-  display: "flex",
-  alignItems: "center",
-  gap: "14px",
-  marginBottom: "16px",
-  background: "transparent",
-  border: "none",
-  padding: 0,
-  textAlign: "left",
-  cursor: "pointer",
-};
-
-const checkBox = {
-  width: "22px",
-  height: "22px",
-  borderRadius: "7px",
-  border: "1px solid rgba(212,176,106,0.75)",
-  boxShadow: "0 0 18px rgba(212,176,106,0.10)",
-  flexShrink: 0,
-};
-
-const checkText = {
-  margin: 0,
-  color: "rgba(255,255,255,0.82)",
-  fontSize: "17px",
-  lineHeight: "26px",
-};
-
-const reviewLabel = {
-  color: "rgba(255,255,255,0.74)",
-  fontSize: "17px",
-  lineHeight: "26px",
-  marginBottom: "10px",
-};
-
-const select = {
-  width: "100%",
-  background: "rgba(15,15,15,0.8)",
-  color: "white",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "18px",
-  padding: "16px",
-  fontSize: "16px",
-  outline: "none",
-};
