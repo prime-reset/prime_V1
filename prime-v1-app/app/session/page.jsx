@@ -1,4 +1,4 @@
-"use client";
+    "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,6 +15,7 @@ import {
 
 import BottomNav from "../components/BottomNav";
 import { supabase } from "../../lib/supabase";
+
 export default function SessionPage() {
   const [disciplineActive, setDisciplineActive] = useState(false);
 
@@ -25,67 +26,51 @@ export default function SessionPage() {
     }
   }, []);
 
-async function activateDiscipline() {
-  const today = new Date().toISOString().split("T")[0];
-  const lastXpDate = localStorage.getItem("prime_last_xp_date");
+  async function activateDiscipline() {
+    const today = new Date().toISOString().split("T")[0];
+    const lastXpDate = localStorage.getItem("prime_last_xp_date");
 
-  setDisciplineActive(true);
+    setDisciplineActive(true);
 
-  localStorage.setItem("prime_discipline_active", "true");
-  localStorage.setItem("prime_session_started_at", new Date().toISOString());
+    localStorage.setItem("prime_discipline_active", "true");
+    localStorage.setItem("prime_session_started_at", new Date().toISOString());
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const user = sessionData?.session?.user;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData?.session?.user;
 
-  if (!user) {
-    console.log("Aucun utilisateur connecté.");
-    return;
-  }
-
-  if (lastXpDate !== today) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("xp, streak")
-      .eq("id", user.id)
-      .single();
-
-    if (error) {
-      console.log("Erreur récupération profil :", error.message);
+    if (!user) {
+      console.log("Aucun utilisateur connecté.");
       return;
     }
 
-    const newXp = Number(profile?.xp || 640) + 40;
-    const newStreak = Number(profile?.streak || 0) + 1;
+    if (lastXpDate !== today) {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("xp, streak")
+        .eq("id", user.id)
+        .single();
 
-    await supabase
-      .from("profiles")
-      .update({
-        xp: newXp,
-        streak: newStreak,
-      })
-      .eq("id", user.id);
+      if (error) {
+        console.log("Erreur récupération profil :", error.message);
+        return;
+      }
 
-    localStorage.setItem("prime_xp", String(newXp));
-    localStorage.setItem("prime_streak", String(newStreak));
-    localStorage.setItem("prime_last_xp_date", today);
+      const newXp = Number(profile?.xp || 640) + 40;
+      const newStreak = Number(profile?.streak || 0) + 1;
+
+      await supabase
+        .from("profiles")
+        .update({
+          xp: newXp,
+          streak: newStreak,
+        })
+        .eq("id", user.id);
+
+      localStorage.setItem("prime_xp", String(newXp));
+      localStorage.setItem("prime_streak", String(newStreak));
+      localStorage.setItem("prime_last_xp_date", today);
+    }
   }
-}
-  const today = new Date().toISOString().split("T")[0];
-  const lastXpDate = localStorage.getItem("prime_last_xp_date");
-
-  setDisciplineActive(true);
-  localStorage.setItem("prime_discipline_active", "true");
-  localStorage.setItem("prime_session_started_at", new Date().toISOString());
-
-  if (lastXpDate !== today) {
-    const currentXp = Number(localStorage.getItem("prime_xp") || 640);
-    const currentStreak = Number(localStorage.getItem("prime_streak") || 4);
-
-    localStorage.setItem("prime_xp", String(currentXp + 40));
-    localStorage.setItem("prime_streak", String(currentStreak + 1));
-    localStorage.setItem("prime_last_xp_date", today);
-  }
-}
 
   return (
     <main className="session-page">
@@ -412,8 +397,8 @@ async function activateDiscipline() {
           </h1>
 
           <p className="subtitle">
-            Avant d’entrer en marché, PRIME vérifie ton état mental, ton intention
-            et ton respect du process.
+            Avant d’entrer en marché, PRIME vérifie ton état mental, ton
+            intention et ton respect du process.
           </p>
         </section>
 
@@ -472,7 +457,8 @@ async function activateDiscipline() {
           <div className="warning">
             <AlertTriangle size={18} color="#d6b25f" />
             <p>
-              Si tu ressens le besoin de te refaire, PRIME te recommandera le mode reset.
+              Si tu ressens le besoin de te refaire, PRIME te recommandera le
+              mode reset.
             </p>
           </div>
         </section>
@@ -544,7 +530,6 @@ async function activateDiscipline() {
           )}
         </section>
       </div>
-
 
       <BottomNav />
     </main>
