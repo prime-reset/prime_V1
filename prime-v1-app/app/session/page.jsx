@@ -545,10 +545,6 @@ async function activateDiscipline() {
         </section>
       </div>
 
-      <BottomNav />
-    </main>
-  );
-}
 
       <BottomNav />
     </main>
