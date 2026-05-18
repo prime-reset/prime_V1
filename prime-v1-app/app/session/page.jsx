@@ -550,6 +550,11 @@ async function activateDiscipline() {
   );
 }
 
+      <BottomNav />
+    </main>
+  );
+}
+
 function CheckItem({ title, desc, done }) {
   return (
     <div className={`check-item ${done ? "done" : ""}`}>
