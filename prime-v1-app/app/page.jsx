@@ -21,7 +21,7 @@ import PrimeLevelCard from "./components/PrimeLevelCard";
 import DisciplineScoreCard from "./components/DisciplineScoreCard";
 import PrimeBadgesCard from "./components/PrimeBadgesCard";
 import PrimeCoachInsight from "./components/PrimeCoachInsight";
-
+import CloudProfileCard from "./components/CloudProfileCard";
 export default function HomePage() {
   const [disciplineActive, setDisciplineActive] = useState(false);
   const [resetActive, setResetActive] = useState(false);
@@ -469,7 +469,7 @@ export default function HomePage() {
             <MiniStat icon={<ShieldCheck size={19} />} title="Statut" value={resetActive ? "Reset" : "Actif"} />
           </div>
         </section>
-
+<CloudProfileCard />
         <DisciplineScoreCard />
 
         <PrimeLevelCard />
