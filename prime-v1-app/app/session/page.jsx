@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import BottomNav from "../components/BottomNav";
-
+import { supabase } from "../../lib/supabase";
 export default function SessionPage() {
   const [disciplineActive, setDisciplineActive] = useState(false);
 
@@ -25,7 +25,51 @@ export default function SessionPage() {
     }
   }, []);
 
-  function activateDiscipline() {
+async function activateDiscipline() {
+  const today = new Date().toISOString().split("T")[0];
+  const lastXpDate = localStorage.getItem("prime_last_xp_date");
+
+  setDisciplineActive(true);
+
+  localStorage.setItem("prime_discipline_active", "true");
+  localStorage.setItem("prime_session_started_at", new Date().toISOString());
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData?.session?.user;
+
+  if (!user) {
+    console.log("Aucun utilisateur connecté.");
+    return;
+  }
+
+  if (lastXpDate !== today) {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("xp, streak")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.log("Erreur récupération profil :", error.message);
+      return;
+    }
+
+    const newXp = Number(profile?.xp || 640) + 40;
+    const newStreak = Number(profile?.streak || 0) + 1;
+
+    await supabase
+      .from("profiles")
+      .update({
+        xp: newXp,
+        streak: newStreak,
+      })
+      .eq("id", user.id);
+
+    localStorage.setItem("prime_xp", String(newXp));
+    localStorage.setItem("prime_streak", String(newStreak));
+    localStorage.setItem("prime_last_xp_date", today);
+  }
+}
   const today = new Date().toISOString().split("T")[0];
   const lastXpDate = localStorage.getItem("prime_last_xp_date");
 
