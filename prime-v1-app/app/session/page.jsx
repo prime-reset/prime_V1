@@ -1,4 +1,4 @@
-    "use client";
+ "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -19,97 +19,55 @@ import { supabase } from "../../lib/supabase";
 export default function SessionPage() {
   const [disciplineActive, setDisciplineActive] = useState(false);
 
- useEffect(() => {
-  async function loadUserSession() {
+  useEffect(() => {
+    async function loadUserSession() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
+
+      if (!user) {
+        setDisciplineActive(false);
+        return;
+      }
+
+      const saved = localStorage.getItem(`prime_discipline_active_${user.id}`);
+      setDisciplineActive(saved === "true");
+    }
+
+    loadUserSession();
+  }, []);
+
+  async function activateDiscipline() {
+    const today = new Date().toISOString().split("T")[0];
+
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData?.session?.user;
 
     if (!user) {
-      setDisciplineActive(false);
+      console.log("Aucun utilisateur connecté.");
       return;
     }
 
-    const saved = localStorage.getItem(`prime_discipline_active_${user.id}`);
+    const lastXpDate = localStorage.getItem(`prime_last_xp_date_${user.id}`);
 
-    if (saved === "true") {
-      setDisciplineActive(true);
-    } else {
-      setDisciplineActive(false);
-    }
-  }
+    setDisciplineActive(true);
 
-  loadUserSession();
-}, []);
+    localStorage.setItem(`prime_discipline_active_${user.id}`, "true");
+    localStorage.setItem(
+      `prime_session_started_at_${user.id}`,
+      new Date().toISOString()
+    );
 
-async function activateDiscipline() {
-  const today = new Date().toISOString().split("T")[0];
+    await supabase.from("sessions").insert([
+      {
+        user_id: user.id,
+        discipline_active: true,
+        discipline_score: 100,
+        xp_gain: 40,
+        streak_gain: 1,
+        status: "active",
+      },
+    ]);
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const user = sessionData?.session?.user;
-
-  if (!user) {
-    console.log("Aucun utilisateur connecté.");
-    return;
-  }
-
-  const lastXpDate = localStorage.getItem(`prime_last_xp_date_${user.id}`);
-
-  setDisciplineActive(true);
-
-  localStorage.setItem(`prime_discipline_active_${user.id}`, "true");
-  localStorage.setItem(`prime_session_started_at_${user.id}`, new Date().toISOString());
-
-  await supabase.from("sessions").insert([
-    {
-      user_id: user.id,
-      discipline_active: true,
-      discipline_score: 100,
-      xp_gain: 40,
-      streak_gain: 1,
-      status: "active",
-    },
-  ]);
-
-  if (lastXpDate !== today) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("xp, streak")
-      .eq("id", user.id)
-      .single();
-
-    if (error) {
-      console.log("Erreur récupération profil :", error.message);
-      return;
-    }
-
-    const newXp = Number(profile?.xp || 640) + 40;
-    const newStreak = Number(profile?.streak || 0) + 1;
-
-    await supabase
-      .from("profiles")
-      .update({
-        xp: newXp,
-        streak: newStreak,
-      })
-      .eq("id", user.id);
-
-    localStorage.setItem(`prime_xp_${user.id}`, String(newXp));
-    localStorage.setItem(`prime_streak_${user.id}`, String(newStreak));
-    localStorage.setItem(`prime_last_xp_date_${user.id}`, today);
-  }
-}
-await supabase
-  .from("sessions")
-  .insert([
-    {
-      user_id: user.id,
-      discipline_active: true,
-      discipline_score: 100,
-      xp_gain: 40,
-      streak_gain: 1,
-      status: "active",
-    },
-  ]);
     if (lastXpDate !== today) {
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -133,9 +91,9 @@ await supabase
         })
         .eq("id", user.id);
 
-      localStorage.setItem("prime_xp", String(newXp));
-      localStorage.setItem("prime_streak", String(newStreak));
-      localStorage.setItem("prime_last_xp_date", today);
+      localStorage.setItem(`prime_xp_${user.id}`, String(newXp));
+      localStorage.setItem(`prime_streak_${user.id}`, String(newStreak));
+      localStorage.setItem(`prime_last_xp_date_${user.id}`, today);
     }
   }
 
