@@ -42,7 +42,18 @@ export default function SessionPage() {
       console.log("Aucun utilisateur connecté.");
       return;
     }
-
+await supabase
+  .from("sessions")
+  .insert([
+    {
+      user_id: user.id,
+      discipline_active: true,
+      discipline_score: 100,
+      xp_gain: 40,
+      streak_gain: 1,
+      status: "active",
+    },
+  ]);
     if (lastXpDate !== today) {
       const { data: profile, error } = await supabase
         .from("profiles")
