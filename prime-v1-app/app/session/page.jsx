@@ -548,7 +548,7 @@ async function activateDiscipline() {
       <BottomNav />
     </main>
   );
-}
+
 
 function CheckItem({ title, desc, done }) {
   return (
