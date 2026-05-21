@@ -1,16 +1,13 @@
- "use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+
 import {
-  Brain,
   ShieldCheck,
-  Target,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowLeft,
   Play,
   Lock,
+  CheckCircle2,
 } from "lucide-react";
 
 import BottomNav from "../components/BottomNav";
@@ -18,7 +15,8 @@ import { supabase } from "../../lib/supabase";
 
 export default function SessionPage() {
   const [disciplineActive, setDisciplineActive] = useState(false);
-const [checklistItems, setChecklistItems] = useState([]);
+  const [checklistItems, setChecklistItems] = useState([]);
+
   useEffect(() => {
     async function loadUserSession() {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -29,584 +27,329 @@ const [checklistItems, setChecklistItems] = useState([]);
         return;
       }
 
-      const saved = localStorage.getItem(`prime_discipline_active_${user.id}`);
+      const saved = localStorage.getItem(
+        `prime_discipline_active_${user.id}`
+      );
+
       setDisciplineActive(saved === "true");
     }
-async function loadChecklist() {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const user = sessionData?.session?.user;
 
-  if (!user) return;
+    async function loadChecklist() {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("profile_type, strategy_type")
-    .eq("id", user.id)
-    .single();
+      if (!user) return;
 
-  if (!profile) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("profile_type, strategy_type")
+        .eq("id", user.id)
+        .single();
 
-  const { data: templates } = await supabase
-    .from("checklist_templates")
-    .select("*")
-    .eq("profile_type", profile.profile_type)
-    .eq("strategy_type", profile.strategy_type)
-    .eq("is_active", true);
+      if (!profile) return;
 
-  if (templates) {
-    setChecklistItems(
-      templates.map((item) => ({
-        ...item,
-        checked: false,
-      }))
+      const { data: templates } = await supabase
+        .from("checklist_templates")
+        .select("*")
+        .eq("profile_type", profile.profile_type)
+        .eq("strategy_type", profile.strategy_type)
+        .eq("is_active", true);
+
+      if (templates) {
+        setChecklistItems(
+          templates.map((item) => ({
+            ...item,
+            checked: false,
+          }))
+        );
+      }
+    }
+
+    loadUserSession();
+    loadChecklist();
+  }, []);
+
+  function toggleChecklist(index) {
+    setChecklistItems((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              checked: !item.checked,
+            }
+          : item
+      )
     );
   }
-}
-    loadUserSession();
-  }, []);
-loadChecklist();
-  async function activateDiscipline() {
-    const today = new Date().toISOString().split("T")[0];
 
+  const allChecked =
+    checklistItems.length > 0 &&
+    checklistItems.every((item) => item.checked);
+
+  async function activateDiscipline() {
     const { data: sessionData } = await supabase.auth.getSession();
     const user = sessionData?.session?.user;
 
     if (!user) {
-      console.log("Aucun utilisateur connecté.");
+      alert("Tu dois être connecté.");
       return;
     }
 
-    const lastXpDate = localStorage.getItem(`prime_last_xp_date_${user.id}`);
+    localStorage.setItem(
+      `prime_discipline_active_${user.id}`,
+      "true"
+    );
 
-    setDisciplineActive(true);
-
-    localStorage.setItem(`prime_discipline_active_${user.id}`, "true");
     localStorage.setItem(
       `prime_session_started_at_${user.id}`,
       new Date().toISOString()
     );
 
-  const { data: sessionInsert, error: sessionError } = await supabase
-  .from("sessions")
-  .insert([
-    {
-      user_id: user.id,
-      discipline_active: true,
-      discipline_score: 100,
-      xp_gain: 40,
-      streak_gain: 1,
-      status: "active",
-    },
-  ])
-  .select();
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: user.id,
+          discipline_active: true,
+          discipline_score: 100,
+          xp_gain: 40,
+          streak_gain: 1,
+          status: "active",
+        },
+      ])
+      .select();
 
-console.log("SESSION INSERT DATA:", sessionInsert);
-console.log("SESSION INSERT ERROR:", sessionError);
+    console.log("SESSION INSERT DATA:", data);
+    console.log("SESSION INSERT ERROR:", error);
 
-    if (lastXpDate !== today) {
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("xp, streak")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        console.log("Erreur récupération profil :", error.message);
-        return;
-      }
-
-      const newXp = Number(profile?.xp || 640) + 40;
-      const newStreak = Number(profile?.streak || 0) + 1;
-
-      await supabase
-        .from("profiles")
-        .update({
-          xp: newXp,
-          streak: newStreak,
-        })
-        .eq("id", user.id);
-
-      localStorage.setItem(`prime_xp_${user.id}`, String(newXp));
-      localStorage.setItem(`prime_streak_${user.id}`, String(newStreak));
-      localStorage.setItem(`prime_last_xp_date_${user.id}`, today);
-    }
+    setDisciplineActive(true);
   }
 
   return (
     <main className="session-page">
-      <style>{`
-        * { box-sizing: border-box; }
+      <div className="session-card">
+        <div className="session-header">
+          <div className="shield-box">
+            <ShieldCheck size={28} />
+          </div>
 
-        body {
-          margin: 0;
-          background: #000;
-        }
+          <div>
+            <p className="subtitle">
+              CHECKLIST PRÉ-TRADE
+            </p>
 
+            <h1>Verrou de discipline</h1>
+          </div>
+        </div>
+
+        <div className="checklist">
+          {checklistItems.map((item, index) => (
+            <button
+              key={index}
+              className={`check-item ${
+                item.checked ? "done" : ""
+              }`}
+              onClick={() => toggleChecklist(index)}
+            >
+              <CheckCircle2
+                size={22}
+                color={
+                  item.checked
+                    ? "#d6b25f"
+                    : "rgba(255,255,255,0.28)"
+                }
+              />
+
+              <div>
+                <h3>{item.question}</h3>
+
+                <p>
+                  {item.category} • poids {item.weight}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {!disciplineActive ? (
+          <button
+            className={`discipline-btn ${
+              !allChecked ? "disabled" : ""
+            }`}
+            disabled={!allChecked}
+            onClick={activateDiscipline}
+          >
+            <Play size={18} />
+
+            {allChecked
+              ? "ACTIVER MA DISCIPLINE"
+              : "COMPLETE TA CHECKLIST"}
+          </button>
+        ) : (
+          <button className="discipline-btn active">
+            <Lock size={18} />
+            DISCIPLINE ACTIVÉE
+          </button>
+        )}
+
+        {disciplineActive && (
+          <div className="confirmation">
+            <ShieldCheck
+              size={18}
+              color="#d6b25f"
+            />
+
+            <p>
+              Session lancée. Chaque action alimentera
+              désormais ton score discipline, ton streak
+              et tes XP.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <BottomNav />
+
+      <style jsx>{`
         .session-page {
           min-height: 100vh;
+          background: black;
           color: white;
-          padding: 28px 18px 125px;
-          font-family: Inter, Arial, sans-serif;
-          background:
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0.12) 0%,
-              rgba(0,0,0,0.40) 42%,
-              rgba(0,0,0,0.98) 100%
-            ),
-            url("/prime-panther-bg.png.png");
-          background-size: cover, min(120vw, 860px) auto;
-          background-position: center top, center -220px;
-          background-repeat: no-repeat;
-          overflow-x: hidden;
-          position: relative;
+          padding: 28px 18px 120px;
         }
 
-        .session-page::before {
-          content: "";
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(circle at 50% 10%, rgba(214,178,95,0.16), transparent 32%),
-            linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.38) 50%, rgba(0,0,0,0.95) 100%);
-          pointer-events: none;
+        .session-card {
+          border-radius: 32px;
+          padding: 22px;
+          background: linear-gradient(
+            180deg,
+            rgba(214, 178, 95, 0.12),
+            rgba(0, 0, 0, 0.82)
+          );
+          border: 1px solid rgba(214, 178, 95, 0.22);
         }
 
-        .page {
-          max-width: 460px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 2;
-          animation: fadeIn 0.8s ease both;
-        }
-
-        .topbar {
+        .session-header {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          margin-bottom: 26px;
+          gap: 16px;
+          margin-bottom: 22px;
         }
 
-        .back {
-          width: 44px;
-          height: 44px;
-          border-radius: 16px;
+        .shield-box {
+          width: 72px;
+          height: 72px;
+          border-radius: 22px;
+          background: rgba(214, 178, 95, 0.1);
+          border: 1px solid rgba(214, 178, 95, 0.22);
+
           display: flex;
           align-items: center;
           justify-content: center;
-          color: white;
-          text-decoration: none;
-          background: rgba(0,0,0,0.38);
-          border: 1px solid rgba(214,178,95,0.28);
-          backdrop-filter: blur(18px);
-        }
 
-        .brand {
-          margin: 0;
-          font-size: 12px;
-          letter-spacing: 5px;
-          color: rgba(214,178,95,0.95);
-          text-transform: uppercase;
-        }
-
-        .hero {
-          margin-bottom: 18px;
-        }
-
-        .title {
-          margin: 0;
-          font-size: 38px;
-          line-height: 0.98;
-          font-weight: 900;
-          letter-spacing: -1.2px;
-          text-transform: uppercase;
-        }
-
-        .title span {
-          display: block;
-          background: linear-gradient(180deg, #fff 0%, #d6b25f 82%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: #d6b25f;
         }
 
         .subtitle {
-          margin: 14px 0 0;
-          color: rgba(255,255,255,0.68);
-          font-size: 14px;
-          line-height: 1.6;
-        }
-
-        .card {
-          position: relative;
-          overflow: hidden;
-          border-radius: 28px;
-          padding: 22px;
-          margin-bottom: 16px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.095), rgba(255,255,255,0.025)),
-            rgba(8,8,8,0.74);
-          border: 1px solid rgba(214,178,95,0.32);
-          box-shadow: 0 24px 70px rgba(0,0,0,0.52);
-          backdrop-filter: blur(22px);
-          animation: fadeUp 0.75s ease both;
-        }
-
-        .card.active-card {
-          border-color: rgba(214,178,95,0.58);
-          box-shadow:
-            0 0 40px rgba(214,178,95,0.14),
-            0 24px 70px rgba(0,0,0,0.60);
-        }
-
-        .card::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at top left, rgba(214,178,95,0.16), transparent 42%);
-          pointer-events: none;
-        }
-
-        .card > * {
-          position: relative;
-          z-index: 1;
-        }
-
-        .row {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .gold-icon {
-          width: 54px;
-          height: 54px;
-          min-width: 54px;
-          border-radius: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           color: #d6b25f;
-          background: rgba(214,178,95,0.12);
-          border: 1px solid rgba(214,178,95,0.22);
-        }
-
-        .label {
-          margin: 0;
+          letter-spacing: 2px;
           font-size: 13px;
-          text-transform: uppercase;
-          letter-spacing: 1.2px;
-          color: rgba(214,178,95,0.95);
         }
 
-        .card-title {
-          margin: 6px 0 0;
-          font-size: 24px;
-          line-height: 1.05;
-          font-weight: 850;
-          color: white;
-        }
-
-        .text {
-          margin: 16px 0 0;
-          color: rgba(255,255,255,0.68);
-          font-size: 14px;
-          line-height: 1.6;
-        }
-
-        .mental-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-          margin-top: 18px;
-        }
-
-        .mental-option {
-          border-radius: 18px;
-          padding: 13px 10px;
-          text-align: center;
-          background: rgba(0,0,0,0.34);
-          border: 1px solid rgba(255,255,255,0.10);
-          color: rgba(255,255,255,0.72);
-          font-size: 13px;
-          font-weight: 700;
-        }
-
-        .mental-option.active {
-          color: #d6b25f;
-          border-color: rgba(214,178,95,0.42);
-          background: rgba(214,178,95,0.10);
-          box-shadow: 0 0 24px rgba(214,178,95,0.10);
+        h1 {
+          font-size: 42px;
+          line-height: 1;
+          margin-top: 4px;
         }
 
         .checklist {
           display: grid;
-          gap: 10px;
-          margin-top: 18px;
+          gap: 12px;
+          margin-top: 22px;
         }
 
         .check-item {
           display: flex;
           align-items: flex-start;
-          gap: 12px;
-          border-radius: 18px;
-          padding: 14px;
-          background: rgba(0,0,0,0.34);
-          border: 1px solid rgba(255,255,255,0.10);
+          gap: 14px;
+
+          border-radius: 22px;
+          padding: 18px;
+
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+
+          color: white;
+          text-align: left;
         }
 
         .check-item.done {
-          border-color: rgba(214,178,95,0.34);
+          border-color: rgba(214, 178, 95, 0.42);
+          background: rgba(214, 178, 95, 0.08);
         }
 
-        .check-title {
-          margin: 0;
+        .check-item h3 {
+          font-size: 18px;
+          margin-bottom: 6px;
+        }
+
+        .check-item p {
+          opacity: 0.65;
           font-size: 14px;
-          font-weight: 800;
-          color: white;
         }
 
-        .check-desc {
-          margin: 4px 0 0;
-          font-size: 12px;
-          line-height: 1.45;
-          color: rgba(255,255,255,0.56);
+        .discipline-btn {
+          width: 100%;
+          height: 68px;
+          border-radius: 24px;
+          border: none;
+
+          margin-top: 24px;
+
+          background: linear-gradient(
+            90deg,
+            #b88a32,
+            #f5e3a1
+          );
+
+          color: black;
+          font-weight: 700;
+          font-size: 18px;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
         }
 
-        .warning,
+        .discipline-btn.disabled {
+          opacity: 0.4;
+        }
+
+        .discipline-btn.active {
+          background: black;
+          border: 1px solid rgba(214, 178, 95, 0.24);
+          color: #d6b25f;
+        }
+
         .confirmation {
-          margin-top: 16px;
+          margin-top: 18px;
           border-radius: 20px;
-          padding: 15px;
+          padding: 18px;
+
+          background: rgba(214, 178, 95, 0.12);
+          border: 1px solid rgba(214, 178, 95, 0.22);
+
           display: flex;
           gap: 12px;
           align-items: flex-start;
         }
 
-        .warning {
-          background: rgba(214,178,95,0.10);
-          border: 1px solid rgba(214,178,95,0.22);
-        }
-
-        .confirmation {
-          background: rgba(214,178,95,0.14);
-          border: 1px solid rgba(214,178,95,0.42);
-          box-shadow: 0 0 28px rgba(214,178,95,0.10);
-        }
-
-        .warning p,
         .confirmation p {
-          margin: 0;
-          color: rgba(255,255,255,0.78);
-          font-size: 13px;
-          line-height: 1.45;
-        }
-
-        .primary-button {
-          width: 100%;
-          margin-top: 18px;
-          border: none;
-          border-radius: 22px;
-          padding: 17px 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          color: #000;
-          font-size: 15px;
-          font-weight: 900;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
-          box-shadow: 0 0 32px rgba(214,178,95,0.22);
-          cursor: pointer;
-        }
-
-        .primary-button.active {
-          color: #d6b25f;
-          background: rgba(0,0,0,0.42);
-          border: 1px solid rgba(214,178,95,0.38);
-          box-shadow: 0 0 30px rgba(214,178,95,0.12);
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px) scale(0.985); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+          opacity: 0.82;
+          line-height: 1.5;
         }
       `}</style>
-
-      <div className="page">
-        <div className="topbar">
-          <Link href="/" className="back">
-            <ArrowLeft size={20} />
-          </Link>
-
-          <p className="brand">PRIME SESSION</p>
-
-          <div style={{ width: 44 }} />
-        </div>
-
-        <section className="hero">
-          <h1 className="title">
-            Prépare
-            <span>ta session</span>
-          </h1>
-
-          <p className="subtitle">
-            Avant d’entrer en marché, PRIME vérifie ton état mental, ton
-            intention et ton respect du process.
-          </p>
-        </section>
-
-        <section className={`card ${disciplineActive ? "active-card" : ""}`}>
-          <div className="row">
-            <div className="gold-icon">
-              {disciplineActive ? <Lock size={25} /> : <Brain size={25} />}
-            </div>
-
-            <div>
-              <p className="label">
-                {disciplineActive ? "Discipline activée" : "État mental"}
-              </p>
-              <h2 className="card-title">
-                {disciplineActive
-                  ? "Session verrouillée PRIME"
-                  : "Comment tu arrives aujourd’hui ?"}
-              </h2>
-            </div>
-          </div>
-
-          {!disciplineActive ? (
-            <div className="mental-grid">
-              <div className="mental-option">Fatiguée</div>
-              <div className="mental-option active">Stable</div>
-              <div className="mental-option">Tendue</div>
-            </div>
-          ) : (
-            <div className="confirmation">
-              <ShieldCheck size={18} color="#d6b25f" />
-              <p>
-                Ton mode discipline est actif. PRIME considérera cette session
-                comme engagée et suivra ton respect du plan.
-              </p>
-            </div>
-          )}
-        </section>
-
-        <section className="card">
-          <div className="row">
-            <div className="gold-icon">
-              <Target size={25} />
-            </div>
-
-            <div>
-              <p className="label">Intention</p>
-              <h2 className="card-title">Objectif comportemental</h2>
-            </div>
-          </div>
-
-          <p className="text">
-            Aujourd’hui, ton objectif n’est pas de gagner plus. Ton objectif est
-            de respecter ton plan, ton risque et ton nombre maximal de trades.
-          </p>
-
-          <div className="warning">
-            <AlertTriangle size={18} color="#d6b25f" />
-            <p>
-              Si tu ressens le besoin de te refaire, PRIME te recommandera le
-              mode reset.
-            </p>
-          </div>
-        </section>
-
-        <section className={`card ${disciplineActive ? "active-card" : ""}`}>
-          <div className="row">
-            <div className="gold-icon">
-              <ShieldCheck size={25} />
-            </div>
-
-            <div>
-              <p className="label">Checklist pré-trade</p>
-              <h2 className="card-title">Verrou de discipline</h2>
-            </div>
-          </div>
-
-          <div className="checklist">
-            <CheckItem
-              title="Biais HTF identifié"
-              desc="Structure, liquidité, zones clés et contexte global validés."
-              done
-            />
-
-            <CheckItem
-              title="Session highs/lows repérés"
-              desc="Asian / London / premarket visibles avant l’exécution."
-              done
-            />
-
-            <CheckItem
-              title="Risque défini"
-              desc="Stop, invalidation et perte maximale acceptée avant entrée."
-              done
-            />
-
-            <CheckItem
-              title="Pas de trade émotionnel"
-              desc="Aucune entrée pour compenser, prouver ou forcer."
-              done={disciplineActive}
-            />
-          </div>
-
-          <button
-            className={`primary-button ${disciplineActive ? "active" : ""}`}
-            onClick={activateDiscipline}
-            disabled={disciplineActive}
-          >
-            {disciplineActive ? (
-              <>
-                <Lock size={18} />
-                Discipline activée
-              </>
-            ) : (
-              <>
-                <Play size={18} />
-                Activer ma discipline
-              </>
-            )}
-          </button>
-
-          {disciplineActive && (
-            <div className="confirmation">
-              <ShieldCheck size={18} color="#d6b25f" />
-              <p>
-                Session lancée. Prochaine étape : chaque action pourra alimenter
-                ton score discipline, ton streak et tes XP.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
-
-      <BottomNav />
     </main>
-  );
-}
-
-function CheckItem({ title, desc, done }) {
-  return (
-    <div className={`check-item ${done ? "done" : ""}`}>
-      <CheckCircle2
-        size={20}
-        color={done ? "#d6b25f" : "rgba(255,255,255,0.35)"}
-      />
-      <div>
-        <p className="check-title">{title}</p>
-        <p className="check-desc">{desc}</p>
-      </div>
-    </div>
   );
 }
