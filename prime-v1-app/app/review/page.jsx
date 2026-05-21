@@ -33,7 +33,21 @@ export default function ReviewPage() {
   }, 0);
 
   const disciplineScore = Math.max(100 - totalSeverity * 8, 0);
+let insight = "Discipline stable. Continue d’exécuter ton plan.";
 
+if (selectedErrors.includes("revenge")) {
+  insight =
+    "Tu sembles trader sous émotion après une perte. PRIME détecte une tendance au revenge trading.";
+} else if (selectedErrors.includes("overtrading")) {
+  insight =
+    "Ton volume de trades semble excessif. PRIME détecte une perte de patience.";
+} else if (selectedErrors.includes("fomo")) {
+  insight =
+    "Tu sembles poursuivre le marché au lieu d’attendre ton setup.";
+} else if (selectedErrors.includes("risk")) {
+  insight =
+    "Ton risque devient instable. PRIME détecte une perte de contrôle du risk management.";
+}
   function toggleError(errorId) {
     setSaved(false);
 
@@ -398,7 +412,16 @@ export default function ReviewPage() {
             de mesurer ton exécution, pas seulement ton PnL.
           </p>
         </section>
-
+<p
+  style={{
+    marginTop: 16,
+    color: "#d6b25f",
+    fontWeight: 700,
+    lineHeight: 1.5,
+  }}
+>
+  {insight}
+</p>
         <section className="card">
           <div className="row">
             <div className="gold-icon">
