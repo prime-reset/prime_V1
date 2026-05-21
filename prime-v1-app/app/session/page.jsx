@@ -1,412 +1,420 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, Play, Lock, CheckCircle2 } from "lucide-react";
+
+import {
+  Brain,
+  Flame,
+  ShieldCheck,
+  AlertTriangle,
+  Activity,
+} from "lucide-react";
 
 import BottomNav from "../components/BottomNav";
 import { supabase } from "../../lib/supabase";
 
-const fallbackChecklist = [
-  {
-    id: "fallback-1",
-    question: "Mon entrée respecte-t-elle réellement mon setup principal ?",
-    category: "execution",
-    weight: 3,
-    checked: false,
-  },
-  {
-    id: "fallback-2",
-    question: "Suis-je en train de trader pour récupérer une perte ?",
-    category: "psychology",
-    weight: 5,
-    checked: false,
-  },
-  {
-    id: "fallback-3",
-    question: "Ai-je identifié la liquidité, le contexte et l’invalidation ?",
-    category: "context",
-    weight: 4,
-    checked: false,
-  },
-  {
-    id: "fallback-4",
-    question: "Est-ce que ce trade respecte ma prescription active ?",
-    category: "discipline",
-    weight: 5,
-    checked: false,
-  },
-];
-
-export default function SessionPage() {
-  const [disciplineActive, setDisciplineActive] = useState(false);
-  const [checklistItems, setChecklistItems] = useState([]);
-  const [mentalState, setMentalState] = useState("");
+export default function StatsPage() {
+  const [profile, setProfile] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [errors, setErrors] = useState([]);
 
   useEffect(() => {
-    async function loadUserSession() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData?.session?.user;
+    async function loadStats() {
+      const { data: sessionData } =
+        await supabase.auth.getSession();
 
-      if (!user) {
-        setDisciplineActive(false);
-        setChecklistItems(fallbackChecklist);
-        return;
-      }
+      const user =
+        sessionData?.session?.user;
 
-      const saved = localStorage.getItem(`prime_discipline_active_${user.id}`);
-      setDisciplineActive(saved === "true");
-    }
+      if (!user) return;
 
-    async function loadChecklist() {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const user = sessionData?.session?.user;
+      const { data: profileData } =
+        await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
 
-      if (!user) {
-        setChecklistItems(fallbackChecklist);
-        return;
-      }
+      setProfile(profileData);
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("profile_type, strategy_type")
-        .eq("id", user.id)
-        .single();
+      const { data: sessionsData } =
+        await supabase
+          .from("sessions")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", {
+            ascending: false,
+          })
+          .limit(10);
 
-      const profileType = profile?.profile_type || "disciplined";
-      const strategyType = profile?.strategy_type || "smc";
-
-      const { data: templates, error } = await supabase
-        .from("checklist_templates")
-        .select("*")
-        .eq("profile_type", profileType)
-        .eq("strategy_type", strategyType)
-        .eq("is_active", true);
-
-      if (error || !templates || templates.length === 0) {
-        setChecklistItems(fallbackChecklist);
-        return;
-      }
-
-      setChecklistItems(
-        templates.map((item) => ({
-          ...item,
-          checked: false,
-        }))
+      setSessions(
+        sessionsData || []
       );
+
+      const { data: errorsData } =
+        await supabase
+          .from("trade_errors")
+          .select("*")
+          .eq("user_id", user.id);
+
+      setErrors(errorsData || []);
     }
 
-    loadUserSession();
-    loadChecklist();
+    loadStats();
   }, []);
 
-  function toggleChecklist(index) {
-    setChecklistItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, checked: !item.checked } : item
-      )
+  const averageDiscipline =
+    sessions.length > 0
+      ? Math.round(
+          sessions.reduce(
+            (sum, session) =>
+              sum +
+              (session.discipline_score ||
+                0),
+            0
+          ) / sessions.length
+        )
+      : 0;
+
+  const dominantErrors = {};
+
+  errors.forEach((error) => {
+    dominantErrors[
+      error.category
+    ] =
+      (dominantErrors[
+        error.category
+      ] || 0) + 1;
+  });
+
+  const sortedErrors =
+    Object.entries(
+      dominantErrors
+    ).sort(
+      (a, b) => b[1] - a[1]
     );
-  }
-
-  const allChecked =
-    checklistItems.length > 0 && checklistItems.every((item) => item.checked);
-
-  async function activateDiscipline() {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const user = sessionData?.session?.user;
-
-    if (!user) {
-      alert("Tu dois être connectée.");
-      return;
-    }
-
-    localStorage.setItem(`prime_discipline_active_${user.id}`, "true");
-    localStorage.setItem(
-      `prime_session_started_at_${user.id}`,
-      new Date().toISOString()
-    );
-
-    const { data, error } = await supabase
-      .from("sessions")
-      .insert([
-        {
-          user_id: user.id,
-          discipline_active: true,
-          discipline_score: 100,
-          xp_gain: 40,
-          streak_gain: 1,
-          mental_state: mentalState,
-          status: "active",
-        },
-      ])
-      .select();
-
-    console.log("SESSION INSERT DATA:", data);
-    console.log("SESSION INSERT ERROR:", error);
-
-    setDisciplineActive(true);
-  }
 
   return (
-    <main className="session-page">
-      <div className="session-card">
-        <div className="session-header">
-          <div className="shield-box">
-            <ShieldCheck size={28} />
+    <main className="stats-page">
+      <div className="stats-container">
+        <div className="hero">
+          <p className="subtitle">
+            PRIME ANALYTICS
+          </p>
+
+          <h1>
+            Tableau
+            <span>de bord</span>
+          </h1>
+        </div>
+
+        <div className="grid">
+          <div className="card">
+            <div className="card-top">
+              <Brain size={24} />
+              <p>DISCIPLINE</p>
+            </div>
+
+            <h2>
+              {averageDiscipline}%
+            </h2>
+
+            <span>
+              Score moyen
+            </span>
           </div>
 
-          <div>
-            <p className="subtitle">CHECKLIST PRÉ-TRADE</p>
-            <h1>Verrou de discipline</h1>
+          <div className="card">
+            <div className="card-top">
+              <Flame size={24} />
+              <p>STREAK</p>
+            </div>
+
+            <h2>
+              {profile?.streak || 0}
+            </h2>
+
+            <span>
+              jours consécutifs
+            </span>
+          </div>
+
+          <div className="card">
+            <div className="card-top">
+              <ShieldCheck size={24} />
+              <p>XP</p>
+            </div>
+
+            <h2>
+              {profile?.xp || 0}
+            </h2>
+
+            <span>
+              progression PRIME
+            </span>
+          </div>
+
+          <div className="card">
+            <div className="card-top">
+              <Activity size={24} />
+              <p>SESSIONS</p>
+            </div>
+
+            <h2>
+              {sessions.length}
+            </h2>
+
+            <span>
+              sessions récentes
+            </span>
           </div>
         </div>
 
-        <div className="mental-card">
-          <p className="mental-label">ÉTAT MENTAL</p>
+        <div className="section">
+          <div className="section-title">
+            <AlertTriangle size={18} />
 
-          <div className="mental-grid">
-            {[
-              "Stable",
-              "Fatiguée",
-              "Stressée",
-              "Impulsive",
-              "Trop confiante",
-              "Envie de me refaire",
-            ].map((state) => (
-              <button
-                key={state}
-                type="button"
-                className={`mental-option ${
-                  mentalState === state ? "active" : ""
-                }`}
-                onClick={() => setMentalState(state)}
-              >
-                {state}
-              </button>
-            ))}
+            <h3>
+              Erreurs dominantes
+            </h3>
           </div>
-        </div>
 
-        <div className="checklist">
-          {checklistItems.map((item, index) => (
-            <button
-              key={item.id || index}
-              className={`check-item ${item.checked ? "done" : ""}`}
-              onClick={() => toggleChecklist(index)}
-              type="button"
-            >
-              <CheckCircle2
-                size={22}
-                color={item.checked ? "#d6b25f" : "rgba(255,255,255,0.28)"}
-              />
-
-              <div>
-                <h3>{item.question}</h3>
-                <p>
-                  {item.category} • poids {item.weight}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {!disciplineActive ? (
-          <button
-            className={`discipline-btn ${
-              !allChecked || !mentalState ? "disabled" : ""
-            }`}
-            disabled={!allChecked || !mentalState}
-            onClick={activateDiscipline}
-            type="button"
-          >
-            <Play size={18} />
-            {!mentalState
-              ? "SÉLECTIONNE TON ÉTAT MENTAL"
-              : allChecked
-              ? "ACTIVER MA DISCIPLINE"
-              : "COMPLÈTE TA CHECKLIST"}
-          </button>
-        ) : (
-          <button className="discipline-btn active" type="button">
-            <Lock size={18} />
-            DISCIPLINE ACTIVÉE
-          </button>
-        )}
-
-        {disciplineActive && (
-          <div className="confirmation">
-            <ShieldCheck size={18} color="#d6b25f" />
-            <p>
-              Session lancée. Chaque action alimentera désormais ton score
-              discipline, ton streak et tes XP.
+          {sortedErrors.length === 0 ? (
+            <p className="empty">
+              Aucune erreur détectée.
             </p>
+          ) : (
+            sortedErrors.map(
+              ([category, count]) => (
+                <div
+                  key={category}
+                  className="error-item"
+                >
+                  <span>
+                    {category}
+                  </span>
+
+                  <strong>
+                    {count}x
+                  </strong>
+                </div>
+              )
+            )
+          )}
+        </div>
+
+        <div className="section">
+          <div className="section-title">
+            <Brain size={18} />
+
+            <h3>
+              États mentaux récents
+            </h3>
           </div>
-        )}
+
+          <div className="mental-list">
+            {sessions
+              .slice(0, 5)
+              .map((session) => (
+                <div
+                  key={session.id}
+                  className="mental-item"
+                >
+                  <span>
+                    {
+                      session.mental_state
+                    }
+                  </span>
+
+                  <small>
+                    {
+                      session.discipline_score
+                    }
+                    %
+                  </small>
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
 
       <BottomNav />
 
       <style jsx>{`
-        .session-page {
+        .stats-page {
           min-height: 100vh;
-          background: #000;
+          background: black;
           color: white;
           padding: 28px 18px 120px;
-          font-family: Inter, Arial, sans-serif;
+          font-family: Inter,
+            Arial, sans-serif;
         }
 
-        .session-card {
-          border-radius: 32px;
-          padding: 22px;
-          background: linear-gradient(
-            180deg,
-            rgba(214, 178, 95, 0.12) 0%,
-            rgba(0, 0, 0, 0.82) 100%
-          );
-          border: 1px solid rgba(214, 178, 95, 0.22);
+        .stats-container {
+          max-width: 520px;
+          margin: 0 auto;
         }
 
-        .session-header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          margin-bottom: 24px;
-        }
-
-        .shield-box {
-          width: 72px;
-          height: 72px;
-          border-radius: 22px;
-          background: rgba(214, 178, 95, 0.1);
-          border: 1px solid rgba(214, 178, 95, 0.22);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #d6b25f;
+        .hero {
+          margin-bottom: 28px;
         }
 
         .subtitle {
           color: #d6b25f;
-          letter-spacing: 2px;
+          letter-spacing: 3px;
           font-size: 13px;
-          margin: 0 0 8px;
+          margin-bottom: 8px;
         }
 
         h1 {
-          font-size: 42px;
-          line-height: 1;
+          font-size: 52px;
+          line-height: 0.95;
           margin: 0;
         }
 
-        .mental-card {
-          margin-bottom: 20px;
-        }
-
-        .mental-label {
-          color: #d6b25f;
-          font-size: 13px;
-          letter-spacing: 2px;
-          margin-bottom: 12px;
-        }
-
-        .mental-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 10px;
-        }
-
-        .mental-option {
-          height: 52px;
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(255, 255, 255, 0.04);
-          color: white;
-          font-weight: 600;
-        }
-
-        .mental-option.active {
-          border-color: rgba(214, 178, 95, 0.5);
-          background: rgba(214, 178, 95, 0.12);
+        h1 span {
+          display: block;
           color: #d6b25f;
         }
 
-        .checklist {
+        .grid {
           display: grid;
-          gap: 12px;
-          margin-top: 22px;
-        }
+          grid-template-columns:
+            repeat(2, 1fr);
 
-        .check-item {
-          display: flex;
-          align-items: flex-start;
           gap: 14px;
-          border-radius: 22px;
-          padding: 18px;
-          background: rgba(0, 0, 0, 0.45);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: white;
-          text-align: left;
-          cursor: pointer;
         }
 
-        .check-item.done {
-          border-color: rgba(214, 178, 95, 0.42);
-          background: rgba(214, 178, 95, 0.08);
+        .card {
+          border-radius: 26px;
+          padding: 22px;
+
+          background: linear-gradient(
+            180deg,
+            rgba(
+                214,
+                178,
+                95,
+                0.12
+              )
+              0%,
+            rgba(
+                255,
+                255,
+                255,
+                0.03
+              )
+              100%
+          );
+
+          border: 1px solid
+            rgba(
+              214,
+              178,
+              95,
+              0.16
+            );
         }
 
-        .check-item h3 {
-          font-size: 17px;
-          margin: 0 0 6px;
-        }
-
-        .check-item p {
-          opacity: 0.65;
-          font-size: 14px;
-          margin: 0;
-        }
-
-        .discipline-btn {
-          width: 100%;
-          height: 68px;
-          border-radius: 24px;
-          border: none;
-          margin-top: 24px;
-          background: linear-gradient(90deg, #b88a32, #f5e3a1);
-          color: black;
-          font-weight: 800;
-          font-size: 17px;
+        .card-top {
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 12px;
-          cursor: pointer;
+          gap: 10px;
+
+          color: #d6b25f;
+          margin-bottom: 18px;
         }
 
-        .discipline-btn.disabled {
-          opacity: 0.45;
-          cursor: not-allowed;
+        .card-top p {
+          margin: 0;
+          font-size: 12px;
+          letter-spacing: 2px;
         }
 
-        .discipline-btn.active {
-          background: black;
-          border: 1px solid rgba(214, 178, 95, 0.24);
+        .card h2 {
+          margin: 0;
+          font-size: 38px;
+        }
+
+        .card span {
+          opacity: 0.65;
+          font-size: 13px;
+        }
+
+        .section {
+          margin-top: 30px;
+
+          border-radius: 28px;
+          padding: 22px;
+
+          background: rgba(
+            255,
+            255,
+            255,
+            0.03
+          );
+
+          border: 1px solid
+            rgba(
+              255,
+              255,
+              255,
+              0.05
+            );
+        }
+
+        .section-title {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          margin-bottom: 20px;
+
           color: #d6b25f;
         }
 
-        .confirmation {
-          margin-top: 18px;
-          border-radius: 20px;
-          padding: 18px;
-          background: rgba(214, 178, 95, 0.12);
-          border: 1px solid rgba(214, 178, 95, 0.22);
-          display: flex;
-          gap: 12px;
-          align-items: flex-start;
+        .section-title h3 {
+          margin: 0;
+          font-size: 18px;
         }
 
-        .confirmation p {
-          opacity: 0.82;
-          line-height: 1.5;
-          margin: 0;
+        .error-item,
+        .mental-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          padding: 14px 0;
+
+          border-bottom: 1px solid
+            rgba(
+              255,
+              255,
+              255,
+              0.06
+            );
+        }
+
+        .error-item:last-child,
+        .mental-item:last-child {
+          border-bottom: none;
+        }
+
+        .error-item span,
+        .mental-item span {
+          font-size: 15px;
+        }
+
+        .error-item strong {
+          color: #d6b25f;
+        }
+
+        .mental-item small {
+          color: #d6b25f;
+        }
+
+        .empty {
+          opacity: 0.6;
         }
       `}</style>
     </main>
