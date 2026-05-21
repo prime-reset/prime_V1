@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  ShieldCheck,
-  Play,
-  Lock,
-  CheckCircle2,
-} from "lucide-react";
+import { ShieldCheck, Play, Lock, CheckCircle2 } from "lucide-react";
 
 import BottomNav from "../components/BottomNav";
 import { supabase } from "../../lib/supabase";
@@ -14,32 +9,28 @@ import { supabase } from "../../lib/supabase";
 const fallbackChecklist = [
   {
     id: "fallback-1",
-    question:
-      "Mon entrée respecte-t-elle réellement mon setup principal ?",
+    question: "Mon entrée respecte-t-elle réellement mon setup principal ?",
     category: "execution",
     weight: 3,
     checked: false,
   },
   {
     id: "fallback-2",
-    question:
-      "Suis-je en train de trader pour récupérer une perte ?",
+    question: "Suis-je en train de trader pour récupérer une perte ?",
     category: "psychology",
     weight: 5,
     checked: false,
   },
   {
     id: "fallback-3",
-    question:
-      "Ai-je identifié la liquidité, le contexte et l’invalidation ?",
+    question: "Ai-je identifié la liquidité, le contexte et l’invalidation ?",
     category: "context",
     weight: 4,
     checked: false,
   },
   {
     id: "fallback-4",
-    question:
-      "Est-ce que ce trade respecte ma prescription active ?",
+    question: "Est-ce que ce trade respecte ma prescription active ?",
     category: "discipline",
     weight: 5,
     checked: false,
@@ -47,22 +38,14 @@ const fallbackChecklist = [
 ];
 
 export default function SessionPage() {
-  const [disciplineActive, setDisciplineActive] =
-    useState(false);
-
-  const [checklistItems, setChecklistItems] =
-    useState([]);
-
-  const [mentalState, setMentalState] =
-    useState("");
+  const [disciplineActive, setDisciplineActive] = useState(false);
+  const [checklistItems, setChecklistItems] = useState([]);
+  const [mentalState, setMentalState] = useState("");
 
   useEffect(() => {
     async function loadUserSession() {
-      const { data: sessionData } =
-        await supabase.auth.getSession();
-
-      const user =
-        sessionData?.session?.user;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
 
       if (!user) {
         setDisciplineActive(false);
@@ -70,72 +53,37 @@ export default function SessionPage() {
         return;
       }
 
-      const saved =
-        localStorage.getItem(
-          `prime_discipline_active_${user.id}`
-        );
-
-      setDisciplineActive(
-        saved === "true"
-      );
+      const saved = localStorage.getItem(`prime_discipline_active_${user.id}`);
+      setDisciplineActive(saved === "true");
     }
 
     async function loadChecklist() {
-      const { data: sessionData } =
-        await supabase.auth.getSession();
-
-      const user =
-        sessionData?.session?.user;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData?.session?.user;
 
       if (!user) {
-        setChecklistItems(
-          fallbackChecklist
-        );
+        setChecklistItems(fallbackChecklist);
         return;
       }
 
-      const { data: profile } =
-        await supabase
-          .from("profiles")
-          .select(
-            "profile_type, strategy_type"
-          )
-          .eq("id", user.id)
-          .single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("profile_type, strategy_type")
+        .eq("id", user.id)
+        .single();
 
-      const profileType =
-        profile?.profile_type ||
-        "disciplined";
+      const profileType = profile?.profile_type || "disciplined";
+      const strategyType = profile?.strategy_type || "smc";
 
-      const strategyType =
-        profile?.strategy_type ||
-        "smc";
-
-      const {
-        data: templates,
-        error,
-      } = await supabase
+      const { data: templates, error } = await supabase
         .from("checklist_templates")
         .select("*")
-        .eq(
-          "profile_type",
-          profileType
-        )
-        .eq(
-          "strategy_type",
-          strategyType
-        )
+        .eq("profile_type", profileType)
+        .eq("strategy_type", strategyType)
         .eq("is_active", true);
 
-      if (
-        error ||
-        !templates ||
-        templates.length === 0
-      ) {
-        setChecklistItems(
-          fallbackChecklist
-        );
-
+      if (error || !templates || templates.length === 0) {
+        setChecklistItems(fallbackChecklist);
         return;
       }
 
@@ -154,73 +102,46 @@ export default function SessionPage() {
   function toggleChecklist(index) {
     setChecklistItems((prev) =>
       prev.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              checked: !item.checked,
-            }
-          : item
+        i === index ? { ...item, checked: !item.checked } : item
       )
     );
   }
 
   const allChecked =
-    checklistItems.length > 0 &&
-    checklistItems.every(
-      (item) => item.checked
-    );
+    checklistItems.length > 0 && checklistItems.every((item) => item.checked);
 
   async function activateDiscipline() {
-    const {
-      data: sessionData,
-    } =
-      await supabase.auth.getSession();
-
-    const user =
-      sessionData?.session?.user;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData?.session?.user;
 
     if (!user) {
-      alert(
-        "Tu dois être connectée."
-      );
-
+      alert("Tu dois être connectée.");
       return;
     }
 
-    localStorage.setItem(
-      `prime_discipline_active_${user.id}`,
-      "true"
-    );
-
+    localStorage.setItem(`prime_discipline_active_${user.id}`, "true");
     localStorage.setItem(
       `prime_session_started_at_${user.id}`,
       new Date().toISOString()
     );
 
-    const { data, error } =
-      await supabase
-        .from("sessions")
-        .insert([
-          {
-            user_id: user.id,
-            discipline_active: true,
-            discipline_score: 100,
-            xp_gain: 40,
-            streak_gain: 1,
-            status: "active",
-          },
-        ])
-        .select();
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: user.id,
+          discipline_active: true,
+          discipline_score: 100,
+          xp_gain: 40,
+          streak_gain: 1,
+          mental_state: mentalState,
+          status: "active",
+        },
+      ])
+      .select();
 
-    console.log(
-      "SESSION INSERT DATA:",
-      data
-    );
-
-    console.log(
-      "SESSION INSERT ERROR:",
-      error
-    );
+    console.log("SESSION INSERT DATA:", data);
+    console.log("SESSION INSERT ERROR:", error);
 
     setDisciplineActive(true);
   }
@@ -234,20 +155,13 @@ export default function SessionPage() {
           </div>
 
           <div>
-            <p className="subtitle">
-              CHECKLIST PRÉ-TRADE
-            </p>
-
-            <h1>
-              Verrou de discipline
-            </h1>
+            <p className="subtitle">CHECKLIST PRÉ-TRADE</p>
+            <h1>Verrou de discipline</h1>
           </div>
         </div>
 
         <div className="mental-card">
-          <p className="mental-label">
-            ÉTAT MENTAL
-          </p>
+          <p className="mental-label">ÉTAT MENTAL</p>
 
           <div className="mental-grid">
             {[
@@ -262,15 +176,9 @@ export default function SessionPage() {
                 key={state}
                 type="button"
                 className={`mental-option ${
-                  mentalState === state
-                    ? "active"
-                    : ""
+                  mentalState === state ? "active" : ""
                 }`}
-                onClick={() =>
-                  setMentalState(
-                    state
-                  )
-                }
+                onClick={() => setMentalState(state)}
               >
                 {state}
               </button>
@@ -279,70 +187,38 @@ export default function SessionPage() {
         </div>
 
         <div className="checklist">
-          {checklistItems.map(
-            (item, index) => (
-              <button
-                key={
-                  item.id || index
-                }
-                className={`check-item ${
-                  item.checked
-                    ? "done"
-                    : ""
-                }`}
-                onClick={() =>
-                  toggleChecklist(
-                    index
-                  )
-                }
-                type="button"
-              >
-                <CheckCircle2
-                  size={22}
-                  color={
-                    item.checked
-                      ? "#d6b25f"
-                      : "rgba(255,255,255,0.28)"
-                  }
-                />
+          {checklistItems.map((item, index) => (
+            <button
+              key={item.id || index}
+              className={`check-item ${item.checked ? "done" : ""}`}
+              onClick={() => toggleChecklist(index)}
+              type="button"
+            >
+              <CheckCircle2
+                size={22}
+                color={item.checked ? "#d6b25f" : "rgba(255,255,255,0.28)"}
+              />
 
-                <div>
-                  <h3>
-                    {item.question}
-                  </h3>
-
-                  <p>
-                    {
-                      item.category
-                    }{" "}
-                    • poids{" "}
-                    {item.weight}
-                  </p>
-                </div>
-              </button>
-            )
-          )}
+              <div>
+                <h3>{item.question}</h3>
+                <p>
+                  {item.category} • poids {item.weight}
+                </p>
+              </div>
+            </button>
+          ))}
         </div>
 
         {!disciplineActive ? (
           <button
             className={`discipline-btn ${
-              !allChecked ||
-              !mentalState
-                ? "disabled"
-                : ""
+              !allChecked || !mentalState ? "disabled" : ""
             }`}
-            disabled={
-              !allChecked ||
-              !mentalState
-            }
-            onClick={
-              activateDiscipline
-            }
+            disabled={!allChecked || !mentalState}
+            onClick={activateDiscipline}
             type="button"
           >
             <Play size={18} />
-
             {!mentalState
               ? "SÉLECTIONNE TON ÉTAT MENTAL"
               : allChecked
@@ -350,10 +226,7 @@ export default function SessionPage() {
               : "COMPLÈTE TA CHECKLIST"}
           </button>
         ) : (
-          <button
-            className="discipline-btn active"
-            type="button"
-          >
+          <button className="discipline-btn active" type="button">
             <Lock size={18} />
             DISCIPLINE ACTIVÉE
           </button>
@@ -361,17 +234,10 @@ export default function SessionPage() {
 
         {disciplineActive && (
           <div className="confirmation">
-            <ShieldCheck
-              size={18}
-              color="#d6b25f"
-            />
-
+            <ShieldCheck size={18} color="#d6b25f" />
             <p>
-              Session lancée.
-              Chaque action
-              alimentera désormais
-              ton score discipline,
-              ton streak et tes XP.
+              Session lancée. Chaque action alimentera désormais ton score
+              discipline, ton streak et tes XP.
             </p>
           </div>
         )}
@@ -385,8 +251,7 @@ export default function SessionPage() {
           background: #000;
           color: white;
           padding: 28px 18px 120px;
-          font-family: Inter,
-            Arial, sans-serif;
+          font-family: Inter, Arial, sans-serif;
         }
 
         .session-card {
@@ -394,29 +259,10 @@ export default function SessionPage() {
           padding: 22px;
           background: linear-gradient(
             180deg,
-            rgba(
-                214,
-                178,
-                95,
-                0.12
-              )
-              0%,
-            rgba(
-                0,
-                0,
-                0,
-                0.82
-              )
-              100%
+            rgba(214, 178, 95, 0.12) 0%,
+            rgba(0, 0, 0, 0.82) 100%
           );
-
-          border: 1px solid
-            rgba(
-              214,
-              178,
-              95,
-              0.22
-            );
+          border: 1px solid rgba(214, 178, 95, 0.22);
         }
 
         .session-header {
@@ -430,26 +276,11 @@ export default function SessionPage() {
           width: 72px;
           height: 72px;
           border-radius: 22px;
-
-          background: rgba(
-            214,
-            178,
-            95,
-            0.1
-          );
-
-          border: 1px solid
-            rgba(
-              214,
-              178,
-              95,
-              0.22
-            );
-
+          background: rgba(214, 178, 95, 0.1);
+          border: 1px solid rgba(214, 178, 95, 0.22);
           display: flex;
           align-items: center;
           justify-content: center;
-
           color: #d6b25f;
         }
 
@@ -479,49 +310,22 @@ export default function SessionPage() {
 
         .mental-grid {
           display: grid;
-          grid-template-columns:
-            repeat(2, 1fr);
-
+          grid-template-columns: repeat(2, 1fr);
           gap: 10px;
         }
 
         .mental-option {
           height: 52px;
           border-radius: 18px;
-          border: 1px solid
-            rgba(
-              255,
-              255,
-              255,
-              0.08
-            );
-
-          background: rgba(
-            255,
-            255,
-            255,
-            0.04
-          );
-
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.04);
           color: white;
           font-weight: 600;
         }
 
         .mental-option.active {
-          border-color: rgba(
-            214,
-            178,
-            95,
-            0.5
-          );
-
-          background: rgba(
-            214,
-            178,
-            95,
-            0.12
-          );
-
+          border-color: rgba(214, 178, 95, 0.5);
+          background: rgba(214, 178, 95, 0.12);
           color: #d6b25f;
         }
 
@@ -535,44 +339,18 @@ export default function SessionPage() {
           display: flex;
           align-items: flex-start;
           gap: 14px;
-
           border-radius: 22px;
           padding: 18px;
-
-          background: rgba(
-            0,
-            0,
-            0,
-            0.45
-          );
-
-          border: 1px solid
-            rgba(
-              255,
-              255,
-              255,
-              0.08
-            );
-
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           color: white;
           text-align: left;
           cursor: pointer;
         }
 
         .check-item.done {
-          border-color: rgba(
-            214,
-            178,
-            95,
-            0.42
-          );
-
-          background: rgba(
-            214,
-            178,
-            95,
-            0.08
-          );
+          border-color: rgba(214, 178, 95, 0.42);
+          background: rgba(214, 178, 95, 0.08);
         }
 
         .check-item h3 {
@@ -591,24 +369,15 @@ export default function SessionPage() {
           height: 68px;
           border-radius: 24px;
           border: none;
-
           margin-top: 24px;
-
-          background: linear-gradient(
-            90deg,
-            #b88a32,
-            #f5e3a1
-          );
-
+          background: linear-gradient(90deg, #b88a32, #f5e3a1);
           color: black;
           font-weight: 800;
           font-size: 17px;
-
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 12px;
-
           cursor: pointer;
         }
 
@@ -619,14 +388,7 @@ export default function SessionPage() {
 
         .discipline-btn.active {
           background: black;
-          border: 1px solid
-            rgba(
-              214,
-              178,
-              95,
-              0.24
-            );
-
+          border: 1px solid rgba(214, 178, 95, 0.24);
           color: #d6b25f;
         }
 
@@ -634,22 +396,8 @@ export default function SessionPage() {
           margin-top: 18px;
           border-radius: 20px;
           padding: 18px;
-
-          background: rgba(
-            214,
-            178,
-            95,
-            0.12
-          );
-
-          border: 1px solid
-            rgba(
-              214,
-              178,
-              95,
-              0.22
-            );
-
+          background: rgba(214, 178, 95, 0.12);
+          border: 1px solid rgba(214, 178, 95, 0.22);
           display: flex;
           gap: 12px;
           align-items: flex-start;
