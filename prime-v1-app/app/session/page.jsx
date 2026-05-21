@@ -18,7 +18,7 @@ import { supabase } from "../../lib/supabase";
 
 export default function SessionPage() {
   const [disciplineActive, setDisciplineActive] = useState(false);
-
+const [checklistItems, setChecklistItems] = useState([]);
   useEffect(() => {
     async function loadUserSession() {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -32,10 +32,39 @@ export default function SessionPage() {
       const saved = localStorage.getItem(`prime_discipline_active_${user.id}`);
       setDisciplineActive(saved === "true");
     }
+async function loadChecklist() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData?.session?.user;
 
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("profile_type, strategy_type")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) return;
+
+  const { data: templates } = await supabase
+    .from("checklist_templates")
+    .select("*")
+    .eq("profile_type", profile.profile_type)
+    .eq("strategy_type", profile.strategy_type)
+    .eq("is_active", true);
+
+  if (templates) {
+    setChecklistItems(
+      templates.map((item) => ({
+        ...item,
+        checked: false,
+      }))
+    );
+  }
+}
     loadUserSession();
   }, []);
-
+loadChecklist();
   async function activateDiscipline() {
     const today = new Date().toISOString().split("T")[0];
 
