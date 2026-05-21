@@ -110,7 +110,49 @@ if (selectedErrors.includes("revenge")) {
         discipline_score: disciplineScore,
       })
       .eq("id", user.id);
+if (selectedErrors.includes("revenge")) {
+  await supabase.from("prescriptions").insert([
+    {
+      user_id: user.id,
+      session_id: activeSession.id,
+      trigger_error: "revenge",
+      title: "Prescription Revenge Trading",
+      rule: "Maximum 1 trade après une perte pendant 7 jours.",
+      duration_days: 7,
+      status: "active",
+    },
+  ]);
+}
 
+if (selectedErrors.includes("overtrading")) {
+  await supabase.from("prescriptions").insert([
+    {
+      user_id: user.id,
+      session_id: activeSession.id,
+      trigger_error: "overtrading",
+      title: "Prescription Overtrading",
+      rule: "Maximum 3 trades par jour pendant 7 jours.",
+      duration_days: 7,
+      status: "active",
+    },
+  ]);
+}
+
+if (selectedErrors.includes("fomo")) {
+  await supabase.from("prescriptions").insert([
+    {
+      user_id: user.id,
+      session_id: activeSession.id,
+      trigger_error: "fomo",
+      title: "Prescription FOMO",
+      rule: "Attendre confirmation BOS avant toute entrée.",
+      duration_days: 7,
+      status: "active",
+    },
+  ]);
+}
+
+setSaved(true);
     setSaved(true);
   }
 
