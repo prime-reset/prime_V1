@@ -57,16 +57,22 @@ export default function SessionPage() {
       new Date().toISOString()
     );
 
-    await supabase.from("sessions").insert([
-      {
-        user_id: user.id,
-        discipline_active: true,
-        discipline_score: 100,
-        xp_gain: 40,
-        streak_gain: 1,
-        status: "active",
-      },
-    ]);
+  const { data: sessionInsert, error: sessionError } = await supabase
+  .from("sessions")
+  .insert([
+    {
+      user_id: user.id,
+      discipline_active: true,
+      discipline_score: 100,
+      xp_gain: 40,
+      streak_gain: 1,
+      status: "active",
+    },
+  ])
+  .select();
+
+console.log("SESSION INSERT DATA:", sessionInsert);
+console.log("SESSION INSERT ERROR:", sessionError);
 
     if (lastXpDate !== today) {
       const { data: profile, error } = await supabase
