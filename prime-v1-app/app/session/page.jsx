@@ -18,7 +18,45 @@ export default function SessionPage() {
   ];
 
   // ACTIVER DISCIPLINE + CREER SESSION
-  const activateDiscipline = async () => {
+const activateDiscipline = async () => {
+  setDiscipline(true);
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  console.log("USER :", user);
+
+  if (userError || !user) {
+    alert("Utilisateur non connecté");
+    console.log(userError);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("sessions")
+    .insert([
+      {
+        user_id: user.id,
+        discipline_active: true,
+        discipline_score: 100,
+        streak_gain: 1,
+        xp_gain: 40,
+        status: "active",
+      },
+    ])
+    .select();
+
+  console.log("INSERT DATA :", data);
+  console.log("INSERT ERROR :", error);
+
+  if (error) {
+    alert(error.message);
+  } else {
+    alert("Session créée !");
+  }
+};
     setDiscipline(true);
 
     const {
