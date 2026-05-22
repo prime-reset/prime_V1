@@ -64,10 +64,48 @@ export default function SessionPage() {
     return data.id;
   };
 
-  const activateDiscipline = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+ const activateDiscipline = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    alert("Utilisateur non connecté");
+    return;
+  }
+
+  // FERME LES ANCIENNES SESSIONS
+  await supabase
+    .from("sessions")
+    .update({
+      status: "closed",
+    })
+    .eq("status", "active");
+
+  // CRÉE NOUVELLE SESSION
+  const { data, error } = await supabase
+    .from("sessions")
+    .insert([
+      {
+        user_id: user.id,
+        discipline_active: true,
+        discipline_score: 0,
+        streak_gain: 1,
+        xp_gain: 40,
+        status: "active",
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  setActiveSessionId(data.id);
+  setDiscipline(true);
+};
 
     if (!user) {
       alert("Utilisateur non connecté");
