@@ -2,27 +2,12 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+
 export default function SessionPage() {
   const [discipline, setDiscipline] = useState(false);
   const [mentalState, setMentalState] = useState("");
   const [checked, setChecked] = useState({});
-const handleMentalState = async (state) => {
-  setMentalState(state);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return;
-
-  await supabase
-    .from("sessions")
-    .update({
-      mental_state: state,
-    })
-    .eq("user_id", user.id)
-    .eq("status", "active");
-};
   const checklist = [
     "J’ai identifié la tendance HTF",
     "J’ai repéré les zones de liquidité",
@@ -32,6 +17,48 @@ const handleMentalState = async (state) => {
     "Je ne trade pas par impatience",
   ];
 
+  // ACTIVATION DISCIPLINE + CREATION SESSION
+  const activateDiscipline = async () => {
+    setDiscipline(true);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    await supabase.from("sessions").insert([
+      {
+        user_id: user.id,
+        discipline_active: true,
+        discipline_score: 100,
+        streak_gain: 1,
+        xp_gain: 40,
+        status: "active",
+      },
+    ]);
+  };
+
+  // ETAT MENTAL
+  const handleMentalState = async (state) => {
+    setMentalState(state);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    await supabase
+      .from("sessions")
+      .update({
+        mental_state: state,
+      })
+      .eq("user_id", user.id)
+      .eq("status", "active");
+  };
+
+  // CHECKLIST
   const toggleCheck = (item) => {
     setChecked((prev) => ({
       ...prev,
@@ -49,56 +76,96 @@ const handleMentalState = async (state) => {
       }}
     >
       <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-        <p style={{ color: "#D4B06A", letterSpacing: "5px", fontSize: "14px" }}>
+        <p
+          style={{
+            color: "#D4B06A",
+            letterSpacing: "5px",
+            fontSize: "14px",
+          }}
+        >
           PRIME SESSION
         </p>
 
-        <h1 style={{ fontSize: "64px", lineHeight: "0.95", margin: "20px 0 36px" }}>
+        <h1
+          style={{
+            fontSize: "64px",
+            lineHeight: "0.95",
+            margin: "20px 0 36px",
+            fontWeight: "800",
+          }}
+        >
           Session
           <br />
           Trading
         </h1>
 
+        {/* DISCIPLINE */}
         <section style={card}>
           <h2 style={title}>Discipline</h2>
+
           <p style={text}>
-            Active ton mode discipline avant de commencer ta session.
+            Active ton mode discipline avant de commencer ta
+            session de trading.
           </p>
 
           <button
-            onClick={() => setDiscipline(true)}
+            onClick={activateDiscipline}
             style={{
               ...button,
               background: discipline ? "#123d22" : "#D4B06A",
               color: discipline ? "#7DFFA1" : "#000",
             }}
           >
-            {discipline ? "🟢 Discipline activée" : "Activer ma discipline"}
+            {discipline
+              ? "🟢 Discipline activée"
+              : "Activer ma discipline"}
           </button>
         </section>
 
+        {/* ETAT MENTAL */}
         <section style={card}>
           <h2 style={title}>État mental</h2>
-          <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
 
-          {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map((state) => (
-            <button
-              key={state}
-             onClick={() => handleMentalState(state)}
-              style={{
-                ...pill,
-                background: mentalState === state ? "#D4B06A" : "rgba(255,255,255,0.06)",
-                color: mentalState === state ? "#000" : "#fff",
-              }}
-            >
-              {state}
-            </button>
-          ))}
+          <p style={text}>
+            Dans quel état tu arrives sur les marchés ?
+          </p>
+
+          <div>
+            {[
+              "Calme",
+              "Focus",
+              "Stressée",
+              "Impatiente",
+              "Fatiguée",
+            ].map((state) => (
+              <button
+                key={state}
+                onClick={() => handleMentalState(state)}
+                style={{
+                  ...pill,
+                  background:
+                    mentalState === state
+                      ? "#D4B06A"
+                      : "rgba(255,255,255,0.06)",
+                  color:
+                    mentalState === state
+                      ? "#000"
+                      : "#fff",
+                }}
+              >
+                {state}
+              </button>
+            ))}
+          </div>
         </section>
 
+        {/* CHECKLIST */}
         <section style={card}>
           <h2 style={title}>Checklist pré-trade</h2>
-          <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
+
+          <p style={text}>
+            Tu ne cherches pas un trade. Tu valides un plan.
+          </p>
 
           {checklist.map((item) => (
             <div
@@ -106,7 +173,10 @@ const handleMentalState = async (state) => {
               onClick={() => toggleCheck(item)}
               style={checkItem}
             >
-              <span>{checked[item] ? "✅" : "⬜"}</span>
+              <span>
+                {checked[item] ? "✅" : "⬜"}
+              </span>
+
               <span>{item}</span>
             </div>
           ))}
