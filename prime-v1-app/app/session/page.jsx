@@ -19,9 +19,33 @@ export default function SessionPage() {
     "Je ne trade pas par impatience",
   ];
 
-  const activateDiscipline = async () => {
+  const getActiveSessionId = async () => {
+    if (activeSessionId) return activeSessionId;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data } = await supabase
+      .from("sessions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!data) return null;
+
+    setActiveSessionId(data.id);
     setDiscipline(true);
 
+    return data.id;
+  };
+
+  const activateDiscipline = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -52,6 +76,7 @@ export default function SessionPage() {
     }
 
     setActiveSessionId(data.id);
+    setDiscipline(true);
     setDisciplineScore(0);
     setChecked({});
   };
@@ -59,7 +84,9 @@ export default function SessionPage() {
   const handleMentalState = async (state) => {
     setMentalState(state);
 
-    if (!activeSessionId) {
+    const sessionId = await getActiveSessionId();
+
+    if (!sessionId) {
       alert("Active d'abord ta discipline.");
       return;
     }
@@ -67,11 +94,13 @@ export default function SessionPage() {
     await supabase
       .from("sessions")
       .update({ mental_state: state })
-      .eq("id", activeSessionId);
+      .eq("id", sessionId);
   };
 
   const handleChecklist = async (item) => {
-    if (!activeSessionId) {
+    const sessionId = await getActiveSessionId();
+
+    if (!sessionId) {
       alert("Active d'abord ta discipline.");
       return;
     }
@@ -91,7 +120,7 @@ export default function SessionPage() {
     await supabase
       .from("sessions")
       .update({ discipline_score: score })
-      .eq("id", activeSessionId);
+      .eq("id", sessionId);
   };
 
   return (
@@ -149,16 +178,7 @@ export default function SessionPage() {
 
         <section style={card}>
           <h2 style={title}>Discipline Score</h2>
-          <p
-            style={{
-              fontSize: "54px",
-              fontWeight: "900",
-              color: "#D4B06A",
-              margin: "10px 0",
-            }}
-          >
-            {disciplineScore}%
-          </p>
+          <p style={scoreText}>{disciplineScore}%</p>
           <p style={text}>Ton score évolue selon le respect de ton process.</p>
         </section>
 
@@ -226,6 +246,13 @@ const text = {
   fontSize: "18px",
   lineHeight: "1.6",
   marginBottom: "22px",
+};
+
+const scoreText = {
+  fontSize: "54px",
+  fontWeight: "900",
+  color: "#D4B06A",
+  margin: "10px 0",
 };
 
 const button = {
