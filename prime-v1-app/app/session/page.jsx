@@ -64,53 +64,21 @@ export default function SessionPage() {
     return data.id;
   };
 
- const activateDiscipline = async () => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    alert("Utilisateur non connecté");
-    return;
-  }
-
-  // FERME LES ANCIENNES SESSIONS
-  await supabase
-    .from("sessions")
-    .update({
-      status: "closed",
-    })
-    .eq("status", "active");
-
-  // CRÉE NOUVELLE SESSION
-  const { data, error } = await supabase
-    .from("sessions")
-    .insert([
-      {
-        user_id: user.id,
-        discipline_active: true,
-        discipline_score: 0,
-        streak_gain: 1,
-        xp_gain: 40,
-        status: "active",
-      },
-    ])
-    .select()
-    .single();
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  setActiveSessionId(data.id);
-  setDiscipline(true);
-};
+  const activateDiscipline = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       alert("Utilisateur non connecté");
       return;
     }
+
+    await supabase
+      .from("sessions")
+      .update({ status: "closed" })
+      .eq("user_id", user.id)
+      .eq("status", "active");
 
     const { data, error } = await supabase
       .from("sessions")
@@ -122,6 +90,7 @@ export default function SessionPage() {
           streak_gain: 1,
           xp_gain: 40,
           status: "active",
+          mental_state: null,
         },
       ])
       .select()
@@ -134,20 +103,21 @@ export default function SessionPage() {
 
     setActiveSessionId(data.id);
     setDiscipline(true);
+    setMentalState("");
     setDisciplineScore(0);
     setChecked({});
     setMistakes({});
   };
 
   const handleMentalState = async (state) => {
-    setMentalState(state);
-
     const sessionId = await getActiveSessionId();
 
     if (!sessionId) {
       alert("Active d'abord ta discipline.");
       return;
     }
+
+    setMentalState(state);
 
     await supabase
       .from("sessions")
