@@ -7,6 +7,7 @@ export default function SessionPage() {
   const [discipline, setDiscipline] = useState(false);
   const [mentalState, setMentalState] = useState("");
   const [checked, setChecked] = useState({});
+  const [mistakes, setMistakes] = useState({});
   const [disciplineScore, setDisciplineScore] = useState(0);
   const [activeSessionId, setActiveSessionId] = useState(null);
 
@@ -18,6 +19,24 @@ export default function SessionPage() {
     "Je connais mon risque max",
     "Je ne trade pas par impatience",
   ];
+
+  const mistakesList = [
+    "Revenge trade",
+    "Overtrading",
+    "Entrée FOMO",
+    "Stop déplacé",
+    "Trade hors plan",
+  ];
+
+  const calculateScore = (updatedChecks, updatedMistakes) => {
+    const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
+    const baseScore = Math.round((checkedCount / checklist.length) * 100);
+
+    const mistakeCount = Object.values(updatedMistakes).filter(Boolean).length;
+    const malus = mistakeCount * 15;
+
+    return Math.max(baseScore - malus, 0);
+  };
 
   const getActiveSessionId = async () => {
     if (activeSessionId) return activeSessionId;
@@ -79,6 +98,7 @@ export default function SessionPage() {
     setDiscipline(true);
     setDisciplineScore(0);
     setChecked({});
+    setMistakes({});
   };
 
   const handleMentalState = async (state) => {
@@ -105,16 +125,38 @@ export default function SessionPage() {
       return;
     }
 
-    const updated = {
+    const updatedChecks = {
       ...checked,
       [item]: !checked[item],
     };
 
-    setChecked(updated);
+    setChecked(updatedChecks);
 
-    const checkedCount = Object.values(updated).filter(Boolean).length;
-    const score = Math.round((checkedCount / checklist.length) * 100);
+    const score = calculateScore(updatedChecks, mistakes);
+    setDisciplineScore(score);
 
+    await supabase
+      .from("sessions")
+      .update({ discipline_score: score })
+      .eq("id", sessionId);
+  };
+
+  const handleMistake = async (mistake) => {
+    const sessionId = await getActiveSessionId();
+
+    if (!sessionId) {
+      alert("Active d'abord ta discipline.");
+      return;
+    }
+
+    const updatedMistakes = {
+      ...mistakes,
+      [mistake]: !mistakes[mistake],
+    };
+
+    setMistakes(updatedMistakes);
+
+    const score = calculateScore(checked, updatedMistakes);
     setDisciplineScore(score);
 
     await supabase
@@ -179,7 +221,10 @@ export default function SessionPage() {
         <section style={card}>
           <h2 style={title}>Discipline Score</h2>
           <p style={scoreText}>{disciplineScore}%</p>
-          <p style={text}>Ton score évolue selon le respect de ton process.</p>
+          <p style={text}>
+            Ton score évolue selon le respect de ton process et tes erreurs
+            comportementales.
+          </p>
         </section>
 
         <section style={card}>
@@ -194,6 +239,24 @@ export default function SessionPage() {
             >
               <span>{checked[item] ? "✅" : "⬜"}</span>
               <span>{item}</span>
+            </div>
+          ))}
+        </section>
+
+        <section style={card}>
+          <h2 style={title}>Erreurs comportementales</h2>
+          <p style={text}>
+            PRIME détecte les comportements qui détruisent ta discipline.
+          </p>
+
+          {mistakesList.map((mistake) => (
+            <div
+              key={mistake}
+              onClick={() => handleMistake(mistake)}
+              style={checkItem}
+            >
+              <span>{mistakes[mistake] ? "❌" : "⬜"}</span>
+              <span>{mistake}</span>
             </div>
           ))}
         </section>
