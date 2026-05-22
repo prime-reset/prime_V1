@@ -1,12 +1,28 @@
 "use client";
 
 import { useState } from "react";
-
+import { supabase } from "@/lib/supabase";
 export default function SessionPage() {
   const [discipline, setDiscipline] = useState(false);
   const [mentalState, setMentalState] = useState("");
   const [checked, setChecked] = useState({});
+const handleMentalState = async (state) => {
+  setMentalState(state);
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  await supabase
+    .from("sessions")
+    .update({
+      mental_state: state,
+    })
+    .eq("user_id", user.id)
+    .eq("status", "active");
+};
   const checklist = [
     "J’ai identifié la tendance HTF",
     "J’ai repéré les zones de liquidité",
@@ -68,7 +84,7 @@ export default function SessionPage() {
           {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map((state) => (
             <button
               key={state}
-              onClick={() => setMentalState(state)}
+             onClick={() => handleMentalState(state)}
               style={{
                 ...pill,
                 background: mentalState === state ? "#D4B06A" : "rgba(255,255,255,0.06)",
