@@ -7,6 +7,7 @@ export default function SessionPage() {
   const [discipline, setDiscipline] = useState(false);
   const [mentalState, setMentalState] = useState("");
   const [checked, setChecked] = useState({});
+  const [disciplineScore, setDisciplineScore] = useState(0);
 
   const checklist = [
     "J’ai identifié la tendance HTF",
@@ -17,50 +18,8 @@ export default function SessionPage() {
     "Je ne trade pas par impatience",
   ];
 
-  // ACTIVER DISCIPLINE
   const activateDiscipline = async () => {
     setDiscipline(true);
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    console.log("USER :", user);
-alert(user?.id);
-    if (userError || !user) {
-      alert("Utilisateur non connecté");
-      console.log(userError);
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("sessions")
-      .insert([
-        {
-          user_id: user.id,
-          discipline_active: true,
-          discipline_score: 100,
-          streak_gain: 1,
-          xp_gain: 40,
-          status: "active",
-        },
-      ])
-      .select();
-
-    console.log("INSERT DATA :", data);
-    console.log("INSERT ERROR :", error);
-
-    if (error) {
-      alert(error.message);
-    } else {
-      alert("Session créée !");
-    }
-  };
-
-  // ETAT MENTAL
-  const handleMentalState = async (state) => {
-    setMentalState(state);
 
     const {
       data: { user },
@@ -71,73 +30,79 @@ alert(user?.id);
       return;
     }
 
-    const { error } = await supabase
-      .from("sessions")
-      .update({
-        mental_state: state,
-      })
-      .eq("user_id", user.id);
+    const { error } = await supabase.from("sessions").insert([
+      {
+        user_id: user.id,
+        discipline_active: true,
+        discipline_score: 0,
+        streak_gain: 1,
+        xp_gain: 40,
+        status: "active",
+      },
+    ]);
 
     if (error) {
-      alert("Erreur : " + error.message);
-    } else {
-      alert("État mental sauvegardé !");
+      alert("Erreur création session : " + error.message);
     }
   };
 
-  // CHECKLIST
-  const toggleCheck = (item) => {
-    setChecked((prev) => ({
-      ...prev,
-      [item]: !prev[item],
-    }));
+  const handleMentalState = async (state) => {
+    setMentalState(state);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    await supabase
+      .from("sessions")
+      .update({ mental_state: state })
+      .eq("user_id", user.id)
+      .eq("status", "active");
+  };
+
+  const toggleCheck = async (item) => {
+    const updated = {
+      ...checked,
+      [item]: !checked[item],
+    };
+
+    setChecked(updated);
+
+    const checkedCount = Object.values(updated).filter(Boolean).length;
+    const score = Math.round((checkedCount / checklist.length) * 100);
+
+    setDisciplineScore(score);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    await supabase
+      .from("sessions")
+      .update({ discipline_score: score })
+      .eq("user_id", user.id)
+      .eq("status", "active");
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#000",
-        color: "white",
-        padding: "42px 20px 120px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "680px",
-          margin: "0 auto",
-        }}
-      >
-        <p
-          style={{
-            color: "#D4B06A",
-            letterSpacing: "5px",
-            fontSize: "14px",
-          }}
-        >
-          PRIME SESSION
-        </p>
+    <main style={page}>
+      <div style={container}>
+        <p style={eyebrow}>PRIME SESSION</p>
 
-        <h1
-          style={{
-            fontSize: "64px",
-            lineHeight: "0.95",
-            margin: "20px 0 36px",
-            fontWeight: "800",
-          }}
-        >
+        <h1 style={heading}>
           Session
           <br />
           Trading
         </h1>
 
-        {/* DISCIPLINE */}
         <section style={card}>
           <h2 style={title}>Discipline</h2>
-
           <p style={text}>
-            Active ton mode discipline avant de commencer ta
-            session de trading.
+            Active ton mode discipline avant de commencer ta session de trading.
           </p>
 
           <button
@@ -148,28 +113,16 @@ alert(user?.id);
               color: discipline ? "#7DFFA1" : "#000",
             }}
           >
-            {discipline
-              ? "🟢 Discipline activée"
-              : "Activer ma discipline"}
+            {discipline ? "🟢 Discipline activée" : "Activer ma discipline"}
           </button>
         </section>
 
-        {/* ETAT MENTAL */}
         <section style={card}>
           <h2 style={title}>État mental</h2>
+          <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
 
-          <p style={text}>
-            Dans quel état tu arrives sur les marchés ?
-          </p>
-
-          <div>
-            {[
-              "Calme",
-              "Focus",
-              "Stressée",
-              "Impatiente",
-              "Fatiguée",
-            ].map((state) => (
+          {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
+            (state) => (
               <button
                 key={state}
                 onClick={() => handleMentalState(state)}
@@ -179,34 +132,39 @@ alert(user?.id);
                     mentalState === state
                       ? "#D4B06A"
                       : "rgba(255,255,255,0.06)",
-                  color:
-                    mentalState === state
-                      ? "#000"
-                      : "#fff",
+                  color: mentalState === state ? "#000" : "#fff",
                 }}
               >
                 {state}
               </button>
-            ))}
-          </div>
+            )
+          )}
         </section>
 
-        {/* CHECKLIST */}
         <section style={card}>
-          <h2 style={title}>Checklist pré-trade</h2>
+          <h2 style={title}>Discipline Score</h2>
 
-          <p style={text}>
-            Tu ne cherches pas un trade. Tu valides un plan.
+          <p
+            style={{
+              fontSize: "54px",
+              fontWeight: "900",
+              color: "#D4B06A",
+              margin: "10px 0",
+            }}
+          >
+            {disciplineScore}%
           </p>
 
-          {checklist.map((item) => (
-            <div
-              key={item}
-              onClick={() => toggleCheck(item)}
-              style={checkItem}
-            >
-              <span>{checked[item] ? "✅" : "⬜"}</span>
+          <p style={text}>Ton score évolue selon le respect de ton process.</p>
+        </section>
 
+        <section style={card}>
+          <h2 style={title}>Checklist pré-trade</h2>
+          <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
+
+          {checklist.map((item) => (
+            <div key={item} onClick={() => toggleCheck(item)} style={checkItem}>
+              <span>{checked[item] ? "✅" : "⬜"}</span>
               <span>{item}</span>
             </div>
           ))}
@@ -215,6 +173,31 @@ alert(user?.id);
     </main>
   );
 }
+
+const page = {
+  minHeight: "100vh",
+  background: "#000",
+  color: "white",
+  padding: "42px 20px 120px",
+};
+
+const container = {
+  maxWidth: "680px",
+  margin: "0 auto",
+};
+
+const eyebrow = {
+  color: "#D4B06A",
+  letterSpacing: "5px",
+  fontSize: "14px",
+};
+
+const heading = {
+  fontSize: "64px",
+  lineHeight: "0.95",
+  margin: "20px 0 36px",
+  fontWeight: "800",
+};
 
 const card = {
   background: "rgba(20,20,20,0.95)",
