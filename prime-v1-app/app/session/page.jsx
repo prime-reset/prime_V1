@@ -17,68 +17,45 @@ export default function SessionPage() {
     "Je ne trade pas par impatience",
   ];
 
-  // ACTIVER DISCIPLINE + CREER SESSION
-const activateDiscipline = async () => {
-  setDiscipline(true);
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  console.log("USER :", user);
-
-  if (userError || !user) {
-    alert("Utilisateur non connecté");
-    console.log(userError);
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from("sessions")
-    .insert([
-      {
-        user_id: user.id,
-        discipline_active: true,
-        discipline_score: 100,
-        streak_gain: 1,
-        xp_gain: 40,
-        status: "active",
-      },
-    ])
-    .select();
-
-  console.log("INSERT DATA :", data);
-  console.log("INSERT ERROR :", error);
-
-  if (error) {
-    alert(error.message);
-  } else {
-    alert("Session créée !");
-  }
-};
+  // ACTIVER DISCIPLINE
+  const activateDiscipline = async () => {
     setDiscipline(true);
 
     const {
       data: { user },
-      error,
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (error || !user) {
-      console.log("Erreur utilisateur");
+    console.log("USER :", user);
+
+    if (userError || !user) {
+      alert("Utilisateur non connecté");
+      console.log(userError);
       return;
     }
 
-    await supabase.from("sessions").insert([
-      {
-        user_id: user.id,
-        discipline_active: true,
-        discipline_score: 100,
-        streak_gain: 1,
-        xp_gain: 40,
-        status: "active",
-      },
-    ]);
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: user.id,
+          discipline_active: true,
+          discipline_score: 100,
+          streak_gain: 1,
+          xp_gain: 40,
+          status: "active",
+        },
+      ])
+      .select();
+
+    console.log("INSERT DATA :", data);
+    console.log("INSERT ERROR :", error);
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Session créée !");
+    }
   };
 
   // ETAT MENTAL
@@ -87,37 +64,24 @@ const activateDiscipline = async () => {
 
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      console.log("Aucun utilisateur");
+    if (!user) {
+      alert("Utilisateur non connecté");
       return;
     }
 
-    const { data: session, error: sessionError } = await supabase
-      .from("sessions")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (sessionError || !session) {
-      console.log("Aucune session active");
-      return;
-    }
-
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from("sessions")
       .update({
         mental_state: state,
       })
-      .eq("id", session.id);
+      .eq("user_id", user.id);
 
-    if (updateError) {
-      console.log(updateError);
+    if (error) {
+      alert("Erreur : " + error.message);
+    } else {
+      alert("État mental sauvegardé !");
     }
   };
 
@@ -241,9 +205,7 @@ const activateDiscipline = async () => {
               onClick={() => toggleCheck(item)}
               style={checkItem}
             >
-              <span>
-                {checked[item] ? "✅" : "⬜"}
-              </span>
+              <span>{checked[item] ? "✅" : "⬜"}</span>
 
               <span>{item}</span>
             </div>
