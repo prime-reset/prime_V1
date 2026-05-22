@@ -8,6 +8,7 @@ export default function SessionPage() {
   const [mentalState, setMentalState] = useState("");
   const [checked, setChecked] = useState({});
   const [disciplineScore, setDisciplineScore] = useState(0);
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   const checklist = [
     "J’ai identifié la tendance HTF",
@@ -30,39 +31,51 @@ export default function SessionPage() {
       return;
     }
 
-    const { error } = await supabase.from("sessions").insert([
-      {
-        user_id: user.id,
-        discipline_active: true,
-        discipline_score: 0,
-        streak_gain: 1,
-        xp_gain: 40,
-        status: "active",
-      },
-    ]);
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: user.id,
+          discipline_active: true,
+          discipline_score: 0,
+          streak_gain: 1,
+          xp_gain: 40,
+          status: "active",
+        },
+      ])
+      .select()
+      .single();
 
     if (error) {
       alert("Erreur création session : " + error.message);
+      return;
     }
+
+    setActiveSessionId(data.id);
+    setDisciplineScore(0);
+    setChecked({});
   };
 
   const handleMentalState = async (state) => {
     setMentalState(state);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
+    if (!activeSessionId) {
+      alert("Active d'abord ta discipline.");
+      return;
+    }
 
     await supabase
       .from("sessions")
       .update({ mental_state: state })
-      .eq("user_id", user.id)
-      .eq("status", "active");
+      .eq("id", activeSessionId);
   };
 
-  const toggleCheck = async (item) => {
+  const handleChecklist = async (item) => {
+    if (!activeSessionId) {
+      alert("Active d'abord ta discipline.");
+      return;
+    }
+
     const updated = {
       ...checked,
       [item]: !checked[item],
@@ -75,17 +88,10 @@ export default function SessionPage() {
 
     setDisciplineScore(score);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
     await supabase
       .from("sessions")
       .update({ discipline_score: score })
-      .eq("user_id", user.id)
-      .eq("status", "active");
+      .eq("id", activeSessionId);
   };
 
   return (
@@ -143,7 +149,6 @@ export default function SessionPage() {
 
         <section style={card}>
           <h2 style={title}>Discipline Score</h2>
-
           <p
             style={{
               fontSize: "54px",
@@ -154,7 +159,6 @@ export default function SessionPage() {
           >
             {disciplineScore}%
           </p>
-
           <p style={text}>Ton score évolue selon le respect de ton process.</p>
         </section>
 
@@ -163,7 +167,11 @@ export default function SessionPage() {
           <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
 
           {checklist.map((item) => (
-            <div key={item} onClick={() => toggleCheck(item)} style={checkItem}>
+            <div
+              key={item}
+              onClick={() => handleChecklist(item)}
+              style={checkItem}
+            >
               <span>{checked[item] ? "✅" : "⬜"}</span>
               <span>{item}</span>
             </div>
