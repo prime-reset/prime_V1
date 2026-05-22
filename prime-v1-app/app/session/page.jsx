@@ -41,6 +41,41 @@ export default function SessionPage() {
 
   // ETAT MENTAL
   const handleMentalState = async (state) => {
+  setMentalState(state);
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.log("Aucun user connecté", userError);
+    return;
+  }
+
+  const { data: session, error: sessionError } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (sessionError || !session) {
+    console.log("Aucune session active trouvée", sessionError);
+    return;
+  }
+
+  const { error: updateError } = await supabase
+    .from("sessions")
+    .update({ mental_state: state })
+    .eq("id", session.id);
+
+  if (updateError) {
+    console.log("Erreur update mental_state", updateError);
+  }
+};
     setMentalState(state);
 
     const {
