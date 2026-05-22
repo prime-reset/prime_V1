@@ -17,15 +17,19 @@ export default function SessionPage() {
     "Je ne trade pas par impatience",
   ];
 
-  // ACTIVATION DISCIPLINE + CREATION SESSION
+  // ACTIVER DISCIPLINE + CREER SESSION
   const activateDiscipline = async () => {
     setDiscipline(true);
 
     const {
       data: { user },
+      error,
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (error || !user) {
+      console.log("Erreur utilisateur");
+      return;
+    }
 
     await supabase.from("sessions").insert([
       {
@@ -41,56 +45,42 @@ export default function SessionPage() {
 
   // ETAT MENTAL
   const handleMentalState = async (state) => {
-  setMentalState(state);
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    console.log("Aucun user connecté", userError);
-    return;
-  }
-
-  const { data: session, error: sessionError } = await supabase
-    .from("sessions")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (sessionError || !session) {
-    console.log("Aucune session active trouvée", sessionError);
-    return;
-  }
-
-  const { error: updateError } = await supabase
-    .from("sessions")
-    .update({ mental_state: state })
-    .eq("id", session.id);
-
-  if (updateError) {
-    console.log("Erreur update mental_state", updateError);
-  }
-};
     setMentalState(state);
 
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (userError || !user) {
+      console.log("Aucun utilisateur");
+      return;
+    }
 
-    await supabase
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (sessionError || !session) {
+      console.log("Aucune session active");
+      return;
+    }
+
+    const { error: updateError } = await supabase
       .from("sessions")
       .update({
         mental_state: state,
       })
-      .eq("user_id", user.id)
-      .eq("status", "active");
+      .eq("id", session.id);
+
+    if (updateError) {
+      console.log(updateError);
+    }
   };
 
   // CHECKLIST
@@ -110,7 +100,12 @@ export default function SessionPage() {
         padding: "42px 20px 120px",
       }}
     >
-      <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+      <div
+        style={{
+          maxWidth: "680px",
+          margin: "0 auto",
+        }}
+      >
         <p
           style={{
             color: "#D4B06A",
