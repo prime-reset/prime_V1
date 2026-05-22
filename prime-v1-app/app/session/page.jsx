@@ -27,7 +27,7 @@ export default function SessionPage() {
     } = await supabase.auth.getUser();
 
     console.log("USER :", user);
-
+alert(user?.id);
     if (userError || !user) {
       alert("Utilisateur non connecté");
       console.log(userError);
