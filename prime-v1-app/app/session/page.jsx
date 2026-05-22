@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import BottomNav from "@/components/Bottonav";
+import BottomNav from "../../components/BottomNav";
 
 export default function SessionPage() {
   const [discipline, setDiscipline] = useState(false);
