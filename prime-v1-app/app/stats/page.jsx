@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import BottomNav from "../../components/BottomNav";
-import FadeIn from "../../components/FadeIn";
-import PremiumCard from "../../components/PremiumCard";
+import BottomNav from "../components/BottomNav";
+import FadeIn from "../components/FadeIn";
+import PremiumCard from "../components/PremiumCard";
 
 export default function StatsPage() {
   const [sessions, setSessions] = useState([]);
