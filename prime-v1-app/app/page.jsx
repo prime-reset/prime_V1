@@ -63,7 +63,7 @@ export default function HomePage() {
           background: #000;
         }
 
-       .prime-home {
+     .prime-home {
   min-height: 100vh;
   padding: 32px 18px 140px;
   color: white;
@@ -74,19 +74,35 @@ export default function HomePage() {
   background:
     linear-gradient(
       180deg,
-      rgba(0,0,0,0.08) 0%,
-      rgba(0,0,0,0.28) 42%,
-      rgba(0,0,0,0.82) 82%,
-      rgba(0,0,0,1) 100%
+      rgba(0,0,0,0.18) 0%,
+      rgba(0,0,0,0.34) 38%,
+      rgba(0,0,0,0.72) 72%,
+      rgba(0,0,0,0.96) 100%
     ),
     url("/black-panther-home.jpg.jpg");
 
-  background-size: 760px auto;
-  background-position: center top;
+  background-size:
+    cover,
+    1250px auto;
+
+  background-position:
+    center,
+    left -280px top -40px;
+
   background-repeat: no-repeat;
   background-attachment: scroll;
 }
+@media(max-width: 768px) {
+  .prime-home {
+    background-size:
+      cover,
+      980px auto;
 
+    background-position:
+      center,
+      left -250px top -10px;
+  }
+}
         .prime-home::after {
           content: "";
           position: fixed;
