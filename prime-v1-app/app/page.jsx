@@ -63,44 +63,29 @@ export default function HomePage() {
           background: #000;
         }
 
-        .prime-home {
-          min-height: 100vh;
-          padding: 32px 18px 140px;
-          color: white;
-          font-family: Inter, sans-serif;
-          overflow-x: hidden;
-          position: relative;
+       .prime-home {
+  min-height: 100vh;
+  padding: 32px 18px 140px;
+  color: white;
+  font-family: Inter, sans-serif;
+  overflow-x: hidden;
+  position: relative;
 
-          background:
-            linear-gradient(
-              90deg,
-              rgba(0,0,0,0.92) 0%,
-              rgba(0,0,0,0.50) 38%,
-              rgba(0,0,0,0.78) 70%,
-              rgba(0,0,0,0.98) 100%
-            ),
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0.12) 0%,
-              rgba(0,0,0,0.34) 38%,
-              rgba(0,0,0,0.82) 78%,
-              rgba(0,0,0,1) 100%
-            ),
-            url("/black-panther-home.jpg.jpg");
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.08) 0%,
+      rgba(0,0,0,0.28) 42%,
+      rgba(0,0,0,0.82) 82%,
+      rgba(0,0,0,1) 100%
+    ),
+    url("/black-panther-home.jpg.jpg");
 
-          background-size:
-            cover,
-            cover,
-            min(105vw, 760px) auto;
-
-          background-position:
-            center top,
-            center top,
-            left top;
-
-          background-repeat: no-repeat;
-          background-attachment: scroll;
-        }
+  background-size: 760px auto;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
 
         .prime-home::after {
           content: "";
