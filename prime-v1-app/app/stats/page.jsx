@@ -31,12 +31,11 @@ export default function StatsPage() {
       .order("created_at", { ascending: false });
 
     if (!error && data) setSessions(data);
-
     setLoading(false);
   };
 
   const scores = sessions
-    .map((session) => session.discipline_score)
+    .map((s) => s.discipline_score)
     .filter((score) => typeof score === "number");
 
   const averageScore =
@@ -47,27 +46,26 @@ export default function StatsPage() {
   const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
   const lastSession = sessions[0];
 
-  const totalXP = sessions.reduce(
-    (total, session) => total + (session.xp_gain || 0),
-    0
+  const totalXP = sessions.reduce((t, s) => t + (s.xp_gain || 0), 0);
+  const totalStreak = sessions.reduce((t, s) => t + (s.streak_gain || 0), 0);
+
+  const dominantMentalState = getDominantValue(
+    sessions.map((s) => s.mental_state).filter(Boolean)
   );
 
-  const totalStreak = sessions.reduce(
-    (total, session) => total + (session.streak_gain || 0),
-    0
+  const dominantError = getDominantValue(
+    sessions.map((s) => s.dominant_error).filter(Boolean)
   );
 
   const level = getPrimeLevel(totalXP);
   const nextLevel = getNextPrimeLevel(totalXP);
   const progress = getLevelProgress(totalXP);
 
-  const dominantMentalState = getDominantValue(
-    sessions.map((session) => session.mental_state).filter(Boolean)
-  );
-
-  const dominantError = getDominantValue(
-    sessions.map((session) => session.dominant_error).filter(Boolean)
-  );
+  const badges = getBadges({
+    sessions,
+    averageScore,
+    totalXP,
+  });
 
   const disciplineLevel = getDisciplineLevel(averageScore);
   const primeInsight = getPrimeInsight(averageScore, dominantError);
@@ -78,13 +76,7 @@ export default function StatsPage() {
       <div style={{ maxWidth: "430px", margin: "0 auto" }}>
         <FadeIn delay={0}>
           <p style={label}>PRIME ANALYTICS</p>
-
-          <h1 style={title}>
-            Tableau
-            <br />
-            de bord
-          </h1>
-
+          <h1 style={title}>Tableau<br />de bord</h1>
           <p style={subtitle}>
             PRIME transforme ta discipline en progression visible.
           </p>
@@ -100,13 +92,33 @@ export default function StatsPage() {
               <div style={{ ...progressInner, width: `${progress}%` }} />
             </div>
 
-            <p style={miniText}>
-              {totalXP} XP · prochain niveau : {nextLevel}
-            </p>
+            <p style={miniText}>{totalXP} XP · prochain niveau : {nextLevel}</p>
           </PremiumCard>
         </FadeIn>
 
         <FadeIn delay={0.25}>
+          <PremiumCard>
+            <p style={cardLabel}>BADGES PRIME</p>
+
+            <div style={badgesGrid}>
+              {badges.map((badge) => (
+                <div
+                  key={badge.name}
+                  style={{
+                    ...badgeCard,
+                    opacity: badge.unlocked ? 1 : 0.35,
+                  }}
+                >
+                  <div style={badgeIcon}>{badge.unlocked ? "🏆" : "🔒"}</div>
+                  <p style={badgeName}>{badge.name}</p>
+                  <p style={badgeText}>{badge.description}</p>
+                </div>
+              ))}
+            </div>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.35}>
           <PremiumCard>
             <p style={cardLabel}>SCORE MOYEN</p>
             <h2 style={score}>{loading ? "..." : `${averageScore}%`}</h2>
@@ -114,7 +126,7 @@ export default function StatsPage() {
           </PremiumCard>
         </FadeIn>
 
-        <FadeIn delay={0.35}>
+        <FadeIn delay={0.45}>
           <div style={grid}>
             <PremiumCard>
               <p style={cardLabel}>SESSIONS</p>
@@ -128,7 +140,7 @@ export default function StatsPage() {
           </div>
         </FadeIn>
 
-        <FadeIn delay={0.5}>
+        <FadeIn delay={0.55}>
           <div style={grid}>
             <PremiumCard>
               <p style={cardLabel}>XP TOTAL</p>
@@ -146,25 +158,21 @@ export default function StatsPage() {
           <PremiumCard>
             <p style={cardLabel}>ÉTAT MENTAL DOMINANT</p>
             <h2 style={goldTitle}>{dominantMentalState || "Aucun"}</h2>
-            <p style={text}>
-              PRIME repère l’état mental qui revient le plus souvent dans tes
-              sessions.
-            </p>
+            <p style={text}>PRIME repère ton état mental le plus fréquent.</p>
           </PremiumCard>
         </FadeIn>
 
-        <FadeIn delay={0.8}>
+        <FadeIn delay={0.75}>
           <PremiumCard>
             <p style={cardLabel}>ERREUR DOMINANTE</p>
             <h2 style={goldTitle}>{dominantError || "Aucune"}</h2>
             <p style={text}>
-              L’erreur qui revient le plus devient ton axe de correction
-              prioritaire.
+              L’erreur qui revient le plus devient ton axe de correction prioritaire.
             </p>
           </PremiumCard>
         </FadeIn>
 
-        <FadeIn delay={0.95}>
+        <FadeIn delay={0.85}>
           <PremiumCard>
             <p style={cardLabel}>INSIGHT PRIME</p>
             <h2 style={goldTitle}>Diagnostic</h2>
@@ -172,7 +180,7 @@ export default function StatsPage() {
           </PremiumCard>
         </FadeIn>
 
-        <FadeIn delay={1.1}>
+        <FadeIn delay={0.95}>
           <PremiumCard>
             <p style={cardLabel}>PRESCRIPTION</p>
             <h2 style={goldTitle}>Plan correctif</h2>
@@ -180,14 +188,12 @@ export default function StatsPage() {
           </PremiumCard>
         </FadeIn>
 
-        <FadeIn delay={1.25}>
+        <FadeIn delay={1.05}>
           <PremiumCard>
             <p style={cardLabel}>DERNIÈRE SESSION</p>
-
             <h2 style={goldTitle}>
               {lastSession ? `${lastSession.discipline_score}%` : "Aucune"}
             </h2>
-
             <p style={text}>
               {lastSession
                 ? `Mental : ${lastSession.mental_state || "non renseigné"} · Erreur : ${
@@ -204,36 +210,45 @@ export default function StatsPage() {
   );
 }
 
+function getBadges({ sessions, averageScore, totalXP }) {
+  const errors = sessions.map((s) => s.dominant_error).filter(Boolean);
+
+  return [
+    {
+      name: "First Session",
+      description: "Première session PRIME sauvegardée.",
+      unlocked: sessions.length >= 1,
+    },
+    {
+      name: "Discipline 85+",
+      description: "Score moyen supérieur ou égal à 85%.",
+      unlocked: averageScore >= 85,
+    },
+    {
+      name: "No Revenge",
+      description: "Aucune session marquée Revenge trade.",
+      unlocked: sessions.length > 0 && !errors.includes("Revenge trade"),
+    },
+    {
+      name: "Consistency Builder",
+      description: "5 sessions PRIME ou plus.",
+      unlocked: sessions.length >= 5,
+    },
+    {
+      name: "PRIME Mindset",
+      description: "250 XP cumulés.",
+      unlocked: totalXP >= 250,
+    },
+  ];
+}
+
 function getPrimeLevel(xp) {
-  if (xp >= 1500)
-    return {
-      name: "PRIME Operator",
-      description: "Tu exécutes avec une discipline avancée et une vraie maîtrise comportementale.",
-    };
-  if (xp >= 900)
-    return {
-      name: "Institutional Mindset",
-      description: "Ton process devient structuré, stable et professionnel.",
-    };
-  if (xp >= 500)
-    return {
-      name: "Elite Executor",
-      description: "Tu commences à incarner une exécution solide et répétable.",
-    };
-  if (xp >= 250)
-    return {
-      name: "Consistent Trader",
-      description: "Tu construis une régularité réelle session après session.",
-    };
-  if (xp >= 100)
-    return {
-      name: "Discipline Builder",
-      description: "Tu renforces tes bases et tu apprends à respecter ton cadre.",
-    };
-  return {
-    name: "Rookie Trader",
-    description: "Tu poses les premières fondations de ta discipline PRIME.",
-  };
+  if (xp >= 1500) return { name: "PRIME Operator", description: "Discipline avancée et maîtrise comportementale." };
+  if (xp >= 900) return { name: "Institutional Mindset", description: "Ton process devient stable et professionnel." };
+  if (xp >= 500) return { name: "Elite Executor", description: "Tu incarnes une exécution solide et répétable." };
+  if (xp >= 250) return { name: "Consistent Trader", description: "Tu construis une régularité réelle." };
+  if (xp >= 100) return { name: "Discipline Builder", description: "Tu renforces tes bases." };
+  return { name: "Rookie Trader", description: "Tu poses les fondations de ta discipline PRIME." };
 }
 
 function getNextPrimeLevel(xp) {
@@ -262,8 +277,8 @@ function getDominantValue(values) {
 
   return values.sort(
     (a, b) =>
-      values.filter((value) => value === b).length -
-      values.filter((value) => value === a).length
+      values.filter((v) => v === b).length -
+      values.filter((v) => v === a).length
   )[0];
 }
 
@@ -276,59 +291,23 @@ function getDisciplineLevel(score) {
 }
 
 function getPrimeInsight(score, error) {
-  if (!error && score >= 85) {
-    return "Ton exécution est propre. Ton objectif est maintenant de maintenir cette stabilité sur plusieurs sessions.";
-  }
-
-  if (error === "Revenge trade") {
-    return "Tu as tendance à vouloir récupérer après une perte. Ce comportement détruit ton edge plus vite que ton analyse ne peut le reconstruire.";
-  }
-
-  if (error === "Overtrading") {
-    return "Ton problème principal semble être la sur-exécution. Tu confonds activité et efficacité.";
-  }
-
-  if (error === "Entrée FOMO") {
-    return "Tu entres quand le mouvement est déjà émotionnellement chargé. PRIME doit t’aider à attendre la confirmation.";
-  }
-
-  if (error === "Stop déplacé") {
-    return "Ton invalidation n’est pas encore respectée. Tu sais où le trade est faux, mais tu négocies encore avec le marché.";
-  }
-
-  if (error === "Trade hors plan") {
-    return "Ton risque principal vient du non-respect de ton propre cadre. Le plan existe, mais il n’est pas encore souverain.";
-  }
-
-  if (score > 0) {
-    return "PRIME commence à collecter tes données. Plus tu renseignes tes sessions, plus le diagnostic deviendra précis.";
-  }
-
+  if (!error && score >= 85) return "Ton exécution est propre. Maintiens cette stabilité.";
+  if (error === "Revenge trade") return "Tu veux récupérer après une perte. Ce comportement détruit ton edge.";
+  if (error === "Overtrading") return "Tu confonds activité et efficacité.";
+  if (error === "Entrée FOMO") return "Tu entres quand le mouvement est déjà émotionnellement chargé.";
+  if (error === "Stop déplacé") return "Tu négocies encore avec ton invalidation.";
+  if (error === "Trade hors plan") return "Le plan existe, mais il n’est pas encore souverain.";
+  if (score > 0) return "PRIME commence à collecter tes données.";
   return "Aucune donnée suffisante pour générer un diagnostic fiable.";
 }
 
 function getPrescription(error) {
-  if (error === "Revenge trade") {
-    return "Pendant 7 jours : après une perte, pause obligatoire de 20 minutes et interdiction de reprendre un trade sans nouveau setup A.";
-  }
-
-  if (error === "Overtrading") {
-    return "Pendant 7 jours : maximum 2 trades par session. Une fois la limite atteinte, la session est terminée.";
-  }
-
-  if (error === "Entrée FOMO") {
-    return "Pendant 7 jours : aucune entrée sans pullback ou confirmation claire. Si le mouvement est déjà parti, tu le laisses partir.";
-  }
-
-  if (error === "Stop déplacé") {
-    return "Pendant 7 jours : stop défini avant entrée et interdit de le déplacer sauf pour réduire le risque.";
-  }
-
-  if (error === "Trade hors plan") {
-    return "Pendant 7 jours : chaque trade doit correspondre à ton scénario principal ou secondaire. Sinon, aucun trade.";
-  }
-
-  return "Continue à remplir tes sessions. PRIME te donnera une prescription dès qu’un pattern comportemental clair apparaîtra.";
+  if (error === "Revenge trade") return "Pendant 7 jours : après une perte, pause obligatoire de 20 minutes.";
+  if (error === "Overtrading") return "Pendant 7 jours : maximum 2 trades par session.";
+  if (error === "Entrée FOMO") return "Pendant 7 jours : aucune entrée sans pullback ou confirmation claire.";
+  if (error === "Stop déplacé") return "Pendant 7 jours : stop défini avant entrée, interdit de le déplacer.";
+  if (error === "Trade hors plan") return "Pendant 7 jours : chaque trade doit correspondre à ton scénario principal ou secondaire.";
+  return "Continue à remplir tes sessions. PRIME prescrira dès qu’un pattern clair apparaît.";
 }
 
 const main = {
@@ -367,6 +346,38 @@ const grid = {
   gridTemplateColumns: "1fr 1fr",
   gap: "16px",
   marginBottom: "16px",
+};
+
+const badgesGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: "12px",
+};
+
+const badgeCard = {
+  border: "1px solid rgba(212,176,106,0.20)",
+  borderRadius: "20px",
+  padding: "16px",
+  background: "rgba(255,255,255,0.04)",
+};
+
+const badgeIcon = {
+  fontSize: "24px",
+  marginBottom: "8px",
+};
+
+const badgeName = {
+  color: "#D4B06A",
+  fontWeight: "800",
+  fontSize: "16px",
+  margin: "0 0 6px",
+};
+
+const badgeText = {
+  color: "rgba(255,255,255,0.55)",
+  fontSize: "14px",
+  lineHeight: "22px",
+  margin: 0,
 };
 
 const progressOuter = {
