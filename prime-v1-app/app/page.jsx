@@ -62,59 +62,60 @@ export default function HomePage() {
           margin: 0;
           background: #000;
         }
-
-     .prime-home {
+<img
+  src="/black-panther-home.jpg.jpg"
+  className="panther-bg"
+  alt=""
+/>
+    .prime-home {
   min-height: 100vh;
   padding: 32px 18px 140px;
   color: white;
   font-family: Inter, sans-serif;
   overflow-x: hidden;
   position: relative;
+  background: #000;
+}
 
+.panther-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 780px;
+  height: auto;
+  opacity: 0.72;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.prime-home::before {
+  content: "";
+  position: fixed;
+  inset: 0;
   background:
     linear-gradient(
-      180deg,
-      rgba(0,0,0,0.18) 0%,
-      rgba(0,0,0,0.34) 38%,
-      rgba(0,0,0,0.72) 72%,
-      rgba(0,0,0,0.96) 100%
+      90deg,
+      rgba(0,0,0,0.20) 0%,
+      rgba(0,0,0,0.48) 42%,
+      rgba(0,0,0,0.95) 100%
     ),
-    url("/black-panther-home.jpg.jpg");
-
-  background-size:
-    cover,
-    1250px auto;
-
-  background-position:
-    center,
-    left -280px top -40px;
-
-  background-repeat: no-repeat;
-  background-attachment: scroll;
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.12) 0%,
+      rgba(0,0,0,0.56) 62%,
+      rgba(0,0,0,1) 100%
+    );
+  z-index: 1;
+  pointer-events: none;
 }
-@media(max-width: 768px) {
-  .prime-home {
-    background-size:
-      cover,
-      980px auto;
 
-    background-position:
-      center,
-      left -250px top -10px;
-  }
+.page {
+  max-width: 460px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
 }
-        .prime-home::after {
-          content: "";
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          background:
-            radial-gradient(circle at 26% 34%, rgba(212,176,106,0.14), transparent 9%),
-            radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 25%),
-            linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.70) 88%);
-          z-index: 0;
-        }
-
+      
         .page {
           max-width: 460px;
           margin: 0 auto;
