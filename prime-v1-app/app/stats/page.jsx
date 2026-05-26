@@ -30,9 +30,7 @@ export default function StatsPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setSessions(data);
-    }
+    if (!error && data) setSessions(data);
 
     setLoading(false);
   };
@@ -59,6 +57,10 @@ export default function StatsPage() {
     0
   );
 
+  const level = getPrimeLevel(totalXP);
+  const nextLevel = getNextPrimeLevel(totalXP);
+  const progress = getLevelProgress(totalXP);
+
   const dominantMentalState = getDominantValue(
     sessions.map((session) => session.mental_state).filter(Boolean)
   );
@@ -84,12 +86,27 @@ export default function StatsPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME analyse tes sessions, tes états mentaux et tes erreurs
-            comportementales.
+            PRIME transforme ta discipline en progression visible.
           </p>
         </FadeIn>
 
-        <FadeIn delay={0.2}>
+        <FadeIn delay={0.15}>
+          <PremiumCard>
+            <p style={cardLabel}>NIVEAU PRIME</p>
+            <h2 style={goldTitle}>{level.name}</h2>
+            <p style={text}>{level.description}</p>
+
+            <div style={progressOuter}>
+              <div style={{ ...progressInner, width: `${progress}%` }} />
+            </div>
+
+            <p style={miniText}>
+              {totalXP} XP · prochain niveau : {nextLevel}
+            </p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.25}>
           <PremiumCard>
             <p style={cardLabel}>SCORE MOYEN</p>
             <h2 style={score}>{loading ? "..." : `${averageScore}%`}</h2>
@@ -168,9 +185,7 @@ export default function StatsPage() {
             <p style={cardLabel}>DERNIÈRE SESSION</p>
 
             <h2 style={goldTitle}>
-              {lastSession
-                ? `${lastSession.discipline_score}%`
-                : "Aucune session"}
+              {lastSession ? `${lastSession.discipline_score}%` : "Aucune"}
             </h2>
 
             <p style={text}>
@@ -187,6 +202,59 @@ export default function StatsPage() {
       <BottomNav active="Stats" />
     </main>
   );
+}
+
+function getPrimeLevel(xp) {
+  if (xp >= 1500)
+    return {
+      name: "PRIME Operator",
+      description: "Tu exécutes avec une discipline avancée et une vraie maîtrise comportementale.",
+    };
+  if (xp >= 900)
+    return {
+      name: "Institutional Mindset",
+      description: "Ton process devient structuré, stable et professionnel.",
+    };
+  if (xp >= 500)
+    return {
+      name: "Elite Executor",
+      description: "Tu commences à incarner une exécution solide et répétable.",
+    };
+  if (xp >= 250)
+    return {
+      name: "Consistent Trader",
+      description: "Tu construis une régularité réelle session après session.",
+    };
+  if (xp >= 100)
+    return {
+      name: "Discipline Builder",
+      description: "Tu renforces tes bases et tu apprends à respecter ton cadre.",
+    };
+  return {
+    name: "Rookie Trader",
+    description: "Tu poses les premières fondations de ta discipline PRIME.",
+  };
+}
+
+function getNextPrimeLevel(xp) {
+  if (xp < 100) return "Discipline Builder";
+  if (xp < 250) return "Consistent Trader";
+  if (xp < 500) return "Elite Executor";
+  if (xp < 900) return "Institutional Mindset";
+  if (xp < 1500) return "PRIME Operator";
+  return "Niveau maximum";
+}
+
+function getLevelProgress(xp) {
+  const levels = [0, 100, 250, 500, 900, 1500];
+
+  for (let i = 0; i < levels.length - 1; i++) {
+    if (xp >= levels[i] && xp < levels[i + 1]) {
+      return Math.round(((xp - levels[i]) / (levels[i + 1] - levels[i])) * 100);
+    }
+  }
+
+  return 100;
 }
 
 function getDominantValue(values) {
@@ -299,6 +367,28 @@ const grid = {
   gridTemplateColumns: "1fr 1fr",
   gap: "16px",
   marginBottom: "16px",
+};
+
+const progressOuter = {
+  width: "100%",
+  height: "12px",
+  background: "rgba(255,255,255,0.08)",
+  borderRadius: "999px",
+  overflow: "hidden",
+  marginTop: "20px",
+  marginBottom: "12px",
+};
+
+const progressInner = {
+  height: "100%",
+  background: "linear-gradient(90deg, #8B6A2E, #D4B06A, #FFF0B8)",
+  borderRadius: "999px",
+};
+
+const miniText = {
+  color: "rgba(255,255,255,0.45)",
+  fontSize: "13px",
+  lineHeight: "22px",
 };
 
 const cardLabel = {
