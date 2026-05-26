@@ -47,7 +47,6 @@ export default function StatsPage() {
       : 0;
 
   const bestScore = scores.length > 0 ? Math.max(...scores) : 0;
-
   const lastSession = sessions[0];
 
   const totalXP = sessions.reduce(
@@ -60,20 +59,17 @@ export default function StatsPage() {
     0
   );
 
-  const mentalStates = sessions
-    .map((session) => session.mental_state)
-    .filter(Boolean);
+  const dominantMentalState = getDominantValue(
+    sessions.map((session) => session.mental_state).filter(Boolean)
+  );
 
-  const dominantMentalState =
-    mentalStates.length > 0
-      ? mentalStates.sort(
-          (a, b) =>
-            mentalStates.filter((v) => v === b).length -
-            mentalStates.filter((v) => v === a).length
-        )[0]
-      : "Aucun";
+  const dominantError = getDominantValue(
+    sessions.map((session) => session.dominant_error).filter(Boolean)
+  );
 
   const disciplineLevel = getDisciplineLevel(averageScore);
+  const primeInsight = getPrimeInsight(averageScore, dominantError);
+  const prescription = getPrescription(dominantError);
 
   return (
     <main style={main}>
@@ -88,7 +84,8 @@ export default function StatsPage() {
           </h1>
 
           <p style={subtitle}>
-            PRIME analyse tes vraies sessions sauvegardées dans Supabase.
+            PRIME analyse tes sessions, tes états mentaux et tes erreurs
+            comportementales.
           </p>
         </FadeIn>
 
@@ -131,7 +128,7 @@ export default function StatsPage() {
         <FadeIn delay={0.65}>
           <PremiumCard>
             <p style={cardLabel}>ÉTAT MENTAL DOMINANT</p>
-            <h2 style={goldTitle}>{dominantMentalState}</h2>
+            <h2 style={goldTitle}>{dominantMentalState || "Aucun"}</h2>
             <p style={text}>
               PRIME repère l’état mental qui revient le plus souvent dans tes
               sessions.
@@ -140,6 +137,33 @@ export default function StatsPage() {
         </FadeIn>
 
         <FadeIn delay={0.8}>
+          <PremiumCard>
+            <p style={cardLabel}>ERREUR DOMINANTE</p>
+            <h2 style={goldTitle}>{dominantError || "Aucune"}</h2>
+            <p style={text}>
+              L’erreur qui revient le plus devient ton axe de correction
+              prioritaire.
+            </p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={0.95}>
+          <PremiumCard>
+            <p style={cardLabel}>INSIGHT PRIME</p>
+            <h2 style={goldTitle}>Diagnostic</h2>
+            <p style={text}>{primeInsight}</p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={1.1}>
+          <PremiumCard>
+            <p style={cardLabel}>PRESCRIPTION</p>
+            <h2 style={goldTitle}>Plan correctif</h2>
+            <p style={text}>{prescription}</p>
+          </PremiumCard>
+        </FadeIn>
+
+        <FadeIn delay={1.25}>
           <PremiumCard>
             <p style={cardLabel}>DERNIÈRE SESSION</p>
 
@@ -151,16 +175,28 @@ export default function StatsPage() {
 
             <p style={text}>
               {lastSession
-                ? `Mental : ${lastSession.mental_state || "non renseigné"}`
+                ? `Mental : ${lastSession.mental_state || "non renseigné"} · Erreur : ${
+                    lastSession.dominant_error || "aucune"
+                  }`
                 : "Lance une session pour générer tes statistiques."}
             </p>
           </PremiumCard>
         </FadeIn>
       </div>
 
-     <BottomNav active="Prime" />
+      <BottomNav active="Stats" />
     </main>
   );
+}
+
+function getDominantValue(values) {
+  if (!values || values.length === 0) return null;
+
+  return values.sort(
+    (a, b) =>
+      values.filter((value) => value === b).length -
+      values.filter((value) => value === a).length
+  )[0];
 }
 
 function getDisciplineLevel(score) {
@@ -169,6 +205,62 @@ function getDisciplineLevel(score) {
   if (score >= 65) return "Zone fragile. PRIME doit renforcer tes garde-fous.";
   if (score > 0) return "Risque élevé. Priorité au contrôle émotionnel.";
   return "Aucune donnée pour le moment.";
+}
+
+function getPrimeInsight(score, error) {
+  if (!error && score >= 85) {
+    return "Ton exécution est propre. Ton objectif est maintenant de maintenir cette stabilité sur plusieurs sessions.";
+  }
+
+  if (error === "Revenge trade") {
+    return "Tu as tendance à vouloir récupérer après une perte. Ce comportement détruit ton edge plus vite que ton analyse ne peut le reconstruire.";
+  }
+
+  if (error === "Overtrading") {
+    return "Ton problème principal semble être la sur-exécution. Tu confonds activité et efficacité.";
+  }
+
+  if (error === "Entrée FOMO") {
+    return "Tu entres quand le mouvement est déjà émotionnellement chargé. PRIME doit t’aider à attendre la confirmation.";
+  }
+
+  if (error === "Stop déplacé") {
+    return "Ton invalidation n’est pas encore respectée. Tu sais où le trade est faux, mais tu négocies encore avec le marché.";
+  }
+
+  if (error === "Trade hors plan") {
+    return "Ton risque principal vient du non-respect de ton propre cadre. Le plan existe, mais il n’est pas encore souverain.";
+  }
+
+  if (score > 0) {
+    return "PRIME commence à collecter tes données. Plus tu renseignes tes sessions, plus le diagnostic deviendra précis.";
+  }
+
+  return "Aucune donnée suffisante pour générer un diagnostic fiable.";
+}
+
+function getPrescription(error) {
+  if (error === "Revenge trade") {
+    return "Pendant 7 jours : après une perte, pause obligatoire de 20 minutes et interdiction de reprendre un trade sans nouveau setup A.";
+  }
+
+  if (error === "Overtrading") {
+    return "Pendant 7 jours : maximum 2 trades par session. Une fois la limite atteinte, la session est terminée.";
+  }
+
+  if (error === "Entrée FOMO") {
+    return "Pendant 7 jours : aucune entrée sans pullback ou confirmation claire. Si le mouvement est déjà parti, tu le laisses partir.";
+  }
+
+  if (error === "Stop déplacé") {
+    return "Pendant 7 jours : stop défini avant entrée et interdit de le déplacer sauf pour réduire le risque.";
+  }
+
+  if (error === "Trade hors plan") {
+    return "Pendant 7 jours : chaque trade doit correspondre à ton scénario principal ou secondaire. Sinon, aucun trade.";
+  }
+
+  return "Continue à remplir tes sessions. PRIME te donnera une prescription dès qu’un pattern comportemental clair apparaîtra.";
 }
 
 const main = {
