@@ -55,7 +55,7 @@ export default function HomePage() {
 
   return (
     <main className="prime-home">
-      <img src="/black-panther-home.jpg.jpg" className="panther-bg" alt="" />
+     <img src="/black-panther-home.jpg" className="panther-bg" alt="" />
 
       <style>{`
         * { box-sizing: border-box; }
