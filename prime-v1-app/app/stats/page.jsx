@@ -158,7 +158,7 @@ export default function StatsPage() {
         </FadeIn>
       </div>
 
-      <BottomNav active="Stats" />
+     <BottomNav active="Prime" />
     </main>
   );
 }
