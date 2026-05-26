@@ -8,7 +8,6 @@ import {
   RotateCcw,
   Brain,
   Flame,
-  Trophy,
   ShieldCheck,
   ChevronRight,
   Sparkles,
@@ -30,27 +29,16 @@ export default function HomePage() {
   const [level, setLevel] = useState("DISCIPLINED TRADER");
 
   useEffect(() => {
-    setDisciplineActive(
-      localStorage.getItem("prime_discipline_active") === "true"
-    );
-
-    setResetActive(
-      localStorage.getItem("prime_reset_active") === "true"
-    );
-
+    setDisciplineActive(localStorage.getItem("prime_discipline_active") === "true");
+    setResetActive(localStorage.getItem("prime_reset_active") === "true");
     setStreak(Number(localStorage.getItem("prime_streak") || 0));
 
     const savedXp = Number(localStorage.getItem("prime_xp") || 0);
-
     setXp(savedXp);
 
-    if (savedXp >= 1500) {
-      setLevel("INSTITUTIONAL MINDSET");
-    } else if (savedXp >= 800) {
-      setLevel("ELITE EXECUTION");
-    } else {
-      setLevel("DISCIPLINED TRADER");
-    }
+    if (savedXp >= 1500) setLevel("INSTITUTIONAL MINDSET");
+    else if (savedXp >= 800) setLevel("ELITE EXECUTION");
+    else setLevel("DISCIPLINED TRADER");
   }, []);
 
   const homeStatus = resetActive
@@ -68,9 +56,7 @@ export default function HomePage() {
   return (
     <main className="prime-home">
       <style>{`
-        * {
-          box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
           margin: 0;
@@ -82,28 +68,57 @@ export default function HomePage() {
           padding: 32px 18px 140px;
           color: white;
           font-family: Inter, sans-serif;
+          overflow-x: hidden;
+          position: relative;
 
           background:
             linear-gradient(
-              180deg,
-              rgba(0,0,0,0.25) 0%,
-              rgba(0,0,0,0.52) 30%,
-              rgba(0,0,0,0.82) 62%,
+              90deg,
+              rgba(0,0,0,0.92) 0%,
+              rgba(0,0,0,0.50) 38%,
+              rgba(0,0,0,0.78) 70%,
               rgba(0,0,0,0.98) 100%
             ),
-            url("/black-panther-home.jpg");
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.12) 0%,
+              rgba(0,0,0,0.34) 38%,
+              rgba(0,0,0,0.82) 78%,
+              rgba(0,0,0,1) 100%
+            ),
+            url("/black-panther-home.jpg.jpg");
 
-          background-size: cover;
-          background-position: center;
+          background-size:
+            cover,
+            cover,
+            min(105vw, 760px) auto;
+
+          background-position:
+            center top,
+            center top,
+            left top;
+
           background-repeat: no-repeat;
-          background-attachment: fixed;
+          background-attachment: scroll;
+        }
 
-          overflow-x: hidden;
+        .prime-home::after {
+          content: "";
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          background:
+            radial-gradient(circle at 26% 34%, rgba(212,176,106,0.14), transparent 9%),
+            radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05), transparent 25%),
+            linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.70) 88%);
+          z-index: 0;
         }
 
         .page {
           max-width: 460px;
           margin: 0 auto;
+          position: relative;
+          z-index: 2;
         }
 
         .hero {
@@ -146,14 +161,10 @@ export default function HomePage() {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-
           padding: 12px 18px;
           border-radius: 999px;
-
           background: rgba(0,0,0,0.42);
-
           border: 1px solid rgba(212,176,106,0.32);
-
           backdrop-filter: blur(12px);
         }
 
@@ -167,31 +178,18 @@ export default function HomePage() {
         .live-card,
         .card {
           position: relative;
-
           overflow: hidden;
-
           border-radius: 34px;
-
           padding: 24px;
-
           margin-bottom: 18px;
-
           background:
-            linear-gradient(
-              145deg,
-              rgba(255,255,255,0.08),
-              rgba(255,255,255,0.02)
-            ),
+            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
             rgba(5,5,5,0.72);
-
           border: 1px solid rgba(255,255,255,0.08);
-
           backdrop-filter: blur(22px);
-
           box-shadow:
             0 20px 60px rgba(0,0,0,0.55),
             inset 0 1px 0 rgba(255,255,255,0.04);
-
           transition: 0.3s ease;
         }
 
@@ -210,17 +208,12 @@ export default function HomePage() {
         .icon-box {
           width: 58px;
           height: 58px;
-
           border-radius: 20px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           background: rgba(212,176,106,0.10);
-
           border: 1px solid rgba(212,176,106,0.16);
-
           color: #D4B06A;
         }
 
@@ -255,34 +248,20 @@ export default function HomePage() {
 
         .action-card {
           position: relative;
-
           overflow: hidden;
-
           text-decoration: none;
           color: white;
-
           border-radius: 28px;
-
           padding: 18px;
-
           min-height: 120px;
-
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-
           background:
-            linear-gradient(
-              145deg,
-              rgba(255,255,255,0.08),
-              rgba(255,255,255,0.015)
-            ),
+            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.015)),
             rgba(5,5,5,0.72);
-
           border: 1px solid rgba(255,255,255,0.08);
-
           backdrop-filter: blur(22px);
-
           transition: 0.3s ease;
         }
 
@@ -300,15 +279,11 @@ export default function HomePage() {
         .action-icon {
           width: 48px;
           height: 48px;
-
           border-radius: 16px;
-
           display: flex;
           align-items: center;
           justify-content: center;
-
           background: rgba(212,176,106,0.10);
-
           color: #D4B06A;
         }
 
@@ -367,24 +342,38 @@ export default function HomePage() {
         }
 
         @keyframes fadeUp {
-          from {
-            opacity: 0;
-            transform: translateY(18px);
-          }
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
 
-          to {
-            opacity: 1;
-            transform: translateY(0);
+        @media(max-width: 600px) {
+          .prime-home {
+            background-size:
+              cover,
+              cover,
+              145vw auto;
+
+            background-position:
+              center top,
+              center top,
+              42% top;
           }
         }
 
         @media(max-width: 390px) {
-          .title {
-            font-size: 50px;
-          }
+          .title { font-size: 50px; }
+          .actions-grid { grid-template-columns: 1fr; }
 
-          .actions-grid {
-            grid-template-columns: 1fr;
+          .prime-home {
+            background-size:
+              cover,
+              cover,
+              162vw auto;
+
+            background-position:
+              center top,
+              center top,
+              42% top;
           }
         }
       `}</style>
@@ -399,8 +388,7 @@ export default function HomePage() {
           </h1>
 
           <p className="subtitle">
-            Discipline comportementale, coaching mental et système
-            d’exécution pour traders.
+            Discipline comportementale, coaching mental et système d’exécution pour traders.
           </p>
 
           <div className="hero-level">
@@ -431,33 +419,10 @@ export default function HomePage() {
         </section>
 
         <section className="actions-grid">
-          <ActionButton
-            href="/session"
-            icon={<Target size={24} />}
-            label="Exécution"
-            title="Session"
-          />
-
-          <ActionButton
-            href="/stats"
-            icon={<BarChart3 size={24} />}
-            label="Analytics"
-            title="Stats"
-          />
-
-          <ActionButton
-            href="/reset"
-            icon={<RotateCcw size={24} />}
-            label="Protection"
-            title="Reset"
-          />
-
-          <ActionButton
-            href="/identity"
-            icon={<Sparkles size={24} />}
-            label="PRIME"
-            title="Identity"
-          />
+          <ActionButton href="/session" icon={<Target size={24} />} label="Exécution" title="Session" />
+          <ActionButton href="/stats" icon={<BarChart3 size={24} />} label="Analytics" title="Stats" />
+          <ActionButton href="/reset" icon={<RotateCcw size={24} />} label="Protection" title="Reset" />
+          <ActionButton href="/identity" icon={<Sparkles size={24} />} label="PRIME" title="Identity" />
         </section>
 
         <section className="card">
@@ -468,39 +433,27 @@ export default function HomePage() {
 
             <div>
               <p className="label">DISCIPLINE STREAK</p>
-              <h2 className="card-title">
-                {streak} jours disciplinés
-              </h2>
+              <h2 className="card-title">{streak} jours disciplinés</h2>
             </div>
           </div>
 
           <div className="streak-row">
             <div>
               <div className="streak-number">{streak}</div>
-
-              <div className="streak-sub">
-                Série actuelle
-              </div>
+              <div className="streak-sub">Série actuelle</div>
             </div>
 
             <div className="xp-box">
               <div className="xp-label">TOTAL XP</div>
-
-              <div className="xp-number">
-                {xp}
-              </div>
+              <div className="xp-number">{xp}</div>
             </div>
           </div>
         </section>
 
         <CloudProfileCard />
-
         <DisciplineScoreCard />
-
         <PrimeLevelCard />
-
         <PrimeBadgesCard />
-
         <PrimeCoachInsight />
       </div>
 
@@ -509,33 +462,17 @@ export default function HomePage() {
   );
 }
 
-function ActionButton({
-  href,
-  icon,
-  label,
-  title,
-}) {
+function ActionButton({ href, icon, label, title }) {
   return (
     <Link href={href} className="action-card">
       <div className="action-top">
-        <div className="action-icon">
-          {icon}
-        </div>
-
-        <ChevronRight
-          size={20}
-          className="arrow"
-        />
+        <div className="action-icon">{icon}</div>
+        <ChevronRight size={20} className="arrow" />
       </div>
 
       <div>
-        <p className="action-label">
-          {label}
-        </p>
-
-        <h3 className="action-title">
-          {title}
-        </h3>
+        <p className="action-label">{label}</p>
+        <h3 className="action-title">{title}</h3>
       </div>
     </Link>
   );
