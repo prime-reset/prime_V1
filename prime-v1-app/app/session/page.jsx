@@ -150,29 +150,38 @@ export default function SessionPage() {
   };
 
   const handleMistake = async (mistake) => {
-    const sessionId = await getActiveSessionId();
+  const sessionId = await getActiveSessionId();
 
-    if (!sessionId) {
-      alert("Active d'abord ta discipline.");
-      return;
-    }
+  if (!sessionId) {
+    alert("Active d'abord ta discipline.");
+    return;
+  }
 
-    const updatedMistakes = {
-      ...mistakes,
-      [mistake]: !mistakes[mistake],
-    };
-
-    setMistakes(updatedMistakes);
-
-    const score = calculateScore(checked, updatedMistakes);
-    setDisciplineScore(score);
-
-    await supabase
-      .from("sessions")
-      .update({ discipline_score: score })
-      .eq("id", sessionId);
+  const updatedMistakes = {
+    ...mistakes,
+    [mistake]: !mistakes[mistake],
   };
 
+  setMistakes(updatedMistakes);
+
+  const score = calculateScore(checked, updatedMistakes);
+  setDisciplineScore(score);
+
+  const activeMistakes = Object.keys(updatedMistakes).filter(
+    (key) => updatedMistakes[key]
+  );
+
+  const dominantError =
+    activeMistakes.length > 0 ? activeMistakes[activeMistakes.length - 1] : null;
+
+  await supabase
+    .from("sessions")
+    .update({
+      discipline_score: score,
+      dominant_error: dominantError,
+    })
+    .eq("id", sessionId);
+};
   return (
     <main style={page}>
       <div style={container}>
