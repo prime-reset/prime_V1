@@ -55,6 +55,8 @@ export default function HomePage() {
 
   return (
     <main className="prime-home">
+      <img src="/black-panther-home.jpg.jpg" className="panther-bg" alt="" />
+
       <style>{`
         * { box-sizing: border-box; }
 
@@ -62,60 +64,51 @@ export default function HomePage() {
           margin: 0;
           background: #000;
         }
-<img
-  src="/black-panther-home.jpg.jpg"
-  className="panther-bg"
-  alt=""
-/>
-    .prime-home {
-  min-height: 100vh;
-  padding: 32px 18px 140px;
-  color: white;
-  font-family: Inter, sans-serif;
-  overflow-x: hidden;
-  position: relative;
-  background: #000;
-}
 
-.panther-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 780px;
-  height: auto;
-  opacity: 0.72;
-  z-index: 0;
-  pointer-events: none;
-}
+        .prime-home {
+          min-height: 100vh;
+          padding: 32px 18px 140px;
+          color: white;
+          font-family: Inter, sans-serif;
+          overflow-x: hidden;
+          position: relative;
+          background: #000;
+        }
 
-.prime-home::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(0,0,0,0.20) 0%,
-      rgba(0,0,0,0.48) 42%,
-      rgba(0,0,0,0.95) 100%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,0.12) 0%,
-      rgba(0,0,0,0.56) 62%,
-      rgba(0,0,0,1) 100%
-    );
-  z-index: 1;
-  pointer-events: none;
-}
+        .panther-bg {
+          position: fixed;
+          top: -40px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: min(100vw, 760px);
+          height: auto;
+          opacity: 0.9;
+          z-index: 0;
+          pointer-events: none;
+        }
 
-.page {
-  max-width: 460px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-}
-      
+        .prime-home::before {
+          content: "";
+          position: fixed;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          background:
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.05) 0%,
+              rgba(0,0,0,0.36) 34%,
+              rgba(0,0,0,0.78) 68%,
+              rgba(0,0,0,1) 100%
+            ),
+            linear-gradient(
+              90deg,
+              rgba(0,0,0,0.24) 0%,
+              rgba(0,0,0,0.48) 50%,
+              rgba(0,0,0,0.92) 100%
+            );
+        }
+
         .page {
           max-width: 460px;
           margin: 0 auto;
@@ -349,16 +342,10 @@ export default function HomePage() {
         }
 
         @media(max-width: 600px) {
-          .prime-home {
-            background-size:
-              cover,
-              cover,
-              145vw auto;
-
-            background-position:
-              center top,
-              center top,
-              42% top;
+          .panther-bg {
+            width: 720px;
+            left: 40%;
+            top: -20px;
           }
         }
 
@@ -366,16 +353,10 @@ export default function HomePage() {
           .title { font-size: 50px; }
           .actions-grid { grid-template-columns: 1fr; }
 
-          .prime-home {
-            background-size:
-              cover,
-              cover,
-              162vw auto;
-
-            background-position:
-              center top,
-              center top,
-              42% top;
+          .panther-bg {
+            width: 680px;
+            left: 38%;
+            top: -10px;
           }
         }
       `}</style>
