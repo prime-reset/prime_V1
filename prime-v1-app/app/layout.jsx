@@ -8,13 +8,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="fr">
-      <body>
-        <div className="prime-global-bg" />
-
-        <div className="prime-app">
-          {children}
-        </div>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
