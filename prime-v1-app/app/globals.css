@@ -15,40 +15,22 @@ body {
   scroll-behavior: smooth;
 }
 
-/* Fond global PRIME */
-body {
+main:not(.prime-home) {
   background-image:
     linear-gradient(
       180deg,
-      rgba(0,0,0,0.68),
-      rgba(0,0,0,0.82)
+      rgba(0,0,0,0.72),
+      rgba(0,0,0,0.88)
     ),
-    url("/prime-gold-frame.jpg");
+    url("/prime-gold-frame.jpg") !important;
 
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  background-color: #000 !important;
 }
 
-/* Le div ajouté dans layout ne doit rien cacher */
-.prime-global-bg {
-  display: none;
-}
-
-.prime-app {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-}
-
-/* Toutes les pages sauf Home laissent voir le fond */
-main:not(.prime-home) {
-  background: transparent !important;
-  background-color: transparent !important;
-}
-
-/* Sélection */
 ::selection {
   background: rgba(212,176,106,0.28);
   color: white;
