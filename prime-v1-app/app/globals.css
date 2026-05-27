@@ -15,20 +15,9 @@ body {
   scroll-behavior: smooth;
 }
 
-main:not(.prime-home) {
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(0,0,0,0.72),
-      rgba(0,0,0,0.88)
-    ),
-    url("/prime-gold-frame.jpg") !important;
-
-  background-size: 100% 100% !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
-  background-color: #000 !important;
+main {
+  position: relative;
+  z-index: 1;
 }
 
 ::selection {
