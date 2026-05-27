@@ -498,21 +498,21 @@ export default function HomePage() {
           }
         }
 
-        @media(max-width: 520px) {
-          .prime-home {
-            background-size:
-              cover,
-              1080px auto;
+     @media(max-width: 520px) {
+  .prime-home {
+    background-size:
+      cover,
+      780px auto;
 
-            background-position:
-              center,
-              left -340px top 0px;
-          }
+    background-position:
+      center,
+      left -230px top -130px;
+  }
 
-          .title {
-            font-size: 52px;
-          }
-        }
+  .title {
+    font-size: 52px;
+  }
+}
 
         @media(max-width: 390px) {
           .actions-grid {
