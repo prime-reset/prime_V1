@@ -38,7 +38,9 @@ export default function HomePage() {
       localStorage.getItem("prime_reset_active") === "true"
     );
 
-    setStreak(Number(localStorage.getItem("prime_streak") || 0));
+    setStreak(
+      Number(localStorage.getItem("prime_streak") || 0)
+    );
 
     const savedXp = Number(
       localStorage.getItem("prime_xp") || 0
@@ -69,8 +71,6 @@ export default function HomePage() {
 
   return (
     <main className="prime-home">
-      <div className="panther-bg" />
-
       <style>{`
         * {
           box-sizing: border-box;
@@ -83,7 +83,9 @@ export default function HomePage() {
 
         .prime-home {
           position: relative;
+
           min-height: 100vh;
+
           overflow-x: hidden;
 
           padding: 32px 18px 140px;
@@ -91,29 +93,30 @@ export default function HomePage() {
           color: white;
           font-family: Inter, sans-serif;
 
-          background: #000;
-        }
+          background:
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.08) 0%,
+              rgba(0,0,0,0.22) 32%,
+              rgba(0,0,0,0.72) 74%,
+              rgba(0,0,0,0.96) 100%
+            ),
 
-        .panther-bg {
-          position: fixed;
-          inset: 0;
+            url("/black-panther-home.jpg");
 
-          z-index: 0;
+          background-size:
+            cover,
+            1200px auto;
 
-          background-image: url("/black-panther-home.jpg.jpg");
+          background-position:
+            center,
+            left -260px top -20px;
 
-          background-size: cover;
-          background-position: center;
           background-repeat: no-repeat;
 
-          transform: scale(1.08);
+          background-attachment: scroll;
 
-          filter:
-            brightness(0.42)
-            contrast(1.08)
-            saturate(0.92);
-
-          opacity: 1;
+          background-color: #000;
         }
 
         .prime-home::before {
@@ -123,17 +126,10 @@ export default function HomePage() {
           inset: 0;
 
           z-index: 1;
+
           pointer-events: none;
 
           background:
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0.02) 0%,
-              rgba(0,0,0,0.18) 35%,
-              rgba(0,0,0,0.68) 72%,
-              rgba(0,0,0,0.94) 100%
-            ),
-
             linear-gradient(
               90deg,
               rgba(0,0,0,0.10) 0%,
@@ -144,14 +140,17 @@ export default function HomePage() {
 
         .page {
           position: relative;
+
           z-index: 2;
 
           max-width: 460px;
+
           margin: 0 auto;
         }
 
         .hero {
           padding-top: 12px;
+
           margin-bottom: 28px;
 
           animation: fadeUp 0.8s ease;
@@ -163,7 +162,9 @@ export default function HomePage() {
           color: #D4B06A;
 
           font-size: 16px;
+
           letter-spacing: 8px;
+
           text-transform: uppercase;
         }
 
@@ -171,6 +172,7 @@ export default function HomePage() {
           margin: 18px 0 0;
 
           font-size: 62px;
+
           line-height: 0.9;
 
           font-weight: 900;
@@ -180,6 +182,7 @@ export default function HomePage() {
 
         .title span {
           display: block;
+
           color: rgba(255,255,255,0.88);
         }
 
@@ -187,6 +190,7 @@ export default function HomePage() {
           margin-top: 22px;
 
           font-size: 18px;
+
           line-height: 1.6;
 
           color: rgba(255,255,255,0.72);
@@ -198,7 +202,9 @@ export default function HomePage() {
           margin-top: 26px;
 
           display: inline-flex;
+
           align-items: center;
+
           gap: 10px;
 
           padding: 12px 18px;
@@ -216,6 +222,7 @@ export default function HomePage() {
           color: #D4B06A;
 
           font-size: 13px;
+
           font-weight: 700;
 
           letter-spacing: 1px;
@@ -261,7 +268,9 @@ export default function HomePage() {
 
         .status {
           display: flex;
+
           align-items: center;
+
           gap: 16px;
         }
 
@@ -272,7 +281,9 @@ export default function HomePage() {
           border-radius: 20px;
 
           display: flex;
+
           align-items: center;
+
           justify-content: center;
 
           background: rgba(212,176,106,0.10);
@@ -288,6 +299,7 @@ export default function HomePage() {
           font-size: 12px;
 
           letter-spacing: 2px;
+
           text-transform: uppercase;
 
           margin-bottom: 6px;
@@ -295,6 +307,7 @@ export default function HomePage() {
 
         .card-title {
           font-size: 30px;
+
           line-height: 1;
 
           font-weight: 900;
@@ -308,6 +321,7 @@ export default function HomePage() {
           color: rgba(255,255,255,0.70);
 
           font-size: 16px;
+
           line-height: 1.7;
         }
 
@@ -327,6 +341,7 @@ export default function HomePage() {
           overflow: hidden;
 
           text-decoration: none;
+
           color: white;
 
           border-radius: 28px;
@@ -336,7 +351,9 @@ export default function HomePage() {
           min-height: 120px;
 
           display: flex;
+
           flex-direction: column;
+
           justify-content: space-between;
 
           background:
@@ -362,7 +379,9 @@ export default function HomePage() {
 
         .action-top {
           display: flex;
+
           justify-content: space-between;
+
           align-items: flex-start;
         }
 
@@ -373,7 +392,9 @@ export default function HomePage() {
           border-radius: 16px;
 
           display: flex;
+
           align-items: center;
+
           justify-content: center;
 
           background: rgba(212,176,106,0.10);
@@ -393,6 +414,7 @@ export default function HomePage() {
           font-size: 11px;
 
           letter-spacing: 2px;
+
           text-transform: uppercase;
         }
 
@@ -400,6 +422,7 @@ export default function HomePage() {
           margin-top: 8px;
 
           font-size: 22px;
+
           line-height: 1.1;
 
           font-weight: 800;
@@ -407,7 +430,9 @@ export default function HomePage() {
 
         .streak-row {
           display: flex;
+
           justify-content: space-between;
+
           align-items: center;
 
           margin-top: 20px;
@@ -415,6 +440,7 @@ export default function HomePage() {
 
         .streak-number {
           font-size: 64px;
+
           line-height: 1;
 
           font-weight: 900;
@@ -444,6 +470,7 @@ export default function HomePage() {
           margin-top: 8px;
 
           font-size: 34px;
+
           font-weight: 800;
         }
 
@@ -460,20 +487,26 @@ export default function HomePage() {
         }
 
         @media(max-width: 768px) {
-          .panther-bg {
-            background-size: 185% auto;
+          .prime-home {
+            background-size:
+              cover,
+              980px auto;
 
             background-position:
-              center top;
+              center,
+              left -240px top 0px;
           }
         }
 
         @media(max-width: 520px) {
-          .panther-bg {
-            background-size: 240% auto;
+          .prime-home {
+            background-size:
+              cover,
+              1080px auto;
 
             background-position:
-              52% top;
+              center,
+              left -340px top 0px;
           }
 
           .title {
@@ -489,19 +522,14 @@ export default function HomePage() {
           .title {
             font-size: 46px;
           }
-
-          .panther-bg {
-            background-size: 270% auto;
-
-            background-position:
-              56% top;
-          }
         }
       `}</style>
 
       <div className="page">
         <section className="hero">
-          <p className="brand">PRIME RESET</p>
+          <p className="brand">
+            PRIME RESET
+          </p>
 
           <h1 className="title">
             Ton cerveau
@@ -509,12 +537,16 @@ export default function HomePage() {
           </h1>
 
           <p className="subtitle">
-            Discipline comportementale, coaching mental et système
+            Discipline comportementale,
+            coaching mental et système
             d’exécution pour traders.
           </p>
 
           <div className="hero-level">
-            <Crown size={16} color="#D4B06A" />
+            <Crown
+              size={16}
+              color="#D4B06A"
+            />
 
             <span>{level}</span>
           </div>
@@ -533,7 +565,9 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="label">STATUT PRIME</p>
+              <p className="label">
+                STATUT PRIME
+              </p>
 
               <h2 className="card-title">
                 {homeStatus}
@@ -639,7 +673,10 @@ function ActionButton({
   title,
 }) {
   return (
-    <Link href={href} className="action-card">
+    <Link
+      href={href}
+      className="action-card"
+    >
       <div className="action-top">
         <div className="action-icon">
           {icon}
