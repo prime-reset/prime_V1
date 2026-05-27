@@ -2,6 +2,7 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -10,70 +11,44 @@ body {
   padding: 0;
   background: #000;
   overflow-x: hidden;
-
   font-family: Inter, sans-serif;
+  scroll-behavior: smooth;
 }
 
-/* GLOBAL PRIME APP */
+/* Fond global PRIME */
+body {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.68),
+      rgba(0,0,0,0.82)
+    ),
+    url("/prime-gold-frame.jpg");
+
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Le div ajouté dans layout ne doit rien cacher */
+.prime-global-bg {
+  display: none;
+}
 
 .prime-app {
   position: relative;
-  z-index: 2;
+  z-index: 1;
+  min-height: 100vh;
 }
 
-/* GLOBAL BACKGROUND */
-
-.prime-global-bg {
-  position: fixed;
-  inset: 0;
-
-  z-index: 0;
-
-  pointer-events: none;
-
-  background-image: url("/prime-gold-frame.jpg");
-
-  background-size: 100% 100%;
-
-  background-position: center;
-
-  background-repeat: no-repeat;
-
-  opacity: 0.55;
-}
-
-/* GLOBAL DARK OVERLAY */
-
-.prime-global-bg::after {
-  content: "";
-
-  position: fixed;
-  inset: 0;
-
-  background: rgba(0,0,0,0.55);
-}
-
-/* ALL PAGES EXCEPT HOME */
-
+/* Toutes les pages sauf Home laissent voir le fond */
 main:not(.prime-home) {
   background: transparent !important;
   background-color: transparent !important;
 }
 
-/* SMOOTH SCROLL */
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* REMOVE BLUE TAP MOBILE */
-
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* SELECTION */
-
+/* Sélection */
 ::selection {
   background: rgba(212,176,106,0.28);
   color: white;
