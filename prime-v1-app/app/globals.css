@@ -87,3 +87,7 @@ body {
     transform: translateY(0);
   }
 }
+main:not(.prime-home) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
