@@ -514,15 +514,25 @@ export default function HomePage() {
   }
 }
 
-        @media(max-width: 390px) {
-          .actions-grid {
-            grid-template-columns: 1fr;
-          }
+       @media(max-width: 390px) {
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
 
-          .title {
-            font-size: 46px;
-          }
-        }
+  .title {
+    font-size: 46px;
+  }
+
+  .prime-home {
+    background-size:
+      cover,
+      740px auto;
+
+    background-position:
+      center,
+      left -220px top -120px;
+  }
+}
       `}</style>
 
       <div className="page">
