@@ -486,35 +486,39 @@ export default function HomePage() {
           }
         }
 
-        @media(max-width: 768px) {
-          .prime-home {
-            background-size:
-              cover,
-              980px auto;
-
-            background-position:
-              center,
-              left -240px top 0px;
-          }
-        }
-
-     @media(max-width: 520px) {
+       @media(max-width: 768px) {
   .prime-home {
     background-size:
       cover,
-      780px auto;
+      980px auto;
 
     background-position:
       center,
-      left -230px top -130px;
+      left -240px top 0px;
+  }
+}
+
+@media(max-width: 520px) {
+  .prime-home {
+    background-size:
+      cover,
+      720px auto;
+
+    background-position:
+      center,
+      left -180px top -220px;
   }
 
   .title {
     font-size: 52px;
   }
+
+  .subtitle {
+    max-width: 100%;
+  }
 }
 
-       @media(max-width: 390px) {
+@media(max-width: 390px) {
   .actions-grid {
     grid-template-columns: 1fr;
   }
@@ -526,11 +530,11 @@ export default function HomePage() {
   .prime-home {
     background-size:
       cover,
-      740px auto;
+      680px auto;
 
     background-position:
       center,
-      left -220px top -120px;
+      left -170px top -210px;
   }
 }
       `}</style>
