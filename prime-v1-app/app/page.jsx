@@ -485,8 +485,7 @@ export default function HomePage() {
             transform: translateY(0);
           }
         }
-
-       @media(max-width: 768px) {
+@media(max-width: 768px) {
   .prime-home {
     background-size:
       cover,
@@ -502,19 +501,15 @@ export default function HomePage() {
   .prime-home {
     background-size:
       cover,
-      720px auto;
+      780px auto;
 
     background-position:
       center,
-      left -180px top -220px;
+      left -230px top -130px;
   }
 
   .title {
     font-size: 52px;
-  }
-
-  .subtitle {
-    max-width: 100%;
   }
 }
 
@@ -530,11 +525,11 @@ export default function HomePage() {
   .prime-home {
     background-size:
       cover,
-      680px auto;
+      740px auto;
 
     background-position:
       center,
-      left -170px top -210px;
+      left -220px top -120px;
   }
 }
       `}</style>
