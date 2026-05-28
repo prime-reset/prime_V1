@@ -7,7 +7,7 @@ export default function BottomNav({ active }) {
     ["Coach", "/coach"],
     ["Journal", "/journal"],
     ["Profil", "/profile"],
-    ["Setup", "/onboarding"],
+    ["Identity", "/onboarding"],
   ];
 
   return (
@@ -19,16 +19,25 @@ export default function BottomNav({ active }) {
         transform: "translateX(-50%)",
         width: "94%",
         maxWidth: "540px",
-        background: "rgba(10,10,10,0.55)",
+
+        background: "rgba(5,5,5,0.55)",
+
         border: "1px solid rgba(255,255,255,0.08)",
+
         borderRadius: "28px",
+
         display: "flex",
         justifyContent: "space-around",
         alignItems: "center",
+
         padding: "14px 8px",
-        backdropFilter: "blur(18px)",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.45)",
-        zIndex: 50,
+
+        backdropFilter: "blur(22px)",
+
+        boxShadow:
+          "0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03)",
+
+        zIndex: 999,
       }}
     >
       {items.map(([label, href]) => {
@@ -40,17 +49,25 @@ export default function BottomNav({ active }) {
             href={href}
             style={{
               color: isActive ? "#D4B06A" : "#8B8B8B",
+
               textDecoration: "none",
-              fontSize: "12px",
+
+              fontSize: "13px",
+
               fontWeight: isActive ? "700" : "500",
-              padding: "8px 7px",
+
+              padding: "8px 10px",
+
               borderRadius: "16px",
+
               background: isActive
                 ? "rgba(212,176,106,0.12)"
                 : "transparent",
+
               boxShadow: isActive
                 ? "0 0 24px rgba(212,176,106,0.12)"
                 : "none",
+
               transition: "all 0.25s ease",
             }}
           >
