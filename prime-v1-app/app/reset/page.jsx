@@ -52,13 +52,21 @@ export default function ResetPage() {
           background:
             linear-gradient(
               180deg,
-              rgba(0,0,0,0.10) 0%,
-              rgba(0,0,0,0.38) 42%,
-              rgba(0,0,0,0.98) 100%
+              rgba(0,0,0,0.20) 0%,
+              rgba(0,0,0,0.42) 38%,
+              rgba(0,0,0,0.88) 78%,
+              rgba(0,0,0,1) 100%
             ),
-            url("/prime-panther-bg.png.png");
-          background-size: cover, min(120vw, 860px) auto;
-          background-position: center top, center -220px;
+            url("/prime-reset-panther.jpg");
+
+          background-size:
+            cover,
+            920px auto;
+
+          background-position:
+            center,
+            center -90px;
+
           background-repeat: no-repeat;
           overflow-x: hidden;
           position: relative;
@@ -69,8 +77,17 @@ export default function ResetPage() {
           position: fixed;
           inset: 0;
           background:
-            radial-gradient(circle at 50% 10%, rgba(214,178,95,0.16), transparent 32%),
-            linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.40) 50%, rgba(0,0,0,0.95) 100%);
+            radial-gradient(
+              circle at 50% 18%,
+              rgba(214,178,95,0.12),
+              transparent 34%
+            ),
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.05) 0%,
+              rgba(0,0,0,0.42) 52%,
+              rgba(0,0,0,0.96) 100%
+            );
           pointer-events: none;
         }
 
@@ -98,7 +115,7 @@ export default function ResetPage() {
           justify-content: center;
           color: white;
           text-decoration: none;
-          background: rgba(0,0,0,0.38);
+          background: rgba(0,0,0,0.46);
           border: 1px solid rgba(214,178,95,0.28);
           backdrop-filter: blur(18px);
         }
@@ -117,10 +134,10 @@ export default function ResetPage() {
 
         .title {
           margin: 0;
-          font-size: 40px;
-          line-height: 0.98;
-          font-weight: 900;
-          letter-spacing: -1.2px;
+          font-size: 48px;
+          line-height: 0.92;
+          font-weight: 950;
+          letter-spacing: -1.6px;
           text-transform: uppercase;
         }
 
@@ -132,24 +149,24 @@ export default function ResetPage() {
         }
 
         .subtitle {
-          margin: 14px 0 0;
-          color: rgba(255,255,255,0.68);
-          font-size: 14px;
-          line-height: 1.6;
+          margin: 16px 0 0;
+          color: rgba(255,255,255,0.72);
+          font-size: 15px;
+          line-height: 1.7;
         }
 
         .card {
           position: relative;
           overflow: hidden;
-          border-radius: 28px;
-          padding: 22px;
+          border-radius: 30px;
+          padding: 24px;
           margin-bottom: 16px;
           background:
-            linear-gradient(145deg, rgba(255,255,255,0.095), rgba(255,255,255,0.025)),
-            rgba(8,8,8,0.74);
-          border: 1px solid rgba(214,178,95,0.32);
-          box-shadow: 0 24px 70px rgba(0,0,0,0.52);
-          backdrop-filter: blur(22px);
+            linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.025)),
+            rgba(8,8,8,0.82);
+          border: 1px solid rgba(214,178,95,0.22);
+          box-shadow: 0 24px 70px rgba(0,0,0,0.58);
+          backdrop-filter: blur(24px);
           animation: fadeUp 0.75s ease both;
         }
 
@@ -157,14 +174,14 @@ export default function ResetPage() {
           border-color: rgba(214,178,95,0.62);
           box-shadow:
             0 0 42px rgba(214,178,95,0.14),
-            0 24px 70px rgba(0,0,0,0.60);
+            0 24px 70px rgba(0,0,0,0.70);
         }
 
         .card::before {
           content: "";
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at top left, rgba(214,178,95,0.16), transparent 42%);
+          background: radial-gradient(circle at top left, rgba(214,178,95,0.12), transparent 42%);
           pointer-events: none;
         }
 
@@ -196,23 +213,23 @@ export default function ResetPage() {
           margin: 0;
           font-size: 13px;
           text-transform: uppercase;
-          letter-spacing: 1.2px;
+          letter-spacing: 1.8px;
           color: rgba(214,178,95,0.95);
         }
 
         .card-title {
           margin: 6px 0 0;
-          font-size: 24px;
+          font-size: 25px;
           line-height: 1.05;
-          font-weight: 850;
+          font-weight: 900;
           color: white;
         }
 
         .text {
           margin: 16px 0 0;
-          color: rgba(255,255,255,0.70);
+          color: rgba(255,255,255,0.72);
           font-size: 14px;
-          line-height: 1.6;
+          line-height: 1.65;
         }
 
         .alert-box {
@@ -222,15 +239,16 @@ export default function ResetPage() {
           display: flex;
           gap: 12px;
           align-items: flex-start;
-          background: rgba(214,178,95,0.12);
-          border: 1px solid rgba(214,178,95,0.26);
+          background: rgba(255,70,70,0.09);
+          border: 1px solid rgba(255,80,80,0.34);
         }
 
         .alert-box p {
           margin: 0;
-          color: rgba(255,255,255,0.78);
+          color: rgba(255,130,130,0.96);
           font-size: 13px;
           line-height: 1.45;
+          font-weight: 700;
         }
 
         .reset-list {
@@ -245,7 +263,7 @@ export default function ResetPage() {
           align-items: flex-start;
           border-radius: 18px;
           padding: 14px;
-          background: rgba(0,0,0,0.34);
+          background: rgba(0,0,0,0.38);
           border: 1px solid rgba(255,255,255,0.10);
         }
 
@@ -278,7 +296,7 @@ export default function ResetPage() {
           justify-content: center;
           gap: 10px;
           font-size: 15px;
-          font-weight: 900;
+          font-weight: 950;
           text-transform: uppercase;
           letter-spacing: 0.8px;
           cursor: pointer;
@@ -307,6 +325,22 @@ export default function ResetPage() {
           from { opacity: 0; transform: translateY(18px) scale(0.985); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
+
+        @media(max-width:520px) {
+          .reset-page {
+            background-size:
+              cover,
+              760px auto;
+
+            background-position:
+              center,
+              center -60px;
+          }
+
+          .title {
+            font-size: 44px;
+          }
+        }
       `}</style>
 
       <div className="page">
@@ -327,8 +361,8 @@ export default function ResetPage() {
           </h1>
 
           <p className="subtitle">
-            Quand tu sens que ton mental prend le contrôle, PRIME te sort du mode
-            exécution et te remet en mode protection.
+            Quand ton mental prend le contrôle, PRIME te sort du mode exécution
+            et te remet en mode protection.
           </p>
         </section>
 
@@ -342,6 +376,7 @@ export default function ResetPage() {
               <p className="label">
                 {resetActive ? "Reset activé" : "Protection mentale"}
               </p>
+
               <h2 className="card-title">
                 {resetActive
                   ? "Exécution suspendue"
@@ -357,7 +392,7 @@ export default function ResetPage() {
           </p>
 
           <div className="alert-box">
-            <AlertTriangle size={18} color="#d6b25f" />
+            <AlertTriangle size={18} color="#ff5c5c" />
             <p>
               Si tu es en tilt, ton objectif n’est plus de trader. Ton objectif
               est de redevenir lucide.
@@ -447,6 +482,7 @@ function ResetItem({ title, desc, done }) {
         size={20}
         color={done ? "#d6b25f" : "rgba(255,255,255,0.35)"}
       />
+
       <div>
         <p className="item-title">{title}</p>
         <p className="item-desc">{desc}</p>
