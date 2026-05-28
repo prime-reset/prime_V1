@@ -493,7 +493,7 @@ export default function PrimeIdentityPage() {
         )}
       </div>
 
-      <BottomNav active="Setup" />
+      <BottomNav active="Identity" />
     </main>
   );
 }
