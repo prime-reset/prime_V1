@@ -63,9 +63,9 @@ export default function ResetPage() {
             cover,
             920px auto;
 
-         background-position:
-  center,
-  center -220px;
+          background-position:
+            center,
+            center -90px;
 
           background-repeat: no-repeat;
           overflow-x: hidden;
@@ -78,9 +78,9 @@ export default function ResetPage() {
           inset: 0;
           background:
             radial-gradient(
-              circle at 50% 18%,
-              rgba(214,178,95,0.12),
-              transparent 34%
+              circle at 50% 22%,
+              rgba(214,178,95,0.18),
+              transparent 30%
             ),
             linear-gradient(
               180deg,
@@ -129,13 +129,13 @@ export default function ResetPage() {
         }
 
         .hero {
-          margin-bottom: 18px;
+          margin-bottom: 14px;
         }
 
         .title {
           margin: 0;
           font-size: 48px;
-          line-height: 0.92;
+          line-height: 0.85;
           font-weight: 950;
           letter-spacing: -1.6px;
           text-transform: uppercase;
@@ -149,7 +149,7 @@ export default function ResetPage() {
         }
 
         .subtitle {
-          margin: 16px 0 0;
+          margin: 6px 0 0;
           color: rgba(255,255,255,0.72);
           font-size: 15px;
           line-height: 1.7;
