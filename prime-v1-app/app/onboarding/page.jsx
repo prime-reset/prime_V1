@@ -1,65 +1,73 @@
 "use client";
 
 import { useState } from "react";
-import BottomNav from "../components/BottomNav";
-import FadeIn from "../components/FadeIn";
-import PremiumCard from "../components/PremiumCard";
-import PrimaryButton from "../components/PrimaryButton";
+import {
+  Fingerprint,
+  Target,
+  Brain,
+  ShieldCheck,
+  Sparkles,
+  CheckCircle,
+} from "lucide-react";
 
-export default function OnboardingPage() {
+import BottomNav from "../components/BottomNav";
+
+export default function PrimeIdentityPage() {
   const [profile, setProfile] = useState({
     tradingStyle: "",
     customStyle: "",
+    asset: "",
+    experience: "",
+    availability: "",
+    weakness: "",
+    psychology: "",
+    goal: "",
     entryCriteria: "",
     invalidation: "",
-    experience: "",
-    psychology: "",
-    weakness: "",
-    goal: "",
   });
 
   const [result, setResult] = useState(null);
 
   const updateField = (field, value) => {
-    setProfile({ ...profile, [field]: value });
+    setProfile((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const generatePrimeProfile = () => {
+  const isCustom = profile.tradingStyle === "Autre / personnalisé";
+
+  const isComplete =
+    profile.tradingStyle &&
+    profile.asset &&
+    profile.experience &&
+    profile.availability &&
+    profile.weakness &&
+    profile.psychology &&
+    profile.goal &&
+    (!isCustom ||
+      (profile.customStyle && profile.entryCriteria && profile.invalidation));
+
+  const generateProfile = () => {
     let detectedProfile = "Trader en construction";
-    let risk = "Manque de structure";
+    let risk = profile.weakness || "Discipline à renforcer";
+    let strength = "Capacité à structurer ton évolution";
+    let weakness = "Manque de données comportementales";
     let prescription = "Respecter une checklist complète avant chaque entrée.";
 
     let checklist = [
       "Contexte marché validé",
       "Setup conforme au plan",
       "Risque défini avant l’entrée",
-      "État émotionnel stable",
+      "État mental stable",
       "Invalidation claire",
     ];
 
-    if (profile.tradingStyle === "Autre / personnalisé") {
-      detectedProfile = profile.customStyle || "Trader personnalisé";
-      risk = profile.weakness || "Risque comportemental à surveiller";
-
-      prescription =
-        "Respecter tes critères d’entrée personnels avant toute exécution.";
-
-      checklist = [
-        profile.entryCriteria || "Critères d’entrée personnels validés",
-        profile.invalidation || "Invalidation clairement définie",
-        "Risque défini avant l’entrée",
-        "État émotionnel stable",
-        "Trade conforme à TA méthode",
-      ];
-    }
-
-    if (
-      profile.tradingStyle === "SMC / Liquidité" &&
-      profile.psychology === "Patient"
-    ) {
+    if (profile.tradingStyle === "SMC / Liquidité") {
       detectedProfile = "Structure & Liquidité";
-      risk = "Anticipation avant confirmation";
-      prescription = "Attendre une confirmation complète avant toute exécution.";
+      strength = "Lecture du contexte et zones clés";
+      weakness = "Risque d’anticiper avant confirmation";
+      prescription = "Attendre sweep, réaction et confirmation avant exécution.";
       checklist = [
         "Biais HTF validé",
         "Liquidité identifiée",
@@ -69,14 +77,11 @@ export default function OnboardingPage() {
       ];
     }
 
-    if (
-      profile.tradingStyle === "Scalping" ||
-      profile.weakness === "Overtrading"
-    ) {
+    if (profile.tradingStyle === "Scalping") {
       detectedProfile = "Scalper sous pression";
-      risk = "Sur-exécution";
-      prescription =
-        "Limiter la session à 2 trades maximum et imposer 5 minutes de pause après chaque perte.";
+      strength = "Réactivité et vitesse d’exécution";
+      weakness = "Risque de sur-exécution";
+      prescription = "Limiter la session à 2 trades maximum.";
       checklist = [
         "Setup rapide mais validé",
         "Pas d’entrée par ennui",
@@ -89,19 +94,51 @@ export default function OnboardingPage() {
     if (profile.weakness === "Revenge trade") {
       detectedProfile = "Trader émotionnel après perte";
       risk = "Revenge trade";
-      prescription = "Maximum 1 trade après une perte pendant 7 jours.";
+      weakness = "Difficulté à accepter une perte sans vouloir récupérer";
+      prescription = "Après une perte : pause obligatoire de 20 minutes.";
       checklist = [
         "Ai-je perdu le trade précédent ?",
-        "Ai-je attendu 5 minutes ?",
+        "Ai-je attendu 20 minutes ?",
         "Le setup est-il réellement valide ?",
         "Mon risque est-il réduit ?",
         "Suis-je en train de me refaire ?",
       ];
     }
 
+    if (profile.weakness === "Overtrading") {
+      detectedProfile = "Trader en sur-exécution";
+      risk = "Overtrading";
+      weakness = "Confusion entre activité et efficacité";
+      prescription = "Maximum 2 trades par session pendant 7 jours.";
+    }
+
+    if (profile.weakness === "FOMO") {
+      detectedProfile = "Trader impulsif sur mouvement";
+      risk = "FOMO";
+      weakness = "Difficulté à laisser partir un mouvement";
+      prescription = "Aucune entrée sans pullback ou confirmation complète.";
+    }
+
+    if (isCustom) {
+      detectedProfile = profile.customStyle;
+      strength = "Méthode personnelle et différenciée";
+      weakness = profile.weakness;
+      prescription =
+        "Respecter tes critères personnels avant toute exécution.";
+      checklist = [
+        profile.entryCriteria,
+        profile.invalidation,
+        "Risque défini avant entrée",
+        "État mental stable",
+        "Trade conforme à TA méthode",
+      ];
+    }
+
     const generatedProfile = {
       detectedProfile,
       risk,
+      strength,
+      weakness,
       prescription,
       checklist,
       answers: profile,
@@ -111,178 +148,348 @@ export default function OnboardingPage() {
     localStorage.setItem("primeProfile", JSON.stringify(generatedProfile));
   };
 
-  const isCustom = profile.tradingStyle === "Autre / personnalisé";
-
-  const isComplete =
-    profile.tradingStyle &&
-    profile.experience &&
-    profile.psychology &&
-    profile.weakness &&
-    profile.goal &&
-    (!isCustom ||
-      (profile.customStyle && profile.entryCriteria && profile.invalidation));
-
   return (
-    <main style={main}>
-      <div style={{ maxWidth: "430px", margin: "0 auto" }}>
-        <FadeIn delay={0}>
-          <p style={label}>ONBOARDING PRIME</p>
+    <main className="identity-page">
+      <style>{`
+        * { box-sizing: border-box; }
 
-          <h1 style={title}>
-            Créons ton
-            <br />
-            profil trader.
+        .identity-page {
+          min-height: 100vh;
+          padding: 32px 20px 150px;
+          color: white;
+          font-family: Inter, Arial, sans-serif;
+          background:
+            linear-gradient(
+              180deg,
+              rgba(0,0,0,0.86),
+              rgba(0,0,0,0.96)
+            ),
+            #000;
+        }
+
+        .page {
+          max-width: 460px;
+          margin: 0 auto;
+        }
+
+        .brand {
+          color: #D4B06A;
+          letter-spacing: 6px;
+          font-size: 14px;
+          text-transform: uppercase;
+          margin-bottom: 18px;
+        }
+
+        .title {
+          font-size: 58px;
+          line-height: 0.92;
+          font-weight: 900;
+          letter-spacing: -3px;
+          margin: 0;
+        }
+
+        .title span {
+          display: block;
+          color: rgba(255,255,255,0.88);
+        }
+
+        .subtitle {
+          margin-top: 24px;
+          font-size: 18px;
+          line-height: 1.7;
+          color: rgba(255,255,255,0.68);
+          margin-bottom: 30px;
+        }
+
+        .card {
+          padding: 26px;
+          margin-bottom: 18px;
+          border-radius: 34px;
+          background:
+            linear-gradient(
+              145deg,
+              rgba(255,255,255,0.08),
+              rgba(255,255,255,0.02)
+            ),
+            rgba(5,5,5,0.78);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(22px);
+          box-shadow:
+            0 20px 60px rgba(0,0,0,0.55),
+            inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        .icon-box {
+          width: 54px;
+          height: 54px;
+          border-radius: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+          background: rgba(212,176,106,0.10);
+          border: 1px solid rgba(212,176,106,0.18);
+          color: #D4B06A;
+        }
+
+        .card-label {
+          color: rgba(212,176,106,0.82);
+          font-size: 12px;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+        }
+
+        .question {
+          font-size: 21px;
+          line-height: 1.4;
+          font-weight: 800;
+          margin-bottom: 16px;
+        }
+
+        select,
+        textarea {
+          width: 100%;
+          background: rgba(15,15,15,0.86);
+          color: white;
+          border: 1px solid rgba(255,255,255,0.10);
+          border-radius: 18px;
+          padding: 17px;
+          font-size: 16px;
+          outline: none;
+          font-family: Arial, sans-serif;
+        }
+
+        textarea {
+          min-height: 105px;
+          resize: vertical;
+          margin-top: 12px;
+        }
+
+        .button {
+          width: 100%;
+          border: none;
+          border-radius: 22px;
+          padding: 18px;
+          font-size: 16px;
+          font-weight: 900;
+          color: #000;
+          background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
+          cursor: pointer;
+          opacity: 1;
+          margin-bottom: 18px;
+        }
+
+        .button:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+
+        .result-title {
+          font-size: 30px;
+          line-height: 1.16;
+          color: #D4B06A;
+          margin: 0 0 16px;
+        }
+
+        .text {
+          color: rgba(255,255,255,0.72);
+          font-size: 17px;
+          line-height: 1.7;
+        }
+
+        .list-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          margin-top: 14px;
+        }
+
+        .list-text {
+          margin: 0;
+          color: rgba(255,255,255,0.78);
+          font-size: 16px;
+          line-height: 1.55;
+        }
+
+        @media(max-width:520px) {
+          .title { font-size: 50px; }
+        }
+      `}</style>
+
+      <div className="page">
+        <section>
+          <div className="brand">PRIME IDENTITY</div>
+
+          <h1 className="title">
+            Ton ADN
+            <span>de trader.</span>
           </h1>
 
-          <p style={subtitle}>
+          <p className="subtitle">
             PRIME s’adapte à ta méthode, même si ton système ne rentre dans
             aucune case.
           </p>
-        </FadeIn>
+        </section>
 
-        <FadeIn delay={0.15}>
-          <PremiumCard>
-            <Question
-              title="Quel est ton style principal ?"
-              value={profile.tradingStyle}
-              onChange={(value) => updateField("tradingStyle", value)}
-              options={[
-                "SMC / Liquidité",
-                "Scalping",
-                "Breakout",
-                "Price Action",
-                "Trend Following",
-                "Autre / personnalisé",
-              ]}
-            />
-          </PremiumCard>
-        </FadeIn>
+        <QuestionCard
+          icon={<Fingerprint size={26} />}
+          label="STYLE"
+          title="Quel est ton style principal ?"
+          value={profile.tradingStyle}
+          onChange={(v) => updateField("tradingStyle", v)}
+          options={[
+            "SMC / Liquidité",
+            "Scalping",
+            "Breakout",
+            "Price Action",
+            "Trend Following",
+            "Autre / personnalisé",
+          ]}
+        />
 
         {isCustom && (
-          <FadeIn delay={0.2}>
-            <PremiumCard>
-              <TextInput
-                title="Décris ta stratégie"
-                value={profile.customStyle}
-                onChange={(value) => updateField("customStyle", value)}
-                placeholder="Ex : VWAP + volume profile + rejet sur niveau clé"
-              />
+          <section className="card">
+            <div className="icon-box">
+              <Sparkles size={26} />
+            </div>
 
-              <TextInput
-                title="Tes critères d’entrée obligatoires"
-                value={profile.entryCriteria}
-                onChange={(value) => updateField("entryCriteria", value)}
-                placeholder="Ex : confirmation M5 + volume + rejet propre"
-              />
+            <div className="card-label">STYLE PERSONNALISÉ</div>
 
-              <TextInput
-                title="Qu’est-ce qui invalide ton setup ?"
-                value={profile.invalidation}
-                onChange={(value) => updateField("invalidation", value)}
-                placeholder="Ex : clôture au-dessus du niveau invalidant"
-              />
-            </PremiumCard>
-          </FadeIn>
+            <p className="question">Décris ta méthode</p>
+            <textarea
+              value={profile.customStyle}
+              onChange={(e) => updateField("customStyle", e.target.value)}
+              placeholder="Ex : liquidité + orderflow + volume profile"
+            />
+
+            <p className="question" style={{ marginTop: "22px" }}>
+              Tes critères d’entrée obligatoires
+            </p>
+            <textarea
+              value={profile.entryCriteria}
+              onChange={(e) => updateField("entryCriteria", e.target.value)}
+              placeholder="Ex : sweep + absorption + confirmation M5"
+            />
+
+            <p className="question" style={{ marginTop: "22px" }}>
+              Qu’est-ce qui invalide ton setup ?
+            </p>
+            <textarea
+              value={profile.invalidation}
+              onChange={(e) => updateField("invalidation", e.target.value)}
+              placeholder="Ex : clôture au-dessus du niveau invalidant"
+            />
+          </section>
         )}
 
-        <FadeIn delay={0.25}>
-          <PremiumCard>
-            <Question
-              title="Ton niveau d’expérience ?"
-              value={profile.experience}
-              onChange={(value) => updateField("experience", value)}
-              options={[
-                "Débutant",
-                "Intermédiaire",
-                "Avancé",
-                "Prop Firm Trader",
-              ]}
-            />
-          </PremiumCard>
-        </FadeIn>
+        <QuestionCard
+          icon={<Target size={26} />}
+          label="MARCHÉ"
+          title="Ton actif principal ?"
+          value={profile.asset}
+          onChange={(v) => updateField("asset", v)}
+          options={["Nasdaq", "Gold", "Forex", "Crypto", "Indices", "Autre"]}
+        />
 
-        <FadeIn delay={0.35}>
-          <PremiumCard>
-            <Question
-              title="Ton plus gros problème émotionnel ?"
-              value={profile.weakness}
-              onChange={(value) => updateField("weakness", value)}
-              options={[
-                "Revenge trade",
-                "Overtrading",
-                "FOMO",
-                "Stop déplacé",
-                "Entrées impulsives",
-              ]}
-            />
-          </PremiumCard>
-        </FadeIn>
+        <QuestionCard
+          icon={<Brain size={26} />}
+          label="EXPÉRIENCE"
+          title="Ton niveau d’expérience ?"
+          value={profile.experience}
+          onChange={(v) => updateField("experience", v)}
+          options={["Débutant", "Intermédiaire", "Avancé", "Prop Firm Trader"]}
+        />
 
-        <FadeIn delay={0.45}>
-          <PremiumCard>
-            <Question
-              title="Comment te décrirais-tu ?"
-              value={profile.psychology}
-              onChange={(value) => updateField("psychology", value)}
-              options={[
-                "Patient",
-                "Impulsif",
-                "Discipliné",
-                "Stressé",
-                "Agressif",
-              ]}
-            />
-          </PremiumCard>
-        </FadeIn>
+        <QuestionCard
+          icon={<ShieldCheck size={26} />}
+          label="TEMPS"
+          title="Temps disponible par jour ?"
+          value={profile.availability}
+          onChange={(v) => updateField("availability", v)}
+          options={["Moins de 1h", "1 à 2h", "2 à 4h", "Plus de 4h"]}
+        />
 
-        <FadeIn delay={0.55}>
-          <PremiumCard>
-            <Question
-              title="Ton objectif principal ?"
-              value={profile.goal}
-              onChange={(value) => updateField("goal", value)}
-              options={[
-                "Discipline",
-                "Consistance",
-                "Passer un challenge",
-                "Obtenir un payout",
-                "Scaler",
-              ]}
-            />
-          </PremiumCard>
-        </FadeIn>
+        <QuestionCard
+          icon={<FlameIcon />}
+          label="RISQUE"
+          title="Ton plus gros problème émotionnel ?"
+          value={profile.weakness}
+          onChange={(v) => updateField("weakness", v)}
+          options={[
+            "Revenge trade",
+            "Overtrading",
+            "FOMO",
+            "Stop déplacé",
+            "Entrées impulsives",
+          ]}
+        />
 
-        <FadeIn delay={0.65}>
-          <button
-            onClick={generatePrimeProfile}
-            disabled={!isComplete}
-            style={{
-              width: "100%",
-              opacity: isComplete ? 1 : 0.35,
-              cursor: isComplete ? "pointer" : "not-allowed",
-              background: "transparent",
-              border: "none",
-              padding: 0,
-            }}
-          >
-            <PrimaryButton>Générer mon profil PRIME</PrimaryButton>
-          </button>
-        </FadeIn>
+        <QuestionCard
+          icon={<Brain size={26} />}
+          label="MENTAL"
+          title="Comment te décrirais-tu ?"
+          value={profile.psychology}
+          onChange={(v) => updateField("psychology", v)}
+          options={["Patient", "Impulsif", "Discipliné", "Stressé", "Agressif"]}
+        />
+
+        <QuestionCard
+          icon={<Target size={26} />}
+          label="OBJECTIF"
+          title="Ton objectif principal ?"
+          value={profile.goal}
+          onChange={(v) => updateField("goal", v)}
+          options={[
+            "Discipline",
+            "Consistance",
+            "Passer un challenge",
+            "Obtenir un payout",
+            "Scaler",
+          ]}
+        />
+
+        <button
+          className="button"
+          onClick={generateProfile}
+          disabled={!isComplete}
+        >
+          Générer mon profil PRIME
+        </button>
 
         {result && (
-          <FadeIn delay={0.8}>
-            <PremiumCard>
-              <p style={resultLabel}>PROFIL PRIME DÉTECTÉ</p>
+          <section className="card">
+            <div className="icon-box">
+              <Sparkles size={26} />
+            </div>
 
-              <h2 style={resultTitle}>{result.detectedProfile}</h2>
+            <div className="card-label">PROFIL PRIME DÉTECTÉ</div>
 
-              <p style={resultText}>
-                Risque dominant : <strong>{result.risk}</strong>
-              </p>
+            <h2 className="result-title">{result.detectedProfile}</h2>
 
-              <p style={resultSub}>Prescription : {result.prescription}</p>
-            </PremiumCard>
-          </FadeIn>
+            <p className="text">
+              <strong>Force :</strong> {result.strength}
+            </p>
+
+            <p className="text">
+              <strong>Point de vigilance :</strong> {result.weakness}
+            </p>
+
+            <p className="text">
+              <strong>Prescription :</strong> {result.prescription}
+            </p>
+
+            <div className="card-label" style={{ marginTop: "24px" }}>
+              CHECKLIST PERSONNALISÉE
+            </div>
+
+            {result.checklist.map((item) => (
+              <div key={item} className="list-item">
+                <CheckCircle size={18} color="#D4B06A" />
+                <p className="list-text">{item}</p>
+              </div>
+            ))}
+          </section>
         )}
       </div>
 
@@ -291,16 +498,16 @@ export default function OnboardingPage() {
   );
 }
 
-function Question({ title, value, onChange, options }) {
+function QuestionCard({ icon, label, title, value, onChange, options }) {
   return (
-    <>
-      <p style={question}>{title}</p>
+    <section className="card">
+      <div className="icon-box">{icon}</div>
 
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={select}
-      >
+      <div className="card-label">{label}</div>
+
+      <p className="question">{title}</p>
+
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">Choisir</option>
 
         {options.map((option) => (
@@ -309,111 +516,10 @@ function Question({ title, value, onChange, options }) {
           </option>
         ))}
       </select>
-    </>
+    </section>
   );
 }
 
-function TextInput({ title, value, onChange, placeholder }) {
-  return (
-    <div style={{ marginTop: "22px" }}>
-      <p style={question}>{title}</p>
-
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        style={textarea}
-      />
-    </div>
-  );
+function FlameIcon() {
+  return <span style={{ fontSize: "26px" }}>🔥</span>;
 }
-
-const main = {
-  minHeight: "100vh",
-  background:
-    "linear-gradient(180deg, #050505 0%, #0A0A0A 55%, #050505 100%)",
-  color: "white",
-  padding: "32px",
-  paddingBottom: "140px",
-  fontFamily: "Arial, sans-serif",
-};
-
-const label = {
-  color: "#D4B06A",
-  letterSpacing: "6px",
-  fontSize: "12px",
-  marginBottom: "24px",
-};
-
-const title = {
-  fontSize: "52px",
-  lineHeight: "0.96",
-  fontWeight: "700",
-  marginBottom: "24px",
-  letterSpacing: "-2px",
-};
-
-const subtitle = {
-  color: "rgba(255,255,255,0.64)",
-  fontSize: "19px",
-  lineHeight: "1.6",
-  marginBottom: "34px",
-};
-
-const question = {
-  fontSize: "22px",
-  lineHeight: "30px",
-  margin: 0,
-};
-
-const select = {
-  width: "100%",
-  background: "rgba(15,15,15,0.8)",
-  color: "white",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "18px",
-  padding: "18px",
-  fontSize: "16px",
-  marginTop: "18px",
-  outline: "none",
-};
-
-const textarea = {
-  width: "100%",
-  minHeight: "110px",
-  background: "rgba(15,15,15,0.8)",
-  color: "white",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "18px",
-  padding: "18px",
-  fontSize: "16px",
-  marginTop: "18px",
-  outline: "none",
-  resize: "vertical",
-  fontFamily: "Arial, sans-serif",
-};
-
-const resultLabel = {
-  color: "#D4B06A",
-  letterSpacing: "2px",
-  fontSize: "12px",
-  marginBottom: "14px",
-};
-
-const resultTitle = {
-  color: "#D4B06A",
-  fontSize: "34px",
-  marginBottom: "12px",
-};
-
-const resultText = {
-  color: "rgba(255,255,255,0.72)",
-  fontSize: "18px",
-  lineHeight: "30px",
-};
-
-const resultSub = {
-  color: "rgba(255,255,255,0.55)",
-  fontSize: "16px",
-  lineHeight: "28px",
-};
