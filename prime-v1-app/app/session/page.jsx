@@ -10,6 +10,7 @@ export default function SessionPage() {
   const [mistakes, setMistakes] = useState({});
   const [disciplineScore, setDisciplineScore] = useState(0);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [sessionFinished, setSessionFinished] = useState(false);
 
   const checklist = [
     "J’ai identifié la tendance HTF",
@@ -31,7 +32,6 @@ export default function SessionPage() {
   const calculateScore = (updatedChecks, updatedMistakes) => {
     const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
     const baseScore = Math.round((checkedCount / checklist.length) * 100);
-
     const mistakeCount = Object.values(updatedMistakes).filter(Boolean).length;
     const malus = mistakeCount * 15;
 
@@ -91,6 +91,7 @@ export default function SessionPage() {
           xp_gain: 40,
           status: "active",
           mental_state: null,
+          dominant_error: null,
         },
       ])
       .select()
@@ -107,6 +108,7 @@ export default function SessionPage() {
     setDisciplineScore(0);
     setChecked({});
     setMistakes({});
+    setSessionFinished(false);
   };
 
   const handleMentalState = async (state) => {
@@ -150,41 +152,109 @@ export default function SessionPage() {
   };
 
   const handleMistake = async (mistake) => {
-  const sessionId = await getActiveSessionId();
+    const sessionId = await getActiveSessionId();
 
-  if (!sessionId) {
-    alert("Active d'abord ta discipline.");
-    return;
-  }
+    if (!sessionId) {
+      alert("Active d'abord ta discipline.");
+      return;
+    }
 
-  const updatedMistakes = {
-    ...mistakes,
-    [mistake]: !mistakes[mistake],
+    const updatedMistakes = {
+      ...mistakes,
+      [mistake]: !mistakes[mistake],
+    };
+
+    setMistakes(updatedMistakes);
+
+    const score = calculateScore(checked, updatedMistakes);
+    setDisciplineScore(score);
+
+    const activeMistakes = Object.keys(updatedMistakes).filter(
+      (key) => updatedMistakes[key]
+    );
+
+    const dominantError =
+      activeMistakes.length > 0
+        ? activeMistakes[activeMistakes.length - 1]
+        : null;
+
+    await supabase
+      .from("sessions")
+      .update({
+        discipline_score: score,
+        dominant_error: dominantError,
+      })
+      .eq("id", sessionId);
   };
 
-  setMistakes(updatedMistakes);
+  const finishSession = async () => {
+    const sessionId = await getActiveSessionId();
 
-  const score = calculateScore(checked, updatedMistakes);
-  setDisciplineScore(score);
+    if (!sessionId) {
+      alert("Aucune session active");
+      return;
+    }
 
-  const activeMistakes = Object.keys(updatedMistakes).filter(
-    (key) => updatedMistakes[key]
-  );
+    await supabase
+      .from("sessions")
+      .update({
+        status: "closed",
+        discipline_score: disciplineScore,
+        mental_state: mentalState || null,
+      })
+      .eq("id", sessionId);
 
-  const dominantError =
-    activeMistakes.length > 0 ? activeMistakes[activeMistakes.length - 1] : null;
+    setSessionFinished(true);
+  };
 
-  await supabase
-    .from("sessions")
-    .update({
-      discipline_score: score,
-      dominant_error: dominantError,
-    })
-    .eq("id", sessionId);
-};
+  if (sessionFinished) {
+    return (
+      <main style={page}>
+        <div style={container}>
+          <button style={backButton} onClick={() => (window.location.href = "/")}>
+            ← Retour
+          </button>
+
+          <p style={eyebrow}>SESSION TERMINÉE</p>
+
+          <h1 style={heading}>
+            Bravo.
+            <br />
+            Session clôturée.
+          </h1>
+
+          <section style={card}>
+            <h2 style={title}>Résumé PRIME</h2>
+
+            <p style={text}>Score discipline : {disciplineScore}%</p>
+            <p style={text}>État mental : {mentalState || "Non renseigné"}</p>
+            <p style={text}>XP gagnée : +40 XP</p>
+            <p style={text}>Streak : +1 jour</p>
+          </section>
+
+          <button style={goldButton} onClick={() => (window.location.href = "/coach")}>
+            Voir mon Coach
+          </button>
+
+          <button style={secondaryButton} onClick={() => (window.location.href = "/journal")}>
+            Voir mon Journal
+          </button>
+
+          <button style={secondaryButton} onClick={() => (window.location.href = "/")}>
+            Retour Home
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main style={page}>
       <div style={container}>
+        <button style={backButton} onClick={() => (window.location.href = "/")}>
+          ← Retour
+        </button>
+
         <p style={eyebrow}>PRIME SESSION</p>
 
         <h1 style={heading}>
@@ -223,9 +293,7 @@ export default function SessionPage() {
                 style={{
                   ...pill,
                   background:
-                    mentalState === state
-                      ? "#D4B06A"
-                      : "rgba(255,255,255,0.06)",
+                    mentalState === state ? "#D4B06A" : "rgba(255,255,255,0.06)",
                   color: mentalState === state ? "#000" : "#fff",
                 }}
               >
@@ -277,6 +345,18 @@ export default function SessionPage() {
             </div>
           ))}
         </section>
+
+        <section style={card}>
+          <h2 style={title}>Fin de session</h2>
+          <p style={text}>
+            Lorsque ton trading est terminé, clôture la session pour envoyer les
+            données à PRIME Coach.
+          </p>
+
+          <button onClick={finishSession} style={goldButton}>
+            TERMINER MA SESSION
+          </button>
+        </section>
       </div>
     </main>
   );
@@ -292,6 +372,18 @@ const page = {
 const container = {
   maxWidth: "680px",
   margin: "0 auto",
+};
+
+const backButton = {
+  background: "transparent",
+  border: "1px solid rgba(212,176,106,0.22)",
+  color: "#D4B06A",
+  borderRadius: "999px",
+  padding: "10px 16px",
+  fontSize: "14px",
+  fontWeight: "700",
+  cursor: "pointer",
+  marginBottom: "24px",
 };
 
 const eyebrow = {
@@ -343,6 +435,32 @@ const button = {
   fontSize: "16px",
   fontWeight: "800",
   cursor: "pointer",
+};
+
+const goldButton = {
+  width: "100%",
+  border: "none",
+  borderRadius: "18px",
+  padding: "18px",
+  fontSize: "16px",
+  fontWeight: "900",
+  cursor: "pointer",
+  background: "#D4B06A",
+  color: "#000",
+  marginBottom: "14px",
+};
+
+const secondaryButton = {
+  width: "100%",
+  border: "1px solid rgba(212,176,106,0.22)",
+  borderRadius: "18px",
+  padding: "18px",
+  fontSize: "16px",
+  fontWeight: "800",
+  cursor: "pointer",
+  background: "rgba(255,255,255,0.04)",
+  color: "#fff",
+  marginBottom: "14px",
 };
 
 const pill = {
