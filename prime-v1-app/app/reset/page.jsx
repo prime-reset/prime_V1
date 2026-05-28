@@ -63,9 +63,9 @@ export default function ResetPage() {
             cover,
             920px auto;
 
-          background-position:
-            center,
-            center -90px;
+         background-position:
+  center,
+  center -220px;
 
           background-repeat: no-repeat;
           overflow-x: hidden;
