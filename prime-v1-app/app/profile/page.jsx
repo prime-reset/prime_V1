@@ -24,39 +24,33 @@ export default function ProfilePage() {
 
   const loadProfile = async () => {
     const {
-  data: { user },
-} = await supabase.auth.getUser();
-
-if (!user) return;
-
-const { data: profileData } = await supabase
-  .from("profiles")
-  .select("*")
-  .eq("email", user.email)
-  .maybeSingle();
-
-if (profileData?.detected_profile) {
-  setPrimeProfile({
-    detectedProfile: profileData.detected_profile,
-    risk: profileData.risk,
-    strength: profileData.strength,
-    weakness: profileData.weakness,
-    prescription: profileData.prescription,
-    checklist: profileData.checklist || [],
-  });
-} else {
-  const savedProfile = localStorage.getItem("primeProfile");
-
-  if (savedProfile) {
-    setPrimeProfile(JSON.parse(savedProfile));
-  }
-}
-
-    const {
       data: { user },
     } = await supabase.auth.getUser();
 
+    const savedProfile = localStorage.getItem("primeProfile");
+
+    if (savedProfile) {
+      setPrimeProfile(JSON.parse(savedProfile));
+    }
+
     if (!user) return;
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (profileData?.detected_profile) {
+      setPrimeProfile({
+        detectedProfile: profileData.detected_profile,
+        risk: profileData.risk,
+        strength: profileData.strength,
+        weakness: profileData.weakness,
+        prescription: profileData.prescription,
+        checklist: profileData.checklist || [],
+      });
+    }
 
     const { data, error } = await supabase
       .from("sessions")
@@ -79,7 +73,10 @@ if (profileData?.detected_profile) {
       : 0;
 
   const totalXP = sessions.reduce((total, s) => total + (s.xp_gain || 0), 0);
-  const totalStreak = sessions.reduce((total, s) => total + (s.streak_gain || 0), 0);
+  const totalStreak = sessions.reduce(
+    (total, s) => total + (s.streak_gain || 0),
+    0
+  );
 
   const level = getPrimeLevel(totalXP);
 
@@ -275,7 +272,7 @@ if (profileData?.detected_profile) {
 
           <p className="text">
             {primeProfile
-              ? `Risque dominant : ${primeProfile.risk}`
+              ? `Risque dominant : ${primeProfile.risk || "Non défini"}`
               : "Va dans PRIME Identity pour générer ton profil trader personnalisé."}
           </p>
         </section>
