@@ -23,11 +23,34 @@ export default function ProfilePage() {
   }, []);
 
   const loadProfile = async () => {
-    const savedProfile = localStorage.getItem("primeProfile");
+    const {
+  data: { user },
+} = await supabase.auth.getUser();
 
-    if (savedProfile) {
-      setPrimeProfile(JSON.parse(savedProfile));
-    }
+if (!user) return;
+
+const { data: profileData } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("email", user.email)
+  .maybeSingle();
+
+if (profileData?.detected_profile) {
+  setPrimeProfile({
+    detectedProfile: profileData.detected_profile,
+    risk: profileData.risk,
+    strength: profileData.strength,
+    weakness: profileData.weakness,
+    prescription: profileData.prescription,
+    checklist: profileData.checklist || [],
+  });
+} else {
+  const savedProfile = localStorage.getItem("primeProfile");
+
+  if (savedProfile) {
+    setPrimeProfile(JSON.parse(savedProfile));
+  }
+}
 
     const {
       data: { user },
