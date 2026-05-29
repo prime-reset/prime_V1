@@ -10,6 +10,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
 export default function PrimeIdentityPage() {
@@ -27,6 +28,7 @@ export default function PrimeIdentityPage() {
   });
 
   const [result, setResult] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const updateField = (field, value) => {
     setProfile((prev) => ({
@@ -48,7 +50,9 @@ export default function PrimeIdentityPage() {
     (!isCustom ||
       (profile.customStyle && profile.entryCriteria && profile.invalidation));
 
-  const generateProfile = () => {
+  const generateProfile = async () => {
+    setSaving(true);
+
     let detectedProfile = "Trader en construction";
     let risk = profile.weakness || "Discipline à renforcer";
     let strength = "Capacité à structurer ton évolution";
@@ -123,8 +127,7 @@ export default function PrimeIdentityPage() {
       detectedProfile = profile.customStyle;
       strength = "Méthode personnelle et différenciée";
       weakness = profile.weakness;
-      prescription =
-        "Respecter tes critères personnels avant toute exécution.";
+      prescription = "Respecter tes critères personnels avant toute exécution.";
       checklist = [
         profile.entryCriteria,
         profile.invalidation,
@@ -146,6 +149,59 @@ export default function PrimeIdentityPage() {
 
     setResult(generatedProfile);
     localStorage.setItem("primeProfile", JSON.stringify(generatedProfile));
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) {
+      setSaving(false);
+      alert("Profil généré localement. Connecte-toi pour le sauvegarder dans Supabase.");
+      return;
+    }
+
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    const payload = {
+      email: user.email,
+      detected_profile: detectedProfile,
+      risk,
+      strength,
+      weakness,
+      prescription,
+      checklist,
+      answers: profile,
+    };
+
+    let error;
+
+    if (existingProfile?.id) {
+      const response = await supabase
+        .from("profiles")
+        .update(payload)
+        .eq("id", existingProfile.id);
+
+      error = response.error;
+    } else {
+      const response = await supabase
+        .from("profiles")
+        .insert([payload]);
+
+      error = response.error;
+    }
+
+    setSaving(false);
+
+    if (error) {
+      alert("Profil généré, mais erreur Supabase : " + error.message);
+      return;
+    }
+
+    alert("Profil PRIME sauvegardé.");
   };
 
   return (
@@ -158,19 +214,10 @@ export default function PrimeIdentityPage() {
           padding: 32px 20px 150px;
           color: white;
           font-family: Inter, Arial, sans-serif;
-          background:
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0.86),
-              rgba(0,0,0,0.96)
-            ),
-            #000;
+          background: linear-gradient(180deg, rgba(0,0,0,0.86), rgba(0,0,0,0.96)), #000;
         }
 
-        .page {
-          max-width: 460px;
-          margin: 0 auto;
-        }
+        .page { max-width: 460px; margin: 0 auto; }
 
         .brand {
           color: #D4B06A;
@@ -206,11 +253,7 @@ export default function PrimeIdentityPage() {
           margin-bottom: 18px;
           border-radius: 34px;
           background:
-            linear-gradient(
-              145deg,
-              rgba(255,255,255,0.08),
-              rgba(255,255,255,0.02)
-            ),
+            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
             rgba(5,5,5,0.78);
           border: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(22px);
@@ -327,8 +370,7 @@ export default function PrimeIdentityPage() {
           </h1>
 
           <p className="subtitle">
-            PRIME s’adapte à ta méthode, même si ton système ne rentre dans
-            aucune case.
+            PRIME s’adapte à ta méthode, même si ton système ne rentre dans aucune case.
           </p>
         </section>
 
@@ -452,9 +494,9 @@ export default function PrimeIdentityPage() {
         <button
           className="button"
           onClick={generateProfile}
-          disabled={!isComplete}
+          disabled={!isComplete || saving}
         >
-          Générer mon profil PRIME
+          {saving ? "Sauvegarde en cours..." : "Générer mon profil PRIME"}
         </button>
 
         {result && (
