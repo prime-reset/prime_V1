@@ -45,15 +45,13 @@ export default function CoachPage() {
   };
 
   const scores = sessions
-    .map((s) => s.discipline_score)
-    .filter((score) => typeof score === "number");
+    .map((s) => Number(s.discipline_score))
+    .filter((score) => !Number.isNaN(score));
 
   const averageScore =
     scores.length > 0
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
-
-  const lastSession = sessions[0];
 
   const dominantMentalState = getDominantValue(
     sessions.map((s) => s.mental_state).filter(Boolean)
@@ -69,7 +67,6 @@ export default function CoachPage() {
     averageScore,
     dominantMentalState,
     dominantError,
-    lastSession,
     sessionsCount: sessions.length,
     detectedPattern,
   });
@@ -84,9 +81,7 @@ export default function CoachPage() {
           padding: 32px 20px 150px;
           color: white;
           font-family: Inter, Arial, sans-serif;
-          background:
-            linear-gradient(180deg, rgba(0,0,0,0.86), rgba(0,0,0,0.96)),
-            #000;
+          background: linear-gradient(180deg, rgba(0,0,0,0.86), rgba(0,0,0,0.96)), #000;
         }
 
         .page {
@@ -132,14 +127,10 @@ export default function CoachPage() {
           padding: 28px;
           margin-bottom: 18px;
           border-radius: 34px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-            rgba(5,5,5,0.78);
+          background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.78);
           border: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(22px);
-          box-shadow:
-            0 20px 60px rgba(0,0,0,0.55),
-            inset 0 1px 0 rgba(255,255,255,0.04);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
         }
 
         .icon-box {
@@ -196,9 +187,7 @@ export default function CoachPage() {
         .mini-card {
           padding: 20px;
           border-radius: 26px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-            rgba(5,5,5,0.78);
+          background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.78);
           border: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(20px);
         }
@@ -215,14 +204,6 @@ export default function CoachPage() {
           margin-top: 10px;
           font-size: 24px;
           font-weight: 900;
-        }
-
-        .score {
-          font-size: 58px;
-          line-height: 1;
-          font-weight: 900;
-          color: #D4B06A;
-          margin-top: 18px;
         }
 
         @media(max-width:520px) {
@@ -264,17 +245,13 @@ export default function CoachPage() {
           <div className="mini-card">
             <Activity size={24} color="#D4B06A" />
             <div className="mini-title">État mental</div>
-            <div className="mini-value">
-              {dominantMentalState || "Aucun"}
-            </div>
+            <div className="mini-value">{dominantMentalState || "Aucun"}</div>
           </div>
 
           <div className="mini-card">
             <Flame size={24} color="#D4B06A" />
             <div className="mini-title">Erreur dominante</div>
-            <div className="mini-value">
-              {dominantError || "Aucune"}
-            </div>
+            <div className="mini-value">{dominantError || "Aucune"}</div>
           </div>
         </section>
 
@@ -343,7 +320,6 @@ function detectPrimePattern(sessions) {
   if (closedSessions.length < 5) {
     return {
       type: "diagnostic_phase",
-      severity: "observation",
       title: "Phase diagnostic en cours",
       reason: `PRIME analyse tes ${closedSessions.length} premières sessions clôturées. Il faut 5 sessions clôturées pour activer les prescriptions comportementales.`,
     };
@@ -359,7 +335,6 @@ function detectPrimePattern(sessions) {
   if (lowDisciplineStreak) {
     return {
       type: "low_discipline_streak",
-      severity: "high",
       title: "Dérive de discipline détectée",
       reason:
         "Tes 3 dernières sessions clôturées sont sous 65% de discipline. Ce n’est plus un accident isolé, c’est un pattern.",
@@ -373,7 +348,6 @@ function detectPrimePattern(sessions) {
   if (revengeCount >= 2) {
     return {
       type: "revenge_trading",
-      severity: "critical",
       title: "Pattern de revenge trading détecté",
       reason:
         "PRIME détecte au moins 2 occurrences de revenge trading sur tes 5 dernières sessions.",
@@ -387,7 +361,6 @@ function detectPrimePattern(sessions) {
   if (overtradingCount >= 2) {
     return {
       type: "overtrading",
-      severity: "medium",
       title: "Pattern d’overtrading détecté",
       reason:
         "PRIME détecte au moins 2 occurrences d’overtrading sur tes 5 dernières sessions.",
@@ -396,7 +369,6 @@ function detectPrimePattern(sessions) {
 
   return {
     type: "stable",
-    severity: "normal",
     title: "Aucun pattern critique détecté",
     reason:
       "PRIME ne détecte pas encore de dérive comportementale répétée. Le Coach reste silencieux tant qu’aucun vrai pattern ne justifie une prescription forte.",
@@ -407,7 +379,6 @@ function getCoachAnalysis({
   averageScore,
   dominantMentalState,
   dominantError,
-  lastSession,
   sessionsCount,
   detectedPattern,
 }) {
@@ -435,20 +406,6 @@ function getCoachAnalysis({
       focusTitle: "Créer ta baseline",
       focus:
         "Pendant cette phase, ton objectif n’est pas d’être parfaite. Ton objectif est de fournir des données réelles.",
-    };
-  }
-
-  if (detectedPattern?.type === "low_discipline_streak") {
-    return {
-      title: detectedPattern.title,
-      analysis:
-        detectedPattern.reason +
-        " Le problème prioritaire n’est pas la stratégie, mais le respect du cadre.",
-      prescription:
-        "Pendant 7 jours : checklist obligatoire avant chaque trade. Aucun trade si ton scénario, ton invalidation et ton risque ne sont pas définis.",
-      focusTitle: "Pas de cadre, pas de trade.",
-      focus:
-        "Tu ne dois pas chercher plus d’opportunités. Tu dois protéger ton processus.",
     };
   }
 
@@ -480,11 +437,24 @@ function getCoachAnalysis({
     };
   }
 
-  if (detectedPattern?.type === "stable") {
+  if (detectedPattern?.type === "low_discipline_streak") {
     return {
       title: detectedPattern.title,
       analysis:
-        detectedPattern.reason,
+        detectedPattern.reason +
+        " Le problème prioritaire n’est pas la stratégie, mais le respect du cadre.",
+      prescription:
+        "Pendant 7 jours : checklist obligatoire avant chaque trade. Aucun trade si ton scénario, ton invalidation et ton risque ne sont pas définis.",
+      focusTitle: "Pas de cadre, pas de trade.",
+      focus:
+        "Tu ne dois pas chercher plus d’opportunités. Tu dois protéger ton processus.",
+    };
+  }
+
+  if (detectedPattern?.type === "stable") {
+    return {
+      title: detectedPattern.title,
+      analysis: detectedPattern.reason,
       prescription:
         "Aucune prescription active. Continue ton process et protège ta régularité.",
       focusTitle: "Maintenir le cadre.",
@@ -493,41 +463,17 @@ function getCoachAnalysis({
     };
   }
 
-  if (averageScore >= 85) {
-    return {
-      title: "Ton exécution devient propre.",
-      analysis:
-        "PRIME détecte une bonne stabilité comportementale. Ton objectif est maintenant de répéter ce niveau sans augmenter le risque trop vite.",
-      prescription:
-        "Maintiens la même taille, le même process et la même checklist pendant 7 jours.",
-      focusTitle: "Stabilise avant d’accélérer.",
-      focus:
-        "La consistance vient avant le scaling. Continue de protéger ton process.",
-    };
-  }
-
-  if (averageScore >= 65) {
-    return {
-      title: "Base correcte, mais encore fragile.",
-      analysis: `Ton état mental dominant est ${
-        dominantMentalState || "encore inconnu"
-      }. PRIME détecte une structure intéressante, mais la discipline doit encore être renforcée.`,
-      prescription:
-        "Avant chaque entrée : relire le scénario, l’invalidation et le risque. Aucun trade sans validation complète.",
-      focusTitle: "Protège ton process.",
-      focus:
-        "Aujourd’hui, ta victoire est de suivre ton plan, pas d’optimiser ton PnL.",
-    };
-  }
-
   return {
-    title: "Priorité au contrôle émotionnel.",
-    analysis:
-      "PRIME détecte un risque élevé de dérive comportementale. La priorité n’est pas la performance, mais la protection de ton capital mental.",
+    title: "Analyse comportementale en cours.",
+    analysis: `Ton état mental dominant est ${
+      dominantMentalState || "encore inconnu"
+    }. Ton erreur dominante actuelle est ${
+      dominantError || "non identifiée"
+    }. Ton score moyen est de ${averageScore}%.`,
     prescription:
-      "Réduis le nombre de trades, baisse l’exposition et termine la session dès la première dérive.",
-    focusTitle: "Redeviens lucide avant d’agir.",
+      "Continue de renseigner tes sessions pour affiner le diagnostic PRIME.",
+    focusTitle: "Construire la donnée.",
     focus:
-      "Tu n’as pas besoin de forcer le marché. Tu as besoin de redevenir neutre.",
+      "Plus tes sessions sont honnêtes, plus PRIME pourra détecter les bons patterns.",
   };
 }
