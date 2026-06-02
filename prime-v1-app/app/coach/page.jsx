@@ -48,6 +48,7 @@ useEffect(() => {
     setLoading(false);
   };
 const createPrescriptionIfNeeded = async () => {
+  alert("createPrescriptionIfNeeded appelée");
   const {
     data: { user },
   } = await supabase.auth.getUser();
