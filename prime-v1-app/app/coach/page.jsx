@@ -21,6 +21,12 @@ export default function CoachPage() {
     loadCoachData();
   }, []);
 
+  useEffect(() => {
+    if (!loading && sessions.length > 0) {
+      createPrescriptionIfNeeded();
+    }
+  }, [loading, sessions]);
+
   const loadCoachData = async () => {
     const {
       data: { user },
@@ -30,11 +36,7 @@ export default function CoachPage() {
       setLoading(false);
       return;
     }
-useEffect(() => {
-  if (!loading && sessions.length > 0) {
-    createPrescriptionIfNeeded();
-  }
-}, [loading, sessions]);
+
     const { data, error } = await supabase
       .from("sessions")
       .select("*")
@@ -47,97 +49,103 @@ useEffect(() => {
 
     setLoading(false);
   };
-const createPrescriptionIfNeeded = async () => {
-  alert("createPrescriptionIfNeeded appelée");
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) return;
+  const createPrescriptionIfNeeded = async () => {
+    alert("createPrescriptionIfNeeded appelée");
 
-  const pattern = detectPrimePattern(sessions);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (
-    pattern.type !== "revenge_trading" &&
-    pattern.type !== "overtrading" &&
-    pattern.type !== "low_discipline_streak"
-  ) {
-    return;
-  }
+    if (!user) return;
 
-  const { data: existingPrescription } = await supabase
-    .from("prescriptions")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
+    const pattern = detectPrimePattern(sessions);
 
-  if (existingPrescription) return;
+    if (
+      pattern.type !== "revenge_trading" &&
+      pattern.type !== "overtrading" &&
+      pattern.type !== "low_discipline_streak"
+    ) {
+      return;
+    }
 
-  let prescription = null;
+    const { data: existingPrescription } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
 
-  if (pattern.type === "revenge_trading") {
-    prescription = {
-      trigger_error: "Revenge trade",
-      title: "Prescription Revenge Trading",
-      text:
-        "Tu cherches à récupérer une émotion après une perte. PRIME veut casser cette boucle.",
-      rule:
-        "Pause obligatoire de 20 minutes après une perte. Aucun nouveau trade sans setup A clair.",
-      duration_days: 7,
-    };
-  }
+    if (existingPrescription) {
+      alert("Une prescription active existe déjà");
+      return;
+    }
 
-  if (pattern.type === "overtrading") {
-    prescription = {
-      trigger_error: "Overtrading",
-      title: "Prescription Overtrading",
-      text:
-        "Tu multiplies les décisions et réduis la qualité de ton exécution.",
-      rule: "Maximum 2 trades par session pendant 7 jours.",
-      duration_days: 7,
-    };
-  }
+    let prescription = null;
 
-  if (pattern.type === "low_discipline_streak") {
-    prescription = {
-      trigger_error: "Low Discipline",
-      title: "Prescription Discipline",
-      text:
-        "Le problème principal n’est pas ta stratégie mais le respect de ton cadre.",
-      rule:
-        "Checklist complète obligatoire avant chaque trade pendant 7 jours.",
-      duration_days: 7,
-    };
-  }
+    if (pattern.type === "revenge_trading") {
+      prescription = {
+        trigger_error: "Revenge trade",
+        title: "Prescription Revenge Trading",
+        text:
+          "Tu cherches à récupérer une émotion après une perte. PRIME veut casser cette boucle.",
+        rule:
+          "Pause obligatoire de 20 minutes après une perte. Aucun nouveau trade sans setup A clair.",
+        duration_days: 7,
+      };
+    }
 
-  if (!prescription) return;
+    if (pattern.type === "overtrading") {
+      prescription = {
+        trigger_error: "Overtrading",
+        title: "Prescription Overtrading",
+        text:
+          "Tu multiplies les décisions et réduis la qualité de ton exécution.",
+        rule: "Maximum 2 trades par session pendant 7 jours.",
+        duration_days: 7,
+      };
+    }
 
-  const { data, error } = await supabase
-  .from("prescriptions")
-  .insert([
-    {
-      user_id: user.id,
-      session_id: sessions[0]?.id || null,
-      trigger_error: prescription.trigger_error,
-      title: prescription.title,
-      text: prescription.text,
-      rule: prescription.rule,
-      duration_days: prescription.duration_days,
-      status: "active",
-    },
-  ])
-  .select();
+    if (pattern.type === "low_discipline_streak") {
+      prescription = {
+        trigger_error: "Low Discipline",
+        title: "Prescription Discipline",
+        text:
+          "Le problème principal n’est pas ta stratégie mais le respect de ton cadre.",
+        rule:
+          "Checklist complète obligatoire avant chaque trade pendant 7 jours.",
+        duration_days: 7,
+      };
+    }
 
-if (error) {
-  alert("Erreur création prescription : " + error.message);
-  console.error("Prescription insert error:", error);
-} else {
-  alert("Prescription créée ✅");
-  console.log("Prescription créée :", data);
-}
-};
+    if (!prescription) return;
+
+    const { data, error } = await supabase
+      .from("prescriptions")
+      .insert([
+        {
+          user_id: user.id,
+          session_id: sessions[0]?.id || null,
+          trigger_error: prescription.trigger_error,
+          title: prescription.title,
+          text: prescription.text,
+          rule: prescription.rule,
+          duration_days: prescription.duration_days,
+          status: "active",
+        },
+      ])
+      .select();
+
+    if (error) {
+      alert("Erreur création prescription : " + error.message);
+      console.error("Prescription insert error:", error);
+    } else {
+      alert("Prescription créée ✅");
+      console.log("Prescription créée :", data);
+    }
+  };
+
   const scores = sessions
     .map((s) => Number(s.discipline_score))
     .filter((score) => !Number.isNaN(score));
