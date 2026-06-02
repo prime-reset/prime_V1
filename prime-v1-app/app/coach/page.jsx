@@ -113,7 +113,9 @@ const createPrescriptionIfNeeded = async () => {
 
   if (!prescription) return;
 
-  await supabase.from("prescriptions").insert([
+  const { data, error } = await supabase
+  .from("prescriptions")
+  .insert([
     {
       user_id: user.id,
       session_id: sessions[0]?.id || null,
@@ -124,7 +126,16 @@ const createPrescriptionIfNeeded = async () => {
       duration_days: prescription.duration_days,
       status: "active",
     },
-  ]);
+  ])
+  .select();
+
+if (error) {
+  alert("Erreur création prescription : " + error.message);
+  console.error("Prescription insert error:", error);
+} else {
+  alert("Prescription créée ✅");
+  console.log("Prescription créée :", data);
+}
 };
   const scores = sessions
     .map((s) => Number(s.discipline_score))
