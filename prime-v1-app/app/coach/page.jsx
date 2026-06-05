@@ -51,8 +51,6 @@ export default function CoachPage() {
   };
 
   const createPrescriptionIfNeeded = async () => {
-    alert("createPrescriptionIfNeeded appelée");
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -77,10 +75,7 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
-    if (existingPrescription) {
-      alert("Une prescription active existe déjà");
-      return;
-    }
+    if (existingPrescription) return;
 
     let prescription = null;
 
@@ -121,29 +116,18 @@ export default function CoachPage() {
 
     if (!prescription) return;
 
-    const { data, error } = await supabase
-      .from("prescriptions")
-      .insert([
-        {
-          user_id: user.id,
-          session_id: sessions[0]?.id || null,
-          trigger_error: prescription.trigger_error,
-          title: prescription.title,
-          text: prescription.text,
-          rule: prescription.rule,
-          duration_days: prescription.duration_days,
-          status: "active",
-        },
-      ])
-      .select();
-
-    if (error) {
-      alert("Erreur création prescription : " + error.message);
-      console.error("Prescription insert error:", error);
-    } else {
-      alert("Prescription créée ✅");
-      console.log("Prescription créée :", data);
-    }
+    await supabase.from("prescriptions").insert([
+      {
+        user_id: user.id,
+        session_id: sessions[0]?.id || null,
+        trigger_error: prescription.trigger_error,
+        title: prescription.title,
+        text: prescription.text,
+        rule: prescription.rule,
+        duration_days: prescription.duration_days,
+        status: "active",
+      },
+    ]);
   };
 
   const scores = sessions
