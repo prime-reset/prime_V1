@@ -189,6 +189,11 @@ export default function CoachPage() {
     detectedPattern,
   });
 
+  const complianceDays = activePrescription?.compliance_days || 0;
+  const missedDays = activePrescription?.missed_days || 0;
+  const durationDays = activePrescription?.duration_days || 7;
+  const checkedDays = complianceDays + missedDays;
+
   return (
     <main className="coach-page">
       <style>{`
@@ -295,6 +300,29 @@ export default function CoachPage() {
           margin-top: 18px;
         }
 
+        .progress-box {
+          margin-top: 22px;
+          padding: 18px;
+          border-radius: 22px;
+          background: rgba(212,176,106,0.08);
+          border: 1px solid rgba(212,176,106,0.16);
+        }
+
+        .progress-title {
+          color: #D4B06A;
+          font-size: 13px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+
+        .progress-value {
+          font-size: 24px;
+          font-weight: 900;
+          color: white;
+          margin: 0;
+        }
+
         .grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -392,6 +420,18 @@ export default function CoachPage() {
 
           {activePrescription?.text && (
             <p className="card-text">{activePrescription.text}</p>
+          )}
+
+          {activePrescription && (
+            <div className="progress-box">
+              <div className="progress-title">Progression</div>
+              <p className="progress-value">
+                Jour {checkedDays} / {durationDays}
+              </p>
+              <p className="card-text">
+                {complianceDays} jour(s) respecté(s) · {missedDays} jour(s) non respecté(s)
+              </p>
+            </div>
           )}
 
           <p className="card-text">
