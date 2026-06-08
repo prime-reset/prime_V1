@@ -15,17 +15,20 @@ import BottomNav from "../components/BottomNav";
 
 export default function CoachPage() {
   const [sessions, setSessions] = useState([]);
+  const [activePrescription, setActivePrescription] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [creationChecked, setCreationChecked] = useState(false);
 
   useEffect(() => {
     loadCoachData();
   }, []);
 
   useEffect(() => {
-    if (!loading && sessions.length > 0) {
+    if (!loading && sessions.length > 0 && !creationChecked) {
       createPrescriptionIfNeeded();
+      setCreationChecked(true);
     }
-  }, [loading, sessions]);
+  }, [loading, sessions, creationChecked]);
 
   const loadCoachData = async () => {
     const {
@@ -37,14 +40,27 @@ export default function CoachPage() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data: sessionsData } = await supabase
       .from("sessions")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setSessions(data);
+    if (sessionsData) {
+      setSessions(sessionsData);
+    }
+
+    const { data: prescriptionData } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (prescriptionData) {
+      setActivePrescription(prescriptionData);
     }
 
     setLoading(false);
@@ -56,6 +72,7 @@ export default function CoachPage() {
     } = await supabase.auth.getUser();
 
     if (!user) return;
+    if (activePrescription) return;
 
     const pattern = detectPrimePattern(sessions);
 
@@ -75,7 +92,10 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
-    if (existingPrescription) return;
+    if (existingPrescription) {
+      setActivePrescription(existingPrescription);
+      return;
+    }
 
     let prescription = null;
 
@@ -84,9 +104,9 @@ export default function CoachPage() {
         trigger_error: "Revenge trade",
         title: "Prescription Revenge Trading",
         text:
-          "Tu cherches à récupérer une émotion après une perte. PRIME veut casser cette boucle.",
+          "Tu cherches à récupérer une émotion après une perte. PRIME veut casser cette boucle comportementale.",
         rule:
-          "Pause obligatoire de 20 minutes après une perte. Aucun nouveau trade sans setup A clair.",
+          "Après une perte : pause obligatoire de 20 minutes. Aucun nouveau trade sans setup A clair.",
         duration_days: 7,
       };
     }
@@ -96,7 +116,7 @@ export default function CoachPage() {
         trigger_error: "Overtrading",
         title: "Prescription Overtrading",
         text:
-          "Tu multiplies les décisions et réduis la qualité de ton exécution.",
+          "Tu multiplies les décisions et tu réduis la qualité de ton exécution.",
         rule: "Maximum 2 trades par session pendant 7 jours.",
         duration_days: 7,
       };
@@ -107,7 +127,7 @@ export default function CoachPage() {
         trigger_error: "Low Discipline",
         title: "Prescription Discipline",
         text:
-          "Le problème principal n’est pas ta stratégie mais le respect de ton cadre.",
+          "Le problème principal n’est pas ta stratégie, mais le respect de ton cadre.",
         rule:
           "Checklist complète obligatoire avant chaque trade pendant 7 jours.",
         duration_days: 7,
@@ -116,18 +136,30 @@ export default function CoachPage() {
 
     if (!prescription) return;
 
-    await supabase.from("prescriptions").insert([
-      {
-        user_id: user.id,
-        session_id: sessions[0]?.id || null,
-        trigger_error: prescription.trigger_error,
-        title: prescription.title,
-        text: prescription.text,
-        rule: prescription.rule,
-        duration_days: prescription.duration_days,
-        status: "active",
-      },
-    ]);
+    const { data: createdPrescription, error } = await supabase
+      .from("prescriptions")
+      .insert([
+        {
+          user_id: user.id,
+          session_id: sessions[0]?.id || null,
+          trigger_error: prescription.trigger_error,
+          title: prescription.title,
+          text: prescription.text,
+          rule: prescription.rule,
+          duration_days: prescription.duration_days,
+          status: "active",
+        },
+      ])
+      .select()
+      .single();
+
+    if (!error && createdPrescription) {
+      setActivePrescription(createdPrescription);
+    }
+
+    if (error) {
+      console.error("Erreur création prescription :", error.message);
+    }
   };
 
   const scores = sessions
@@ -348,11 +380,24 @@ export default function CoachPage() {
 
           <div className="card-label">PRESCRIPTION ACTIVE</div>
 
-          <div className="prescription">{coach.prescription}</div>
+          <h2 className="card-title">
+            {activePrescription
+              ? activePrescription.title
+              : "Prescription générée"}
+          </h2>
+
+          <div className="prescription">
+            {activePrescription ? activePrescription.rule : coach.prescription}
+          </div>
+
+          {activePrescription?.text && (
+            <p className="card-text">{activePrescription.text}</p>
+          )}
 
           <p className="card-text">
-            Durée recommandée : 7 jours. PRIME ne cherche pas à te faire trader
-            plus, mais à te faire exécuter mieux.
+            Durée recommandée :{" "}
+            {activePrescription?.duration_days || 7} jours. PRIME ne cherche
+            pas à te faire trader plus, mais à te faire exécuter mieux.
           </p>
         </section>
 
@@ -481,6 +526,47 @@ function getCoachAnalysis({
     };
   }
 
+  if (detectedPattern?.type === "revenge_trading") {
+    return {
+      title: detectedPattern.title,
+      analysis:
+        detectedPattern.reason +
+        " Tu ne trades plus seulement le marché, tu trades une émotion à réparer.",
+      prescription:
+        "Après une perte : pause obligatoire de 20 minutes. Aucun nouveau trade sans setup A clair.",
+      focusTitle: "Ne récupère pas. Reviens neutre.",
+      focus:
+        "Une perte acceptée coûte moins cher qu’une perte que tu essaies de réparer.",
+    };
+  }
+
+  if (detectedPattern?.type === "overtrading") {
+    return {
+      title: detectedPattern.title,
+      analysis:
+        detectedPattern.reason +
+        " Ton danger principal est de confondre présence au marché et qualité d’exécution.",
+      prescription: "Maximum 2 trades par session pendant 7 jours.",
+      focusTitle: "Moins de trades. Plus de qualité.",
+      focus:
+        "Ton edge ne vient pas du nombre d’actions, mais de la sélection.",
+    };
+  }
+
+  if (detectedPattern?.type === "low_discipline_streak") {
+    return {
+      title: detectedPattern.title,
+      analysis:
+        detectedPattern.reason +
+        " Le problème prioritaire n’est pas la stratégie, mais le respect du cadre.",
+      prescription:
+        "Checklist complète obligatoire avant chaque trade pendant 7 jours.",
+      focusTitle: "Pas de cadre, pas de trade.",
+      focus:
+        "Tu ne dois pas chercher plus d’opportunités. Tu dois protéger ton processus.",
+    };
+  }
+
   if (detectedPattern?.type === "diagnostic_phase") {
     return {
       title: detectedPattern.title,
@@ -495,71 +581,14 @@ function getCoachAnalysis({
     };
   }
 
-  if (detectedPattern?.type === "revenge_trading") {
-    return {
-      title: detectedPattern.title,
-      analysis:
-        detectedPattern.reason +
-        " Tu ne trades plus seulement le marché, tu trades une émotion à réparer.",
-      prescription:
-        "Pendant 7 jours : après une perte, pause obligatoire de 20 minutes. Aucun nouveau trade sans setup A clair.",
-      focusTitle: "Ne récupère pas. Reviens neutre.",
-      focus:
-        "Une perte acceptée coûte moins cher qu’une perte que tu essaies de réparer.",
-    };
-  }
-
-  if (detectedPattern?.type === "overtrading") {
-    return {
-      title: detectedPattern.title,
-      analysis:
-        detectedPattern.reason +
-        " Ton danger principal est de confondre présence au marché et qualité d’exécution.",
-      prescription:
-        "Pendant 7 jours : maximum 2 trades par session. Une fois la limite atteinte, session terminée.",
-      focusTitle: "Moins de trades. Plus de qualité.",
-      focus:
-        "Ton edge ne vient pas du nombre d’actions, mais de la sélection.",
-    };
-  }
-
-  if (detectedPattern?.type === "low_discipline_streak") {
-    return {
-      title: detectedPattern.title,
-      analysis:
-        detectedPattern.reason +
-        " Le problème prioritaire n’est pas la stratégie, mais le respect du cadre.",
-      prescription:
-        "Pendant 7 jours : checklist obligatoire avant chaque trade. Aucun trade si ton scénario, ton invalidation et ton risque ne sont pas définis.",
-      focusTitle: "Pas de cadre, pas de trade.",
-      focus:
-        "Tu ne dois pas chercher plus d’opportunités. Tu dois protéger ton processus.",
-    };
-  }
-
-  if (detectedPattern?.type === "stable") {
-    return {
-      title: detectedPattern.title,
-      analysis: detectedPattern.reason,
-      prescription:
-        "Aucune prescription active. Continue ton process et protège ta régularité.",
-      focusTitle: "Maintenir le cadre.",
-      focus:
-        "Aujourd’hui, PRIME ne cherche pas à corriger. Il observe et confirme ta stabilité.",
-    };
-  }
-
   return {
-    title: "Analyse comportementale en cours.",
-    analysis: `Ton état mental dominant est ${
-      dominantMentalState || "encore inconnu"
-    }. Ton erreur dominante actuelle est ${
-      dominantError || "non identifiée"
-    }. Ton score moyen est de ${averageScore}%.`,
+    title: "Aucun pattern critique détecté",
+    analysis:
+      "PRIME ne détecte pas encore de dérive comportementale répétée. Le Coach reste silencieux tant qu’aucun vrai pattern ne justifie une prescription forte.",
     prescription:
-      "Continue de renseigner tes sessions pour affiner le diagnostic PRIME.",
-    focusTitle: "Construire la donnée.",
+      "Aucune prescription active. Continue ton process et protège ta régularité.",
+    focusTitle: "Maintenir le cadre.",
     focus:
-      "Plus tes sessions sont honnêtes, plus PRIME pourra détecter les bons patterns.",
+      "Aujourd’hui, PRIME ne cherche pas à corriger. Il observe et confirme ta stabilité.",
   };
 }
