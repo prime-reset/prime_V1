@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function SessionPage() {
@@ -11,6 +11,12 @@ export default function SessionPage() {
   const [disciplineScore, setDisciplineScore] = useState(0);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const [activePrescription, setActivePrescription] = useState(null);
+  const [prescriptionAnswered, setPrescriptionAnswered] = useState(false);
+
+  useEffect(() => {
+    loadActivePrescription();
+  }, []);
 
   const checklist = [
     "J’ai identifié la tendance HTF",
@@ -28,6 +34,80 @@ export default function SessionPage() {
     "Stop déplacé",
     "Trade hors plan",
   ];
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const loadActivePrescription = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (data) {
+      setActivePrescription(data);
+      setPrescriptionAnswered(data.last_check_date === today);
+    }
+  };
+
+  const updatePrescriptionCompliance = async (respected) => {
+    if (!activePrescription) return;
+
+    if (activePrescription.last_check_date === today) {
+      alert("Tu as déjà renseigné ta prescription aujourd’hui.");
+      setPrescriptionAnswered(true);
+      return;
+    }
+
+    const newComplianceDays =
+      (activePrescription.compliance_days || 0) + (respected ? 1 : 0);
+
+    const newMissedDays =
+      (activePrescription.missed_days || 0) + (respected ? 0 : 1);
+
+    const totalCheckedDays = newComplianceDays + newMissedDays;
+    const durationDays = activePrescription.duration_days || 7;
+
+    const shouldComplete = totalCheckedDays >= durationDays;
+
+    const result =
+      shouldComplete && newComplianceDays >= Math.ceil(durationDays * 0.7)
+        ? "success"
+        : shouldComplete
+        ? "failed"
+        : null;
+
+    const { data, error } = await supabase
+      .from("prescriptions")
+      .update({
+        compliance_days: newComplianceDays,
+        missed_days: newMissedDays,
+        last_check_date: today,
+        status: shouldComplete ? "completed" : "active",
+        completed_at: shouldComplete ? new Date().toISOString() : null,
+        result,
+      })
+      .eq("id", activePrescription.id)
+      .select()
+      .single();
+
+    if (error) {
+      alert("Erreur prescription : " + error.message);
+      return;
+    }
+
+    setActivePrescription(data);
+    setPrescriptionAnswered(true);
+  };
 
   const calculateScore = (updatedChecks, updatedMistakes) => {
     const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
@@ -263,6 +343,47 @@ export default function SessionPage() {
           Trading
         </h1>
 
+        {activePrescription && (
+          <section style={card}>
+            <h2 style={title}>Prescription active</h2>
+
+            <p style={text}>{activePrescription.title}</p>
+
+            <p style={prescriptionRule}>{activePrescription.rule}</p>
+
+            <p style={text}>
+              Progression : {activePrescription.compliance_days || 0} jour(s)
+              respecté(s) / {activePrescription.duration_days || 7}
+            </p>
+
+            {prescriptionAnswered ? (
+              <p style={successText}>
+                Prescription renseignée aujourd’hui ✅
+              </p>
+            ) : (
+              <>
+                <p style={text}>
+                  As-tu respecté cette prescription aujourd’hui ?
+                </p>
+
+                <button
+                  style={goldButton}
+                  onClick={() => updatePrescriptionCompliance(true)}
+                >
+                  Oui, respectée
+                </button>
+
+                <button
+                  style={secondaryButton}
+                  onClick={() => updatePrescriptionCompliance(false)}
+                >
+                  Non, pas respectée
+                </button>
+              </>
+            )}
+          </section>
+        )}
+
         <section style={card}>
           <h2 style={title}>Discipline</h2>
           <p style={text}>
@@ -417,6 +538,21 @@ const text = {
   color: "#A5A5A5",
   fontSize: "18px",
   lineHeight: "1.6",
+  marginBottom: "22px",
+};
+
+const successText = {
+  color: "#7DFFA1",
+  fontSize: "17px",
+  fontWeight: "800",
+  lineHeight: "1.6",
+};
+
+const prescriptionRule = {
+  color: "#fff",
+  fontSize: "20px",
+  fontWeight: "900",
+  lineHeight: "1.5",
   marginBottom: "22px",
 };
 
