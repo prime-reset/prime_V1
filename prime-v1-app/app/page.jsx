@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Target,
@@ -14,9 +15,13 @@ import {
   Crown,
 } from "lucide-react";
 
+import { supabase } from "../lib/supabase";
 import BottomNav from "./components/BottomNav";
 
 export default function HomePage() {
+  const router = useRouter();
+
+  const [authLoading, setAuthLoading] = useState(true);
   const [disciplineActive, setDisciplineActive] = useState(false);
   const [resetActive, setResetActive] = useState(false);
   const [streak, setStreak] = useState(0);
@@ -24,6 +29,19 @@ export default function HomePage() {
   const [level, setLevel] = useState("DISCIPLINED TRADER");
 
   useEffect(() => {
+    checkAuthAndLoadHome();
+  }, []);
+
+  const checkAuthAndLoadHome = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/auth");
+      return;
+    }
+
     const discipline = localStorage.getItem("prime_discipline_active") === "true";
     const reset = localStorage.getItem("prime_reset_active") === "true";
     const savedStreak = Number(localStorage.getItem("prime_streak") || 0);
@@ -37,7 +55,29 @@ export default function HomePage() {
     if (savedXp >= 1500) setLevel("INSTITUTIONAL MINDSET");
     else if (savedXp >= 800) setLevel("ELITE EXECUTION");
     else setLevel("DISCIPLINED TRADER");
-  }, []);
+
+    setAuthLoading(false);
+  };
+
+  if (authLoading) {
+    return (
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#000",
+          color: "#D4B06A",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "Inter, Arial, sans-serif",
+          letterSpacing: "4px",
+          textTransform: "uppercase",
+        }}
+      >
+        Chargement PRIME...
+      </main>
+    );
+  }
 
   const homeStatus = resetActive
     ? "MODE RESET"
