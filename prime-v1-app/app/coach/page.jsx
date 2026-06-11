@@ -16,6 +16,7 @@ import BottomNav from "../components/BottomNav";
 export default function CoachPage() {
   const [sessions, setSessions] = useState([]);
   const [activePrescription, setActivePrescription] = useState(null);
+  const [completedPrescription, setCompletedPrescription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [creationChecked, setCreationChecked] = useState(false);
 
@@ -50,7 +51,7 @@ export default function CoachPage() {
       setSessions(sessionsData);
     }
 
-    const { data: prescriptionData } = await supabase
+    const { data: activeData } = await supabase
       .from("prescriptions")
       .select("*")
       .eq("user_id", user.id)
@@ -59,8 +60,21 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
-    if (prescriptionData) {
-      setActivePrescription(prescriptionData);
+    if (activeData) {
+      setActivePrescription(activeData);
+    }
+
+    const { data: completedData } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (completedData) {
+      setCompletedPrescription(completedData);
     }
 
     setLoading(false);
@@ -189,10 +203,14 @@ export default function CoachPage() {
     detectedPattern,
   });
 
-  const complianceDays = activePrescription?.compliance_days || 0;
-  const missedDays = activePrescription?.missed_days || 0;
-  const durationDays = activePrescription?.duration_days || 7;
+  const displayedPrescription = activePrescription || completedPrescription;
+
+  const complianceDays = displayedPrescription?.compliance_days || 0;
+  const missedDays = displayedPrescription?.missed_days || 0;
+  const durationDays = displayedPrescription?.duration_days || 7;
   const checkedDays = complianceDays + missedDays;
+
+  const isCompleted = displayedPrescription?.status === "completed";
 
   return (
     <main className="coach-page">
@@ -323,6 +341,20 @@ export default function CoachPage() {
           margin: 0;
         }
 
+        .result-success {
+          color: #7DFFA1;
+          font-size: 24px;
+          font-weight: 900;
+          margin-top: 10px;
+        }
+
+        .result-failed {
+          color: #ff8a8a;
+          font-size: 24px;
+          font-weight: 900;
+          margin-top: 10px;
+        }
+
         .grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -406,37 +438,55 @@ export default function CoachPage() {
             <ShieldAlert size={28} />
           </div>
 
-          <div className="card-label">PRESCRIPTION ACTIVE</div>
+          <div className="card-label">
+            {isCompleted ? "PRESCRIPTION TERMINÉE" : "PRESCRIPTION ACTIVE"}
+          </div>
 
           <h2 className="card-title">
-            {activePrescription
-              ? activePrescription.title
+            {displayedPrescription
+              ? displayedPrescription.title
               : "Prescription générée"}
           </h2>
 
           <div className="prescription">
-            {activePrescription ? activePrescription.rule : coach.prescription}
+            {displayedPrescription
+              ? displayedPrescription.rule
+              : coach.prescription}
           </div>
 
-          {activePrescription?.text && (
-            <p className="card-text">{activePrescription.text}</p>
+          {displayedPrescription?.text && (
+            <p className="card-text">{displayedPrescription.text}</p>
           )}
 
-          {activePrescription && (
+          {displayedPrescription && (
             <div className="progress-box">
-              <div className="progress-title">Progression</div>
+              <div className="progress-title">
+                {isCompleted ? "Résultat final" : "Progression"}
+              </div>
+
               <p className="progress-value">
-                Jour {checkedDays} / {durationDays}
+                {isCompleted
+                  ? `${complianceDays} / ${durationDays} jours respectés`
+                  : `Jour ${checkedDays} / ${durationDays}`}
               </p>
+
               <p className="card-text">
                 {complianceDays} jour(s) respecté(s) · {missedDays} jour(s) non respecté(s)
               </p>
+
+              {isCompleted && displayedPrescription.result === "success" && (
+                <p className="result-success">Prescription réussie ✅</p>
+              )}
+
+              {isCompleted && displayedPrescription.result === "failed" && (
+                <p className="result-failed">Prescription échouée ❌</p>
+              )}
             </div>
           )}
 
           <p className="card-text">
             Durée recommandée :{" "}
-            {activePrescription?.duration_days || 7} jours. PRIME ne cherche
+            {displayedPrescription?.duration_days || 7} jours. PRIME ne cherche
             pas à te faire trader plus, mais à te faire exécuter mieux.
           </p>
         </section>
