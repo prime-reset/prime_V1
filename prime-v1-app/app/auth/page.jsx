@@ -71,7 +71,7 @@ linear-gradient(
   rgba(0,0,0,0.82) 80%,
   rgba(0,0,0,0.98) 100%
 ),
-url("/black-panther-home.jpg");
+url("/prime-auth-bg.jpg");
          background-size: cover;
 background-position: center;
           background-repeat: no-repeat;
