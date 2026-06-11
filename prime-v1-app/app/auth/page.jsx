@@ -64,15 +64,16 @@ export default function AuthPage() {
           padding: 34px 18px;
           font-family: Inter, Arial, sans-serif;
           background:
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0.42) 0%,
-              rgba(0,0,0,0.68) 45%,
-              rgba(0,0,0,0.98) 100%
-            ),
-            url("/prime-panther-bg.png.png");
-          background-size: cover, min(120vw, 860px) auto;
-          background-position: center top, center -190px;
+linear-gradient(
+  180deg,
+  rgba(0,0,0,0.10) 0%,
+  rgba(0,0,0,0.35) 40%,
+  rgba(0,0,0,0.82) 80%,
+  rgba(0,0,0,0.98) 100%
+),
+url("/black-panther-home.jpg");
+         background-size: cover;
+background-position: center;
           background-repeat: no-repeat;
           display: flex;
           align-items: center;
