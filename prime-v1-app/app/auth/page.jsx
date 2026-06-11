@@ -58,27 +58,29 @@ export default function AuthPage() {
           background: #000;
         }
 
-        .auth-page {
-          min-height: 100vh;
-          color: white;
-          padding: 34px 18px;
-          font-family: Inter, Arial, sans-serif;
-          background:
-linear-gradient(
-  180deg,
-  rgba(0,0,0,0.10) 0%,
-  rgba(0,0,0,0.35) 40%,
-  rgba(0,0,0,0.82) 80%,
-  rgba(0,0,0,0.98) 100%
-),
-url("/prime-auth-bg.jpg");
-         background-size: cover;
-background-position: center;
-          background-repeat: no-repeat;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+       .auth-page {
+  min-height: 100vh;
+  color: white;
+  padding: 34px 18px;
+  font-family: Inter, Arial, sans-serif;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,0.15) 0%,
+      rgba(0,0,0,0.35) 45%,
+      rgba(0,0,0,0.78) 100%
+    ),
+    url("/prime-auth-bg.jpg");
+
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
         .auth-card {
           width: 100%;
