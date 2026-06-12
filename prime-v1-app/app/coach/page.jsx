@@ -8,6 +8,7 @@ import {
   Activity,
   Sparkles,
   Target,
+  Crown,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
@@ -199,6 +200,7 @@ export default function CoachPage() {
   );
 
   const detectedPattern = detectPrimePattern(sessions);
+  const primeIdentity = getPrimeIdentity(sessions, averageScore, dominantError);
 
   const coach = getCoachAnalysis({
     averageScore,
@@ -263,14 +265,8 @@ export default function CoachPage() {
           background: linear-gradient(180deg, rgba(0,0,0,0.86), rgba(0,0,0,0.96)), #000;
         }
 
-        .page {
-          max-width: 460px;
-          margin: 0 auto;
-        }
-
-        .hero {
-          margin-bottom: 28px;
-        }
+        .page { max-width: 460px; margin: 0 auto; }
+        .hero { margin-bottom: 28px; }
 
         .brand {
           color: #D4B06A;
@@ -348,20 +344,20 @@ export default function CoachPage() {
           color: rgba(255,255,255,0.74);
         }
 
-        .diagnostic-grid {
+        .diagnostic-grid, .identity-grid {
           margin-top: 24px;
           display: grid;
           gap: 12px;
         }
 
-        .diagnostic-item {
+        .diagnostic-item, .identity-item {
           padding: 14px;
           border-radius: 18px;
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .diagnostic-label {
+        .diagnostic-label, .identity-label {
           color: rgba(212,176,106,0.82);
           font-size: 12px;
           letter-spacing: 2px;
@@ -369,10 +365,34 @@ export default function CoachPage() {
           margin-bottom: 8px;
         }
 
-        .diagnostic-value {
+        .diagnostic-value, .identity-value {
           font-size: 18px;
           font-weight: 800;
           color: white;
+        }
+
+        .identity-list {
+          margin-top: 14px;
+          padding-left: 0;
+          list-style: none;
+        }
+
+        .identity-list li {
+          margin-top: 10px;
+          color: rgba(255,255,255,0.75);
+          font-size: 15px;
+          line-height: 1.5;
+        }
+
+        .mission {
+          margin-top: 20px;
+          padding: 18px;
+          border-radius: 22px;
+          background: rgba(212,176,106,0.08);
+          border: 1px solid rgba(212,176,106,0.16);
+          color: white;
+          font-weight: 800;
+          line-height: 1.5;
         }
 
         .prescription {
@@ -525,6 +545,40 @@ export default function CoachPage() {
               <div className="diagnostic-value">{risk}</div>
             </div>
           </div>
+        </section>
+
+        <section className="card">
+          <div className="icon-box">
+            <Crown size={28} />
+          </div>
+
+          <div className="card-label">IDENTITÉ PRIME</div>
+
+          <h2 className="card-title">{primeIdentity.profile}</h2>
+
+          <p className="card-text">{primeIdentity.description}</p>
+
+          <div className="identity-grid">
+            <div className="identity-item">
+              <div className="identity-label">Forces</div>
+              <ul className="identity-list">
+                {primeIdentity.strengths.map((item) => (
+                  <li key={item}>✓ {item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="identity-item">
+              <div className="identity-label">Points de vigilance</div>
+              <ul className="identity-list">
+                {primeIdentity.weaknesses.map((item) => (
+                  <li key={item}>✗ {item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mission">{primeIdentity.mission}</div>
         </section>
 
         <section className="grid">
@@ -690,6 +744,82 @@ function getDominantValue(values) {
       values.filter((value) => value === b).length -
       values.filter((value) => value === a).length
   )[0];
+}
+
+function getPrimeIdentity(sessions, averageScore, dominantError) {
+  const errors = sessions.map((s) => s.dominant_error).filter(Boolean);
+
+  const count = (value) => errors.filter((e) => e === value).length;
+
+  const revengeCount = count("Revenge trade");
+  const overtradingCount = count("Overtrading");
+  const fomoCount = count("Entrée FOMO");
+  const stopMovedCount = count("Stop déplacé");
+  const offPlanCount = count("Trade hors plan");
+
+  if (averageScore >= 85 && errors.length <= 2) {
+    return {
+      profile: "Trader Patient",
+      description:
+        "Ton profil montre une bonne stabilité comportementale. Tu sembles capable de respecter ton cadre sans chercher à forcer le marché.",
+      strengths: ["Discipline stable", "Bonne patience", "Capacité à respecter le plan"],
+      weaknesses: ["Risque de relâchement", "Excès de confiance après une bonne série"],
+      mission: "Mission PRIME : maintenir ton cadre sans accélérer trop vite.",
+    };
+  }
+
+  if (revengeCount + overtradingCount >= fomoCount + offPlanCount + stopMovedCount) {
+    return {
+      profile: "Trader Impulsif",
+      description:
+        "Ton profil montre une tendance à réagir vite sous pression. Tu peux être décisif, mais le risque est de transformer une émotion en décision de marché.",
+      strengths: ["Réactivité", "Capacité à agir", "Énergie d’exécution"],
+      weaknesses: ["Revenge trading", "Suractivité", "Décisions prises sous émotion"],
+      mission: "Mission PRIME : apprendre à ralentir avant d’agir.",
+    };
+  }
+
+  if (fomoCount >= revengeCount && fomoCount >= offPlanCount) {
+    return {
+      profile: "Trader FOMO",
+      description:
+        "Ton profil montre une sensibilité aux mouvements déjà lancés. Tu risques d’entrer pour ne pas rater, plutôt que parce que ton setup est complet.",
+      strengths: ["Lecture rapide du momentum", "Réactivité au mouvement"],
+      weaknesses: ["Entrées précipitées", "Difficulté à laisser partir un mouvement"],
+      mission: "Mission PRIME : accepter qu’un trade manqué vaut mieux qu’un trade forcé.",
+    };
+  }
+
+  if (offPlanCount >= revengeCount || averageScore < 65) {
+    return {
+      profile: "Trader Désorganisé",
+      description:
+        "Ton profil montre que le cadre n’est pas encore assez solide. Le problème prioritaire n’est pas la stratégie, mais l’exécution structurée.",
+      strengths: ["Intuition de marché", "Capacité d’adaptation"],
+      weaknesses: ["Plan non respecté", "Checklist fragile", "Manque de structure"],
+      mission: "Mission PRIME : stabiliser ton process avant de chercher plus de performance.",
+    };
+  }
+
+  if (stopMovedCount >= 2) {
+    return {
+      profile: "Trader Agressif",
+      description:
+        "Ton profil montre une tendance à négocier avec le risque après l’entrée. Ton enjeu principal est de rendre ton invalidation non négociable.",
+      strengths: ["Courage d’exécution", "Tolérance à la pression"],
+      weaknesses: ["Stop déplacé", "Risque excessif", "Difficulté à accepter l’invalidation"],
+      mission: "Mission PRIME : rendre ton stop sacré.",
+    };
+  }
+
+  return {
+    profile: "Trader en Construction",
+    description:
+      "PRIME collecte encore tes données comportementales. Ton identité deviendra plus précise à mesure que tu clôtures tes sessions.",
+    strengths: ["Volonté de progresser", "Données en construction"],
+    weaknesses: ["Profil encore instable", "Besoin de plus d’historique"],
+    mission: "Mission PRIME : créer assez de données honnêtes pour révéler ton vrai profil.",
+  };
 }
 
 function detectPrimePattern(sessions) {
