@@ -17,6 +17,7 @@ export default function CoachPage() {
   const [sessions, setSessions] = useState([]);
   const [activePrescription, setActivePrescription] = useState(null);
   const [completedPrescription, setCompletedPrescription] = useState(null);
+  const [prescriptionHistory, setPrescriptionHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creationChecked, setCreationChecked] = useState(false);
 
@@ -75,6 +76,18 @@ export default function CoachPage() {
 
     if (completedData) {
       setCompletedPrescription(completedData);
+    }
+
+    const { data: historyData } = await supabase
+      .from("prescriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false })
+      .limit(5);
+
+    if (historyData) {
+      setPrescriptionHistory(historyData);
     }
 
     setLoading(false);
@@ -211,6 +224,22 @@ export default function CoachPage() {
   const checkedDays = complianceDays + missedDays;
 
   const isCompleted = displayedPrescription?.status === "completed";
+
+  const totalCompleted = prescriptionHistory.length;
+
+  const totalCompliance = prescriptionHistory.reduce(
+    (sum, p) => sum + (p.compliance_days || 0),
+    0
+  );
+
+  const totalDays = prescriptionHistory.reduce(
+    (sum, p) =>
+      sum + ((p.compliance_days || 0) + (p.missed_days || 0)),
+    0
+  );
+
+  const prescriptionSuccessRate =
+    totalDays > 0 ? Math.round((totalCompliance / totalDays) * 100) : 0;
 
   return (
     <main className="coach-page">
@@ -355,6 +384,25 @@ export default function CoachPage() {
           margin-top: 10px;
         }
 
+        .history-item {
+          margin-top: 14px;
+          padding: 16px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .history-item strong {
+          display: block;
+          color: white;
+          margin-bottom: 6px;
+        }
+
+        .history-item span {
+          color: rgba(255,255,255,0.65);
+          font-size: 14px;
+        }
+
         .grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -490,6 +538,38 @@ export default function CoachPage() {
             pas à te faire trader plus, mais à te faire exécuter mieux.
           </p>
         </section>
+
+        {prescriptionHistory.length > 0 && (
+          <section className="card">
+            <div className="icon-box">
+              <Sparkles size={28} />
+            </div>
+
+            <div className="card-label">HISTORIQUE COMPORTEMENTAL</div>
+
+            <h2 className="card-title">
+              Taux de respect : {prescriptionSuccessRate}%
+            </h2>
+
+            <p className="card-text">
+              {totalCompleted} prescription(s) terminée(s). PRIME mesure ta
+              capacité à tenir une règle dans le temps.
+            </p>
+
+            {prescriptionHistory.map((p) => (
+              <div key={p.id} className="history-item">
+                <strong>
+                  {p.result === "success" ? "✅" : "❌"} {p.title}
+                </strong>
+
+                <span>
+                  {p.compliance_days || 0} / {p.duration_days || 7} jours
+                  respectés
+                </span>
+              </div>
+            ))}
+          </section>
+        )}
 
         <section className="grid">
           <div className="mini-card">
