@@ -79,12 +79,19 @@ export default function SessionPage() {
 
     const shouldComplete = totalCheckedDays >= durationDays;
 
-    const result =
-      shouldComplete && newComplianceDays >= Math.ceil(durationDays * 0.7)
-        ? "success"
-        : shouldComplete
-        ? "failed"
-        : null;
+   let result = null;
+
+if (shouldComplete) {
+  const successRate = newComplianceDays / durationDays;
+
+  if (successRate >= 0.8) {
+    result = "success";
+  } else if (successRate >= 0.6) {
+    result = "partial";
+  } else {
+    result = "failed";
+  }
+}
 
     const { data, error } = await supabase
       .from("prescriptions")
