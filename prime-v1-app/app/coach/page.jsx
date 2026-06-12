@@ -48,9 +48,7 @@ export default function CoachPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (sessionsData) {
-      setSessions(sessionsData);
-    }
+    if (sessionsData) setSessions(sessionsData);
 
     const { data: activeData } = await supabase
       .from("prescriptions")
@@ -61,9 +59,7 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
-    if (activeData) {
-      setActivePrescription(activeData);
-    }
+    if (activeData) setActivePrescription(activeData);
 
     const { data: completedData } = await supabase
       .from("prescriptions")
@@ -74,9 +70,7 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
-    if (completedData) {
-      setCompletedPrescription(completedData);
-    }
+    if (completedData) setCompletedPrescription(completedData);
 
     const { data: historyData } = await supabase
       .from("prescriptions")
@@ -86,9 +80,7 @@ export default function CoachPage() {
       .order("completed_at", { ascending: false })
       .limit(5);
 
-    if (historyData) {
-      setPrescriptionHistory(historyData);
-    }
+    if (historyData) setPrescriptionHistory(historyData);
 
     setLoading(false);
   };
@@ -222,7 +214,6 @@ export default function CoachPage() {
   const missedDays = displayedPrescription?.missed_days || 0;
   const durationDays = displayedPrescription?.duration_days || 7;
   const checkedDays = complianceDays + missedDays;
-
   const isCompleted = displayedPrescription?.status === "completed";
 
   const totalCompleted = prescriptionHistory.length;
@@ -240,6 +231,25 @@ export default function CoachPage() {
 
   const prescriptionSuccessRate =
     totalDays > 0 ? Math.round((totalCompliance / totalDays) * 100) : 0;
+
+  let rootCause = "Stabilité";
+  let symptom = dominantError || "Aucun";
+  let risk = "Faible";
+
+  if (detectedPattern?.type === "low_discipline_streak") {
+    rootCause = "Discipline";
+    risk = "Perte de contrôle émotionnel";
+  }
+
+  if (detectedPattern?.type === "revenge_trading") {
+    rootCause = "Gestion émotionnelle";
+    risk = "Revenge trading chronique";
+  }
+
+  if (detectedPattern?.type === "overtrading") {
+    rootCause = "Suractivité";
+    risk = "Dégradation de l’edge";
+  }
 
   return (
     <main className="coach-page">
@@ -337,6 +347,33 @@ export default function CoachPage() {
           font-size: 17px;
           line-height: 1.8;
           color: rgba(255,255,255,0.74);
+        }
+
+        .diagnostic-grid {
+          margin-top: 24px;
+          display: grid;
+          gap: 12px;
+        }
+
+        .diagnostic-item {
+          padding: 14px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .diagnostic-label {
+          color: rgba(212,176,106,0.82);
+          font-size: 12px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          margin-bottom: 8px;
+        }
+
+        .diagnostic-value {
+          font-size: 18px;
+          font-weight: 800;
+          color: white;
         }
 
         .prescription {
@@ -465,6 +502,23 @@ export default function CoachPage() {
           </h2>
 
           <p className="card-text">{coach.analysis}</p>
+
+          <div className="diagnostic-grid">
+            <div className="diagnostic-item">
+              <div className="diagnostic-label">🧠 Cause principale</div>
+              <div className="diagnostic-value">{rootCause}</div>
+            </div>
+
+            <div className="diagnostic-item">
+              <div className="diagnostic-label">🔥 Symptôme dominant</div>
+              <div className="diagnostic-value">{symptom}</div>
+            </div>
+
+            <div className="diagnostic-item">
+              <div className="diagnostic-label">⚠️ Risque</div>
+              <div className="diagnostic-value">{risk}</div>
+            </div>
+          </div>
         </section>
 
         <section className="grid">
