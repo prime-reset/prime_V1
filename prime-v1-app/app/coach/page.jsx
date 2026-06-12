@@ -224,8 +224,7 @@ export default function CoachPage() {
   );
 
   const totalDays = prescriptionHistory.reduce(
-    (sum, p) =>
-      sum + ((p.compliance_days || 0) + (p.missed_days || 0)),
+    (sum, p) => sum + ((p.compliance_days || 0) + (p.missed_days || 0)),
     0
   );
 
@@ -414,6 +413,13 @@ export default function CoachPage() {
           margin-top: 10px;
         }
 
+        .result-partial {
+          color: #D4B06A;
+          font-size: 24px;
+          font-weight: 900;
+          margin-top: 10px;
+        }
+
         .result-failed {
           color: #ff8a8a;
           font-size: 24px;
@@ -580,6 +586,12 @@ export default function CoachPage() {
                 <p className="result-success">Prescription réussie ✅</p>
               )}
 
+              {isCompleted && displayedPrescription.result === "partial" && (
+                <p className="result-partial">
+                  Prescription partiellement respectée ⚠️
+                </p>
+              )}
+
               {isCompleted && displayedPrescription.result === "failed" && (
                 <p className="result-failed">Prescription échouée ❌</p>
               )}
@@ -610,18 +622,31 @@ export default function CoachPage() {
               capacité à tenir une règle dans le temps.
             </p>
 
-            {prescriptionHistory.map((p) => (
-              <div key={p.id} className="history-item">
-                <strong>
-                  {p.result === "success" ? "✅" : "❌"} {p.title}
-                </strong>
+            {prescriptionHistory.map((p) => {
+              const historyCompliance = p.compliance_days || 0;
+              const historyDuration = p.duration_days || 7;
+              const historyPercent = Math.round(
+                (historyCompliance / historyDuration) * 100
+              );
 
-                <span>
-                  {p.compliance_days || 0} / {p.duration_days || 7} jours
-                  respectés
-                </span>
-              </div>
-            ))}
+              return (
+                <div key={p.id} className="history-item">
+                  <strong>
+                    {p.result === "success"
+                      ? "✅"
+                      : p.result === "partial"
+                      ? "⚠️"
+                      : "❌"}{" "}
+                    {p.title}
+                  </strong>
+
+                  <span>
+                    {historyCompliance} / {historyDuration} jours respectés ·{" "}
+                    {historyPercent}%
+                  </span>
+                </div>
+              );
+            })}
           </section>
         )}
 
