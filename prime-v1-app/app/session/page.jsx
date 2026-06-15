@@ -13,19 +13,58 @@ export default function SessionPage() {
   const [sessionFinished, setSessionFinished] = useState(false);
   const [activePrescription, setActivePrescription] = useState(null);
   const [prescriptionAnswered, setPrescriptionAnswered] = useState(false);
-
+const [primeProfile, setPrimeProfile] = useState(null);
+  
   useEffect(() => {
     loadActivePrescription();
   }, []);
 
-  const checklist = [
-    "J’ai identifié la tendance HTF",
-    "J’ai repéré les zones de liquidité",
-    "J’ai défini mon scénario principal",
-    "J’ai défini mon invalidation",
-    "Je connais mon risque max",
-    "Je ne trade pas par impatience",
-  ];
+ const getChecklistByProfile = () => {
+  switch (primeProfile) {
+
+    case "Trader Impulsif":
+      return [
+        "J’ai attendu mon setup complet",
+        "Je ne trade pas une émotion",
+        "Je ne suis pas en revenge trade",
+        "Mon risque est défini",
+        "Mon invalidation est définie",
+        "Je respecte mon cadre",
+      ];
+
+    case "Trader Désorganisé":
+      return [
+        "Mon scénario est écrit",
+        "Mon invalidation est définie",
+        "Mon risque est calculé",
+        "J’ai identifié la tendance HTF",
+        "J’ai identifié les liquidités",
+        "Je sais exactement pourquoi j'entre",
+      ];
+
+    case "Trader FOMO":
+      return [
+        "J’ai attendu la confirmation",
+        "Je n’anticipe pas le mouvement",
+        "Le setup est complet",
+        "J’accepte de rater un trade",
+        "Mon entrée est validée",
+        "Je respecte mon plan",
+      ];
+
+    default:
+      return [
+        "J’ai identifié la tendance HTF",
+        "J’ai repéré les zones de liquidité",
+        "J’ai défini mon scénario principal",
+        "J’ai défini mon invalidation",
+        "Je connais mon risque max",
+        "Je ne trade pas par impatience",
+      ];
+  }
+};
+
+const checklist = getChecklistByProfile();
 
   const mistakesList = [
     "Revenge trade",
@@ -43,7 +82,17 @@ export default function SessionPage() {
     } = await supabase.auth.getUser();
 
     if (!user) return;
+const { data: profileData } = await supabase
+  .from("prime_identity_history")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .maybeSingle();
 
+if (profileData) {
+  setPrimeProfile(profileData.profile);
+}
     const { data } = await supabase
       .from("prescriptions")
       .select("*")
