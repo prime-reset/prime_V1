@@ -65,7 +65,21 @@ const [primeProfile, setPrimeProfile] = useState(null);
 };
 
 const checklist = getChecklistByProfile();
+const getFocusMessage = () => {
+  switch (primeProfile) {
+    case "Trader Impulsif":
+      return "Attendre la confirmation avant d'agir.";
 
+    case "Trader Désorganisé":
+      return "Structurer le plan avant l'exécution.";
+
+    case "Trader FOMO":
+      return "Accepter de laisser partir les opportunités.";
+
+    default:
+      return "Respecter le process avant le résultat.";
+  }
+};
   const mistakesList = [
     "Revenge trade",
     "Overtrading",
@@ -358,7 +372,24 @@ if (shouldComplete) {
             <br />
             Session clôturée.
           </h1>
+<section style={card}>
+  <h2 style={title}>Identité active</h2>
 
+  <p
+    style={{
+      color: "#D4B06A",
+      fontSize: "28px",
+      fontWeight: "900",
+      marginBottom: "16px",
+    }}
+  >
+    {primeProfile || "Profil en cours d'analyse"}
+  </p>
+
+  <p style={text}>
+    Focus du jour : {getFocusMessage()}
+  </p>
+</section>
           <section style={card}>
             <h2 style={title}>Résumé PRIME</h2>
 
