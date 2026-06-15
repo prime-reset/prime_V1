@@ -372,24 +372,7 @@ if (shouldComplete) {
             <br />
             Session clôturée.
           </h1>
-<section style={card}>
-  <h2 style={title}>Identité active</h2>
 
-  <p
-    style={{
-      color: "#D4B06A",
-      fontSize: "28px",
-      fontWeight: "900",
-      marginBottom: "16px",
-    }}
-  >
-    {primeProfile || "Profil en cours d'analyse"}
-  </p>
-
-  <p style={text}>
-    Focus du jour : {getFocusMessage()}
-  </p>
-</section>
           <section style={card}>
             <h2 style={title}>Résumé PRIME</h2>
 
@@ -429,7 +412,24 @@ if (shouldComplete) {
           <br />
           Trading
         </h1>
+<section style={card}>
+  <h2 style={title}>Identité active</h2>
 
+  <p
+    style={{
+      color: "#D4B06A",
+      fontSize: "28px",
+      fontWeight: "900",
+      marginBottom: "16px",
+    }}
+  >
+    {primeProfile || "Profil en cours d'analyse"}
+  </p>
+
+  <p style={text}>
+    Focus du jour : {getFocusMessage()}
+  </p>
+</section>
         {activePrescription && (
           <section style={card}>
             <h2 style={title}>Prescription active</h2>
