@@ -22,7 +22,8 @@ export default function CoachPage() {
   const [loading, setLoading] = useState(true);
   const [creationChecked, setCreationChecked] = useState(false);
   const [identitySnapshotChecked, setIdentitySnapshotChecked] = useState(false);
-
+const [identityHistory, setIdentityHistory] = useState([]);
+  
   useEffect(() => {
     loadCoachData();
   }, []);
@@ -58,7 +59,14 @@ export default function CoachPage() {
       .order("created_at", { ascending: false });
 
     if (sessionsData) setSessions(sessionsData);
+const { data: identityData } = await supabase
+  .from("prime_identity_history")
+  .select("*")
+  .eq("user_id", user.id)
+  .order("created_at", { ascending: false })
+  .limit(2);
 
+if (identityData) setIdentityHistory(identityData);
     const { data: activeData } = await supabase
       .from("prescriptions")
       .select("*")
@@ -657,7 +665,69 @@ export default function CoachPage() {
 
           <div className="mission">{primeIdentity.mission}</div>
         </section>
+{identityHistory.length > 0 && (
+  <section className="card">
+    <div className="icon-box">
+      <Crown size={28} />
+    </div>
 
+    <div className="card-label">
+      ÉVOLUTION PRIME
+    </div>
+
+    <h2 className="card-title">
+      {identityHistory[0]?.profile}
+    </h2>
+
+    <p className="card-text">
+      PRIME conserve une trace de ton évolution comportementale.
+    </p>
+
+    <div className="identity-grid">
+
+      <div className="identity-item">
+        <div className="identity-label">
+          Profil précédent
+        </div>
+
+        <div className="identity-value">
+          {identityHistory[1]?.profile || "Premier profil"}
+        </div>
+      </div>
+
+      <div className="identity-item">
+        <div className="identity-label">
+          Progression
+        </div>
+
+        <div className="identity-value">
+          {identityHistory[0]?.progression || 0}%
+        </div>
+      </div>
+
+      <div className="identity-item">
+        <div className="identity-label">
+          Sessions analysées
+        </div>
+
+        <div className="identity-value">
+          {identityHistory[0]?.total_sessions || 0}
+        </div>
+      </div>
+
+      <div className="identity-item">
+        <div className="identity-label">
+          Score moyen
+        </div>
+
+        <div className="identity-value">
+          {identityHistory[0]?.discipline_average || 0}%
+        </div>
+      </div>
+
+    </div>
+  </section>
+)}
         <section className="grid">
           <div className="mini-card">
             <Activity size={24} color="#D4B06A" />
