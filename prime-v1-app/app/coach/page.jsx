@@ -695,16 +695,16 @@ if (identityData) setIdentityHistory(identityData);
         </div>
       </div>
 
-      <div className="identity-item">
-        <div className="identity-label">
-          Progression
-        </div>
+    <div className="identity-item">
+  <div className="identity-label">
+    Niveau actuel
+  </div>
 
-        <div className="identity-value">
-          {identityHistory[0]?.progression || 0}%
-        </div>
-      </div>
-
+  <div className="identity-value">
+    Confirmé
+  </div>
+</div>
+      
       <div className="identity-item">
         <div className="identity-label">
           Sessions analysées
