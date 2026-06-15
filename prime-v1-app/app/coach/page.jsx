@@ -21,6 +21,7 @@ export default function CoachPage() {
   const [prescriptionHistory, setPrescriptionHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creationChecked, setCreationChecked] = useState(false);
+  const [identitySnapshotChecked, setIdentitySnapshotChecked] = useState(false);
 
   useEffect(() => {
     loadCoachData();
@@ -32,6 +33,13 @@ export default function CoachPage() {
       setCreationChecked(true);
     }
   }, [loading, sessions, creationChecked]);
+
+  useEffect(() => {
+    if (!loading && sessions.length >= 5 && !identitySnapshotChecked) {
+      saveIdentitySnapshot();
+      setIdentitySnapshotChecked(true);
+    }
+  }, [loading, sessions, identitySnapshotChecked]);
 
   const loadCoachData = async () => {
     const {
@@ -179,6 +187,68 @@ export default function CoachPage() {
 
     if (error) {
       console.error("Erreur création prescription :", error.message);
+    }
+  };
+
+  const saveIdentitySnapshot = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+    if (sessions.length < 5) return;
+
+    const currentScores = sessions
+      .map((s) => Number(s.discipline_score))
+      .filter((score) => !Number.isNaN(score));
+
+    const currentAverage =
+      currentScores.length > 0
+        ? Math.round(
+            currentScores.reduce((a, b) => a + b, 0) / currentScores.length
+          )
+        : 0;
+
+    const currentDominantError = getDominantValue(
+      sessions.map((s) => s.dominant_error).filter(Boolean)
+    );
+
+    const currentIdentity = getPrimeIdentity(
+      sessions,
+      currentAverage,
+      currentDominantError
+    );
+
+    const { data: lastIdentity } = await supabase
+      .from("prime_identity_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (lastIdentity?.profile === currentIdentity.profile) {
+      return;
+    }
+
+    const progression =
+      currentAverage - Number(lastIdentity?.discipline_average || 0);
+
+    const { error } = await supabase.from("prime_identity_history").insert([
+      {
+        user_id: user.id,
+        profile: currentIdentity.profile,
+        previous_profile: lastIdentity?.profile || null,
+        progression: Math.round(progression),
+        confidence_score: currentAverage,
+        total_sessions: sessions.length,
+        discipline_average: currentAverage,
+        dominant_error: currentDominantError || null,
+      },
+    ]);
+
+    if (error) {
+      console.error("Erreur sauvegarde identité PRIME :", error.message);
     }
   };
 
@@ -748,7 +818,6 @@ function getDominantValue(values) {
 
 function getPrimeIdentity(sessions, averageScore, dominantError) {
   const errors = sessions.map((s) => s.dominant_error).filter(Boolean);
-
   const count = (value) => errors.filter((e) => e === value).length;
 
   const revengeCount = count("Revenge trade");
