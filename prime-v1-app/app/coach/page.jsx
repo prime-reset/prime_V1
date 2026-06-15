@@ -227,6 +227,11 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
+    console.log("IDENTITY SNAPSHOT TEST", {
+  sessions: sessions.length,
+  currentProfile: currentIdentity.profile,
+  lastProfile: lastIdentity?.profile,
+});
     if (lastIdentity?.profile === currentIdentity.profile) {
       return;
     }
@@ -248,8 +253,10 @@ export default function CoachPage() {
     ]);
 
     if (error) {
-      console.error("Erreur sauvegarde identité PRIME :", error.message);
-    }
+  console.error("Erreur sauvegarde identité PRIME :", error.message);
+} else {
+  console.log("Identité PRIME sauvegardée ✅");
+}
   };
 
   const scores = sessions
