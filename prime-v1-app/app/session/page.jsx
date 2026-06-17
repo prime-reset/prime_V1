@@ -180,13 +180,44 @@ if (shouldComplete) {
   };
 
   const calculateScore = (updatedChecks, updatedMistakes) => {
-    const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
-    const baseScore = Math.round((checkedCount / checklist.length) * 100);
-    const mistakeCount = Object.values(updatedMistakes).filter(Boolean).length;
-    const malus = mistakeCount * 15;
+  const checkedCount =
+    Object.values(updatedChecks).filter(Boolean).length;
 
-    return Math.max(baseScore - malus, 0);
-  };
+  const baseScore = Math.round(
+    (checkedCount / checklist.length) * 100
+  );
+
+  let malus = 0;
+
+  Object.entries(updatedMistakes).forEach(([mistake, active]) => {
+    if (!active) return;
+
+    if (primeProfile === "Trader Impulsif") {
+      if (mistake === "Revenge trade") malus += 25;
+      else if (mistake === "Overtrading") malus += 20;
+      else if (mistake === "Entrée FOMO") malus += 10;
+      else malus += 15;
+    }
+
+    else if (primeProfile === "Trader FOMO") {
+      if (mistake === "Entrée FOMO") malus += 25;
+      else if (mistake === "Revenge trade") malus += 10;
+      else malus += 15;
+    }
+
+    else if (primeProfile === "Trader Désorganisé") {
+      if (mistake === "Trade hors plan") malus += 25;
+      else if (mistake === "Stop déplacé") malus += 20;
+      else malus += 15;
+    }
+
+    else {
+      malus += 15;
+    }
+  });
+
+  return Math.max(baseScore - malus, 0);
+};
 
   const getActiveSessionId = async () => {
     if (activeSessionId) return activeSessionId;
