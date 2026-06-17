@@ -494,16 +494,7 @@ if (shouldComplete) {
           )}
         </section>
 
-        <section style={card}>
-          <h2 style={title}>Discipline Score</h2>
-          <p style={scoreText}>{disciplineScore}%</p>
-          <p style={text}>
-            Ton score évolue selon le respect de ton process et tes erreurs
-            comportementales.
-          </p>
-        </section>
-
-        <section style={card}>
+              <section style={card}>
           <h2 style={title}>Checklist pré-trade</h2>
           <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
 
@@ -536,7 +527,16 @@ if (shouldComplete) {
             </div>
           ))}
         </section>
-
+        
+<section style={card}>
+  <h2 style={title}>Discipline Score</h2>
+  <p style={scoreText}>{disciplineScore}%</p>
+  <p style={text}>
+    Ton score évolue selon le respect de ton process et tes erreurs
+    comportementales.
+  </p>
+</section>
+        
         <section style={card}>
           <h2 style={title}>Fin de session</h2>
           <p style={text}>
