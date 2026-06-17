@@ -22,8 +22,8 @@ export default function CoachPage() {
   const [loading, setLoading] = useState(true);
   const [creationChecked, setCreationChecked] = useState(false);
   const [identitySnapshotChecked, setIdentitySnapshotChecked] = useState(false);
-const [identityHistory, setIdentityHistory] = useState([]);
-  
+  const [identityHistory, setIdentityHistory] = useState([]);
+
   useEffect(() => {
     loadCoachData();
   }, []);
@@ -59,14 +59,16 @@ const [identityHistory, setIdentityHistory] = useState([]);
       .order("created_at", { ascending: false });
 
     if (sessionsData) setSessions(sessionsData);
-const { data: identityData } = await supabase
-  .from("prime_identity_history")
-  .select("*")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false })
-  .limit(2);
 
-if (identityData) setIdentityHistory(identityData);
+    const { data: identityData } = await supabase
+      .from("prime_identity_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(2);
+
+    if (identityData) setIdentityHistory(identityData);
+
     const { data: activeData } = await supabase
       .from("prescriptions")
       .select("*")
@@ -235,11 +237,6 @@ if (identityData) setIdentityHistory(identityData);
       .limit(1)
       .maybeSingle();
 
-    console.log("IDENTITY SNAPSHOT TEST", {
-  sessions: sessions.length,
-  currentProfile: currentIdentity.profile,
-  lastProfile: lastIdentity?.profile,
-});
     if (lastIdentity?.profile === currentIdentity.profile) {
       return;
     }
@@ -261,10 +258,8 @@ if (identityData) setIdentityHistory(identityData);
     ]);
 
     if (error) {
-  console.error("Erreur sauvegarde identité PRIME :", error.message);
-} else {
-  console.log("Identité PRIME sauvegardée ✅");
-}
+      console.error("Erreur sauvegarde identité PRIME :", error.message);
+    }
   };
 
   const scores = sessions
@@ -293,6 +288,7 @@ if (identityData) setIdentityHistory(identityData);
     dominantError,
     sessionsCount: sessions.length,
     detectedPattern,
+    primeIdentity,
   });
 
   const displayedPrescription = activePrescription || completedPrescription;
@@ -429,20 +425,23 @@ if (identityData) setIdentityHistory(identityData);
           color: rgba(255,255,255,0.74);
         }
 
-        .diagnostic-grid, .identity-grid {
+        .diagnostic-grid,
+        .identity-grid {
           margin-top: 24px;
           display: grid;
           gap: 12px;
         }
 
-        .diagnostic-item, .identity-item {
+        .diagnostic-item,
+        .identity-item {
           padding: 14px;
           border-radius: 18px;
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .diagnostic-label, .identity-label {
+        .diagnostic-label,
+        .identity-label {
           color: rgba(212,176,106,0.82);
           font-size: 12px;
           letter-spacing: 2px;
@@ -450,7 +449,8 @@ if (identityData) setIdentityHistory(identityData);
           margin-bottom: 8px;
         }
 
-        .diagnostic-value, .identity-value {
+        .diagnostic-value,
+        .identity-value {
           font-size: 18px;
           font-weight: 800;
           color: white;
@@ -665,69 +665,61 @@ if (identityData) setIdentityHistory(identityData);
 
           <div className="mission">{primeIdentity.mission}</div>
         </section>
-{identityHistory.length > 0 && (
-  <section className="card">
-    <div className="icon-box">
-      <Crown size={28} />
-    </div>
 
-    <div className="card-label">
-      ÉVOLUTION PRIME
-    </div>
+        {identityHistory.length > 0 && (
+          <section className="card">
+            <div className="icon-box">
+              <Crown size={28} />
+            </div>
 
-    <h2 className="card-title">
-      {identityHistory[0]?.profile}
-    </h2>
+            <div className="card-label">ÉVOLUTION PRIME</div>
 
-    <p className="card-text">
-      PRIME conserve une trace de ton évolution comportementale.
-    </p>
+            <h2 className="card-title">{identityHistory[0]?.profile}</h2>
 
-    <div className="identity-grid">
+            <p className="card-text">
+              PRIME conserve une trace de ton évolution comportementale.
+            </p>
 
-      <div className="identity-item">
-        <div className="identity-label">
-          Profil précédent
-        </div>
+            <div className="identity-grid">
+              <div className="identity-item">
+                <div className="identity-label">Profil précédent</div>
 
-        <div className="identity-value">
-          {identityHistory[1]?.profile || "Premier profil"}
-        </div>
-      </div>
+                <div className="identity-value">
+                  {identityHistory[1]?.profile || "Premier profil"}
+                </div>
+              </div>
 
-    <div className="identity-item">
-  <div className="identity-label">
-    Niveau actuel
-  </div>
+              <div className="identity-item">
+                <div className="identity-label">Niveau actuel</div>
 
-  <div className="identity-value">
-    Confirmé
-  </div>
-</div>
-      
-      <div className="identity-item">
-        <div className="identity-label">
-          Sessions analysées
-        </div>
+                <div className="identity-value">
+                  {identityHistory[0]?.confidence_score >= 80
+                    ? "Élevé"
+                    : identityHistory[0]?.confidence_score >= 60
+                    ? "Confirmé"
+                    : "En construction"}
+                </div>
+              </div>
 
-        <div className="identity-value">
-          {identityHistory[0]?.total_sessions || 0}
-        </div>
-      </div>
+              <div className="identity-item">
+                <div className="identity-label">Sessions analysées</div>
 
-      <div className="identity-item">
-        <div className="identity-label">
-          Score moyen
-        </div>
+                <div className="identity-value">
+                  {identityHistory[0]?.total_sessions || 0}
+                </div>
+              </div>
 
-        <div className="identity-value">
-          {identityHistory[0]?.discipline_average || 0}%
-        </div>
-      </div>
+              <div className="identity-item">
+                <div className="identity-label">Score moyen</div>
 
-    </div>
-  </section>
-)}
+                <div className="identity-value">
+                  {identityHistory[0]?.discipline_average || 0}%
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="grid">
           <div className="mini-card">
             <Activity size={24} color="#D4B06A" />
@@ -780,7 +772,8 @@ if (identityData) setIdentityHistory(identityData);
               </p>
 
               <p className="card-text">
-                {complianceDays} jour(s) respecté(s) · {missedDays} jour(s) non respecté(s)
+                {complianceDays} jour(s) respecté(s) · {missedDays} jour(s) non
+                respecté(s)
               </p>
 
               {isCompleted && displayedPrescription.result === "success" && (
@@ -800,9 +793,9 @@ if (identityData) setIdentityHistory(identityData);
           )}
 
           <p className="card-text">
-            Durée recommandée :{" "}
-            {displayedPrescription?.duration_days || 7} jours. PRIME ne cherche
-            pas à te faire trader plus, mais à te faire exécuter mieux.
+            Durée recommandée : {displayedPrescription?.duration_days || 7}{" "}
+            jours. PRIME ne cherche pas à te faire trader plus, mais à te faire
+            exécuter mieux.
           </p>
         </section>
 
@@ -908,19 +901,33 @@ function getPrimeIdentity(sessions, averageScore, dominantError) {
       profile: "Trader Patient",
       description:
         "Ton profil montre une bonne stabilité comportementale. Tu sembles capable de respecter ton cadre sans chercher à forcer le marché.",
-      strengths: ["Discipline stable", "Bonne patience", "Capacité à respecter le plan"],
-      weaknesses: ["Risque de relâchement", "Excès de confiance après une bonne série"],
+      strengths: [
+        "Discipline stable",
+        "Bonne patience",
+        "Capacité à respecter le plan",
+      ],
+      weaknesses: [
+        "Risque de relâchement",
+        "Excès de confiance après une bonne série",
+      ],
       mission: "Mission PRIME : maintenir ton cadre sans accélérer trop vite.",
     };
   }
 
-  if (revengeCount + overtradingCount >= fomoCount + offPlanCount + stopMovedCount) {
+  if (
+    revengeCount + overtradingCount >=
+    fomoCount + offPlanCount + stopMovedCount
+  ) {
     return {
       profile: "Trader Impulsif",
       description:
         "Ton profil montre une tendance à réagir vite sous pression. Tu peux être décisif, mais le risque est de transformer une émotion en décision de marché.",
       strengths: ["Réactivité", "Capacité à agir", "Énergie d’exécution"],
-      weaknesses: ["Revenge trading", "Suractivité", "Décisions prises sous émotion"],
+      weaknesses: [
+        "Revenge trading",
+        "Suractivité",
+        "Décisions prises sous émotion",
+      ],
       mission: "Mission PRIME : apprendre à ralentir avant d’agir.",
     };
   }
@@ -931,8 +938,12 @@ function getPrimeIdentity(sessions, averageScore, dominantError) {
       description:
         "Ton profil montre une sensibilité aux mouvements déjà lancés. Tu risques d’entrer pour ne pas rater, plutôt que parce que ton setup est complet.",
       strengths: ["Lecture rapide du momentum", "Réactivité au mouvement"],
-      weaknesses: ["Entrées précipitées", "Difficulté à laisser partir un mouvement"],
-      mission: "Mission PRIME : accepter qu’un trade manqué vaut mieux qu’un trade forcé.",
+      weaknesses: [
+        "Entrées précipitées",
+        "Difficulté à laisser partir un mouvement",
+      ],
+      mission:
+        "Mission PRIME : accepter qu’un trade manqué vaut mieux qu’un trade forcé.",
     };
   }
 
@@ -943,7 +954,8 @@ function getPrimeIdentity(sessions, averageScore, dominantError) {
         "Ton profil montre que le cadre n’est pas encore assez solide. Le problème prioritaire n’est pas la stratégie, mais l’exécution structurée.",
       strengths: ["Intuition de marché", "Capacité d’adaptation"],
       weaknesses: ["Plan non respecté", "Checklist fragile", "Manque de structure"],
-      mission: "Mission PRIME : stabiliser ton process avant de chercher plus de performance.",
+      mission:
+        "Mission PRIME : stabiliser ton process avant de chercher plus de performance.",
     };
   }
 
@@ -953,7 +965,11 @@ function getPrimeIdentity(sessions, averageScore, dominantError) {
       description:
         "Ton profil montre une tendance à négocier avec le risque après l’entrée. Ton enjeu principal est de rendre ton invalidation non négociable.",
       strengths: ["Courage d’exécution", "Tolérance à la pression"],
-      weaknesses: ["Stop déplacé", "Risque excessif", "Difficulté à accepter l’invalidation"],
+      weaknesses: [
+        "Stop déplacé",
+        "Risque excessif",
+        "Difficulté à accepter l’invalidation",
+      ],
       mission: "Mission PRIME : rendre ton stop sacré.",
     };
   }
@@ -964,7 +980,8 @@ function getPrimeIdentity(sessions, averageScore, dominantError) {
       "PRIME collecte encore tes données comportementales. Ton identité deviendra plus précise à mesure que tu clôtures tes sessions.",
     strengths: ["Volonté de progresser", "Données en construction"],
     weaknesses: ["Profil encore instable", "Besoin de plus d’historique"],
-    mission: "Mission PRIME : créer assez de données honnêtes pour révéler ton vrai profil.",
+    mission:
+      "Mission PRIME : créer assez de données honnêtes pour révéler ton vrai profil.",
   };
 }
 
@@ -1037,6 +1054,7 @@ function getCoachAnalysis({
   dominantError,
   sessionsCount,
   detectedPattern,
+  primeIdentity,
 }) {
   if (!sessionsCount) {
     return {
@@ -1044,14 +1062,44 @@ function getCoachAnalysis({
       analysis:
         "Lance une session PRIME pour que le coach commence à lire ton comportement réel.",
       prescription:
-        "Active une session, renseigne ton état mental, coche ta checklist et note tes erreurs.",
+        "Lance une session, renseigne ton état mental, coche ta checklist et note tes erreurs.",
       focusTitle: "Créer la première donnée",
       focus:
         "La première étape n’est pas de performer. C’est de créer une base de données comportementale fiable.",
     };
   }
 
+  const profile = primeIdentity?.profile;
+
   if (detectedPattern?.type === "revenge_trading") {
+    if (profile === "Trader Impulsif") {
+      return {
+        title: "Impulsivité détectée",
+        analysis:
+          detectedPattern.reason +
+          " Ton profil impulsif transforme rapidement une perte en besoin d’action. Le problème n’est pas le marché, c’est la vitesse de réaction après frustration.",
+        prescription:
+          "Après une perte : pause obligatoire de 20 minutes. Aucun trade sans confirmation complète du setup.",
+        focusTitle: "Ralentis avant d’agir.",
+        focus:
+          "Ton edge ne disparaît pas parce que tu attends. Il disparaît quand tu veux réparer trop vite.",
+      };
+    }
+
+    if (profile === "Trader FOMO") {
+      return {
+        title: "Réaction émotionnelle détectée",
+        analysis:
+          detectedPattern.reason +
+          " Ton profil FOMO peut transformer une perte en peur de rater le prochain mouvement. Tu risques de rentrer pour compenser, pas pour exécuter.",
+        prescription:
+          "Après une perte : interdiction de reprendre un trade tant que le setup complet n’est pas revenu.",
+        focusTitle: "Un trade raté vaut mieux qu’un trade forcé.",
+        focus:
+          "Tu n’as pas besoin d’être dans chaque mouvement. Tu dois être dans les bons.",
+      };
+    }
+
     return {
       title: detectedPattern.title,
       analysis:
@@ -1066,6 +1114,34 @@ function getCoachAnalysis({
   }
 
   if (detectedPattern?.type === "overtrading") {
+    if (profile === "Trader Impulsif") {
+      return {
+        title: "Suractivité impulsive détectée",
+        analysis:
+          detectedPattern.reason +
+          " Ton profil impulsif a tendance à confondre action et contrôle. Plus tu trades, plus tu réduis la qualité de ton exécution.",
+        prescription:
+          "Maximum 2 trades par session pendant 7 jours. Aucun trade supplémentaire même si le marché bouge.",
+        focusTitle: "Moins d’actions. Plus de maîtrise.",
+        focus:
+          "Tu n’as pas besoin de trader plus. Tu as besoin d’attendre mieux.",
+      };
+    }
+
+    if (profile === "Trader FOMO") {
+      return {
+        title: "FOMO déguisé en activité détecté",
+        analysis:
+          detectedPattern.reason +
+          " Ton overtrading peut venir d’une peur de manquer une opportunité. Tu trades pour être présente, pas toujours parce que le setup est complet.",
+        prescription:
+          "Pendant 7 jours : maximum 1 trade si le setup n’est pas noté avant l’entrée.",
+        focusTitle: "Laisse passer sans culpabilité.",
+        focus:
+          "Le marché offrira d’autres occasions. Ton capital mental, lui, doit être protégé.",
+      };
+    }
+
     return {
       title: detectedPattern.title,
       analysis:
@@ -1079,6 +1155,34 @@ function getCoachAnalysis({
   }
 
   if (detectedPattern?.type === "low_discipline_streak") {
+    if (profile === "Trader Désorganisé") {
+      return {
+        title: "Cadre insuffisant détecté",
+        analysis:
+          detectedPattern.reason +
+          " Ton profil désorganisé montre que le problème principal vient d’un manque de structure avant l’entrée. Sans plan écrit, chaque trade devient négociable.",
+        prescription:
+          "Pendant 7 jours : scénario écrit, invalidation définie et risque calculé avant chaque trade.",
+        focusTitle: "Écris le plan avant d’exécuter.",
+        focus:
+          "Un trade sans cadre n’est pas une opportunité. C’est une exposition au hasard.",
+      };
+    }
+
+    if (profile === "Trader Impulsif") {
+      return {
+        title: "Discipline sous pression détectée",
+        analysis:
+          detectedPattern.reason +
+          " Ton profil impulsif perd surtout en qualité quand l’émotion accélère la décision. Le cadre doit te ralentir avant l’action.",
+        prescription:
+          "Checklist complète obligatoire avant chaque trade pendant 7 jours. Aucun clic sans validation mentale.",
+        focusTitle: "Le cadre avant le clic.",
+        focus:
+          "Tu ne dois pas aller plus vite que ton process. C’est lui qui protège ton capital.",
+      };
+    }
+
     return {
       title: detectedPattern.title,
       analysis:
