@@ -471,24 +471,7 @@ if (shouldComplete) {
           </section>
         )}
 
-        <section style={card}>
-          <h2 style={title}>Discipline</h2>
-          <p style={text}>
-            Active ton mode discipline avant de commencer ta session de trading.
-          </p>
-
-          <button
-            onClick={activateDiscipline}
-            style={{
-              ...button,
-              background: discipline ? "#123d22" : "#D4B06A",
-              color: discipline ? "#7DFFA1" : "#000",
-            }}
-          >
-            {discipline ? "🟢 Discipline activée" : "Activer ma discipline"}
-          </button>
-        </section>
-
+      
         <section style={card}>
           <h2 style={title}>État mental</h2>
           <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
