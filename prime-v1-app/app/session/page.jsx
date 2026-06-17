@@ -13,82 +13,13 @@ export default function SessionPage() {
   const [sessionFinished, setSessionFinished] = useState(false);
   const [activePrescription, setActivePrescription] = useState(null);
   const [prescriptionAnswered, setPrescriptionAnswered] = useState(false);
-const [primeProfile, setPrimeProfile] = useState(null);
-  
+  const [primeProfile, setPrimeProfile] = useState(null);
+
+  const today = new Date().toISOString().split("T")[0];
+
   useEffect(() => {
     loadActivePrescription();
   }, []);
-
- const getChecklistByProfile = () => {
-  switch (primeProfile) {
-
-    case "Trader Impulsif":
-      return [
-        "J’ai attendu mon setup complet",
-        "Je ne trade pas une émotion",
-        "Je ne suis pas en revenge trade",
-        "Mon risque est défini",
-        "Mon invalidation est définie",
-        "Je respecte mon cadre",
-      ];
-
-    case "Trader Désorganisé":
-      return [
-        "Mon scénario est écrit",
-        "Mon invalidation est définie",
-        "Mon risque est calculé",
-        "J’ai identifié la tendance HTF",
-        "J’ai identifié les liquidités",
-        "Je sais exactement pourquoi j'entre",
-      ];
-
-    case "Trader FOMO":
-      return [
-        "J’ai attendu la confirmation",
-        "Je n’anticipe pas le mouvement",
-        "Le setup est complet",
-        "J’accepte de rater un trade",
-        "Mon entrée est validée",
-        "Je respecte mon plan",
-      ];
-
-    default:
-      return [
-        "J’ai identifié la tendance HTF",
-        "J’ai repéré les zones de liquidité",
-        "J’ai défini mon scénario principal",
-        "J’ai défini mon invalidation",
-        "Je connais mon risque max",
-        "Je ne trade pas par impatience",
-      ];
-  }
-};
-
-const checklist = getChecklistByProfile();
-const getFocusMessage = () => {
-  switch (primeProfile) {
-    case "Trader Impulsif":
-      return "Attendre la confirmation avant d'agir.";
-
-    case "Trader Désorganisé":
-      return "Structurer le plan avant l'exécution.";
-
-    case "Trader FOMO":
-      return "Accepter de laisser partir les opportunités.";
-
-    default:
-      return "Respecter le process avant le résultat.";
-  }
-};
-  const mistakesList = [
-    "Revenge trade",
-    "Overtrading",
-    "Entrée FOMO",
-    "Stop déplacé",
-    "Trade hors plan",
-  ];
-
-  const today = new Date().toISOString().split("T")[0];
 
   const loadActivePrescription = async () => {
     const {
@@ -96,17 +27,19 @@ const getFocusMessage = () => {
     } = await supabase.auth.getUser();
 
     if (!user) return;
-const { data: profileData } = await supabase
-  .from("prime_identity_history")
-  .select("*")
-  .eq("user_id", user.id)
-  .order("created_at", { ascending: false })
-  .limit(1)
-  .maybeSingle();
 
-if (profileData) {
-  setPrimeProfile(profileData.profile);
-}
+    const { data: profileData } = await supabase
+      .from("prime_identity_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (profileData) {
+      setPrimeProfile(profileData.profile);
+    }
+
     const { data } = await supabase
       .from("prescriptions")
       .select("*")
@@ -120,6 +53,161 @@ if (profileData) {
       setActivePrescription(data);
       setPrescriptionAnswered(data.last_check_date === today);
     }
+  };
+
+  const getChecklistByProfile = () => {
+    switch (primeProfile) {
+      case "Trader Impulsif":
+        return [
+          "J’ai attendu mon setup complet",
+          "Je ne trade pas une émotion",
+          "Je ne suis pas en revenge trade",
+          "Mon risque est défini",
+          "Mon invalidation est définie",
+          "Je respecte mon cadre",
+        ];
+
+      case "Trader Désorganisé":
+        return [
+          "Mon scénario est écrit",
+          "Mon invalidation est définie",
+          "Mon risque est calculé",
+          "J’ai identifié la tendance HTF",
+          "J’ai identifié les liquidités",
+          "Je sais exactement pourquoi j'entre",
+        ];
+
+      case "Trader FOMO":
+        return [
+          "J’ai attendu la confirmation",
+          "Je n’anticipe pas le mouvement",
+          "Le setup est complet",
+          "J’accepte de rater un trade",
+          "Mon entrée est validée",
+          "Je respecte mon plan",
+        ];
+
+      default:
+        return [
+          "J’ai identifié la tendance HTF",
+          "J’ai repéré les zones de liquidité",
+          "J’ai défini mon scénario principal",
+          "J’ai défini mon invalidation",
+          "Je connais mon risque max",
+          "Je ne trade pas par impatience",
+        ];
+    }
+  };
+
+  const checklist = getChecklistByProfile();
+
+  const mistakesList = [
+    "Revenge trade",
+    "Overtrading",
+    "Entrée FOMO",
+    "Stop déplacé",
+    "Trade hors plan",
+  ];
+
+  const getFocusMessage = () => {
+    switch (primeProfile) {
+      case "Trader Impulsif":
+        return "Attendre la confirmation avant d'agir.";
+
+      case "Trader Désorganisé":
+        return "Structurer le plan avant l'exécution.";
+
+      case "Trader FOMO":
+        return "Accepter de laisser partir les opportunités.";
+
+      default:
+        return "Respecter le process avant le résultat.";
+    }
+  };
+
+  const calculateScore = (updatedChecks, updatedMistakes) => {
+    const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
+
+    const baseScore = Math.round((checkedCount / checklist.length) * 100);
+
+    let malus = 0;
+
+    Object.entries(updatedMistakes).forEach(([mistake, active]) => {
+      if (!active) return;
+
+      if (primeProfile === "Trader Impulsif") {
+        if (mistake === "Revenge trade") malus += 25;
+        else if (mistake === "Overtrading") malus += 20;
+        else if (mistake === "Entrée FOMO") malus += 10;
+        else malus += 15;
+      } else if (primeProfile === "Trader FOMO") {
+        if (mistake === "Entrée FOMO") malus += 25;
+        else if (mistake === "Revenge trade") malus += 10;
+        else malus += 15;
+      } else if (primeProfile === "Trader Désorganisé") {
+        if (mistake === "Trade hors plan") malus += 25;
+        else if (mistake === "Stop déplacé") malus += 20;
+        else malus += 15;
+      } else {
+        malus += 15;
+      }
+    });
+
+    return Math.max(baseScore - malus, 0);
+  };
+
+  const getActiveSessionId = async () => {
+    if (activeSessionId) return activeSessionId;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("Utilisateur non connecté");
+      return null;
+    }
+
+    const { data: existingSession } = await supabase
+      .from("sessions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingSession) {
+      setActiveSessionId(existingSession.id);
+      setDiscipline(true);
+      return existingSession.id;
+    }
+
+    const { data: newSession, error } = await supabase
+      .from("sessions")
+      .insert([
+        {
+          user_id: user.id,
+          discipline_active: true,
+          discipline_score: 0,
+          streak_gain: 1,
+          xp_gain: 40,
+          status: "active",
+          mental_state: null,
+          dominant_error: null,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      alert("Erreur création session : " + error.message);
+      return null;
+    }
+
+    setActiveSessionId(newSession.id);
+    setDiscipline(true);
+    return newSession.id;
   };
 
   const updatePrescriptionCompliance = async (respected) => {
@@ -139,22 +227,17 @@ if (profileData) {
 
     const totalCheckedDays = newComplianceDays + newMissedDays;
     const durationDays = activePrescription.duration_days || 7;
-
     const shouldComplete = totalCheckedDays >= durationDays;
 
-   let result = null;
+    let result = null;
 
-if (shouldComplete) {
-  const successRate = newComplianceDays / durationDays;
+    if (shouldComplete) {
+      const successRate = newComplianceDays / durationDays;
 
-  if (successRate >= 0.8) {
-    result = "success";
-  } else if (successRate >= 0.6) {
-    result = "partial";
-  } else {
-    result = "failed";
-  }
-}
+      if (successRate >= 0.8) result = "success";
+      else if (successRate >= 0.6) result = "partial";
+      else result = "failed";
+    }
 
     const { data, error } = await supabase
       .from("prescriptions")
@@ -179,126 +262,9 @@ if (shouldComplete) {
     setPrescriptionAnswered(true);
   };
 
-  const calculateScore = (updatedChecks, updatedMistakes) => {
-  const checkedCount =
-    Object.values(updatedChecks).filter(Boolean).length;
-
-  const baseScore = Math.round(
-    (checkedCount / checklist.length) * 100
-  );
-
-  let malus = 0;
-
-  Object.entries(updatedMistakes).forEach(([mistake, active]) => {
-    if (!active) return;
-
-    if (primeProfile === "Trader Impulsif") {
-      if (mistake === "Revenge trade") malus += 25;
-      else if (mistake === "Overtrading") malus += 20;
-      else if (mistake === "Entrée FOMO") malus += 10;
-      else malus += 15;
-    }
-
-    else if (primeProfile === "Trader FOMO") {
-      if (mistake === "Entrée FOMO") malus += 25;
-      else if (mistake === "Revenge trade") malus += 10;
-      else malus += 15;
-    }
-
-    else if (primeProfile === "Trader Désorganisé") {
-      if (mistake === "Trade hors plan") malus += 25;
-      else if (mistake === "Stop déplacé") malus += 20;
-      else malus += 15;
-    }
-
-    else {
-      malus += 15;
-    }
-  });
-
-  return Math.max(baseScore - malus, 0);
-};
-
-  const getActiveSessionId = async () => {
-    if (activeSessionId) return activeSessionId;
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return null;
-
-    const { data } = await supabase
-      .from("sessions")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (!data) return null;
-
-    setActiveSessionId(data.id);
-    setDiscipline(true);
-
-    return data.id;
-  };
-
-  const activateDiscipline = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      alert("Utilisateur non connecté");
-      return;
-    }
-
-    await supabase
-      .from("sessions")
-      .update({ status: "closed" })
-      .eq("user_id", user.id)
-      .eq("status", "active");
-
-    const { data, error } = await supabase
-      .from("sessions")
-      .insert([
-        {
-          user_id: user.id,
-          discipline_active: true,
-          discipline_score: 0,
-          streak_gain: 1,
-          xp_gain: 40,
-          status: "active",
-          mental_state: null,
-          dominant_error: null,
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      alert("Erreur création session : " + error.message);
-      return;
-    }
-
-    setActiveSessionId(data.id);
-    setDiscipline(true);
-    setMentalState("");
-    setDisciplineScore(0);
-    setChecked({});
-    setMistakes({});
-    setSessionFinished(false);
-  };
-
   const handleMentalState = async (state) => {
     const sessionId = await getActiveSessionId();
-
-    if (!sessionId) {
-      alert("Active d'abord ta discipline.");
-      return;
-    }
+    if (!sessionId) return;
 
     setMentalState(state);
 
@@ -310,11 +276,7 @@ if (shouldComplete) {
 
   const handleChecklist = async (item) => {
     const sessionId = await getActiveSessionId();
-
-    if (!sessionId) {
-      alert("Active d'abord ta discipline.");
-      return;
-    }
+    if (!sessionId) return;
 
     const updatedChecks = {
       ...checked,
@@ -334,11 +296,7 @@ if (shouldComplete) {
 
   const handleMistake = async (mistake) => {
     const sessionId = await getActiveSessionId();
-
-    if (!sessionId) {
-      alert("Active d'abord ta discipline.");
-      return;
-    }
+    if (!sessionId) return;
 
     const updatedMistakes = {
       ...mistakes,
@@ -406,7 +364,6 @@ if (shouldComplete) {
 
           <section style={card}>
             <h2 style={title}>Résumé PRIME</h2>
-
             <p style={text}>Score discipline : {disciplineScore}%</p>
             <p style={text}>État mental : {mentalState || "Non renseigné"}</p>
             <p style={text}>XP gagnée : +40 XP</p>
@@ -443,24 +400,24 @@ if (shouldComplete) {
           <br />
           Trading
         </h1>
-<section style={card}>
-  <h2 style={title}>Identité active</h2>
 
-  <p
-    style={{
-      color: "#D4B06A",
-      fontSize: "28px",
-      fontWeight: "900",
-      marginBottom: "16px",
-    }}
-  >
-    {primeProfile || "Profil en cours d'analyse"}
-  </p>
+        <section style={card}>
+          <h2 style={title}>Identité active</h2>
 
-  <p style={text}>
-    Focus du jour : {getFocusMessage()}
-  </p>
-</section>
+          <p
+            style={{
+              color: "#D4B06A",
+              fontSize: "28px",
+              fontWeight: "900",
+              marginBottom: "16px",
+            }}
+          >
+            {primeProfile || "Profil en cours d'analyse"}
+          </p>
+
+          <p style={text}>Focus du jour : {getFocusMessage()}</p>
+        </section>
+
         {activePrescription && (
           <section style={card}>
             <h2 style={title}>Prescription active</h2>
@@ -475,9 +432,7 @@ if (shouldComplete) {
             </p>
 
             {prescriptionAnswered ? (
-              <p style={successText}>
-                Prescription renseignée aujourd’hui ✅
-              </p>
+              <p style={successText}>Prescription renseignée aujourd’hui ✅</p>
             ) : (
               <>
                 <p style={text}>
@@ -502,7 +457,6 @@ if (shouldComplete) {
           </section>
         )}
 
-      
         <section style={card}>
           <h2 style={title}>État mental</h2>
           <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
@@ -525,7 +479,7 @@ if (shouldComplete) {
           )}
         </section>
 
-              <section style={card}>
+        <section style={card}>
           <h2 style={title}>Checklist pré-trade</h2>
           <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
 
@@ -535,7 +489,7 @@ if (shouldComplete) {
               onClick={() => handleChecklist(item)}
               style={checkItem}
             >
-              <span>{checked[item] ? "✅" : "⬜"}</span>
+              <span>{checked[item] ? "✅" : "◻️"}</span>
               <span>{item}</span>
             </div>
           ))}
@@ -553,21 +507,21 @@ if (shouldComplete) {
               onClick={() => handleMistake(mistake)}
               style={checkItem}
             >
-              <span>{mistakes[mistake] ? "❌" : "⬜"}</span>
+              <span>{mistakes[mistake] ? "🔥" : "◻️"}</span>
               <span>{mistake}</span>
             </div>
           ))}
         </section>
-        
-<section style={card}>
-  <h2 style={title}>Discipline Score</h2>
-  <p style={scoreText}>{disciplineScore}%</p>
-  <p style={text}>
-    Ton score évolue selon le respect de ton process et tes erreurs
-    comportementales.
-  </p>
-</section>
-        
+
+        <section style={card}>
+          <h2 style={title}>Discipline Score</h2>
+          <p style={scoreText}>{disciplineScore}%</p>
+          <p style={text}>
+            Ton score évolue selon le respect de ton process, ton identité PRIME
+            et tes erreurs comportementales.
+          </p>
+        </section>
+
         <section style={card}>
           <h2 style={title}>Fin de session</h2>
           <p style={text}>
@@ -575,7 +529,7 @@ if (shouldComplete) {
             données à PRIME Coach.
           </p>
 
-          <button onClick={finishSession} style={goldButton}>
+          <button style={goldButton} onClick={finishSession}>
             TERMINER MA SESSION
           </button>
         </section>
@@ -587,65 +541,52 @@ if (shouldComplete) {
 const page = {
   minHeight: "100vh",
   background: "#000",
-  color: "white",
-  padding: "42px 20px 120px",
+  color: "#fff",
+  padding: "28px 18px 120px",
+  fontFamily: "Inter, Arial, sans-serif",
 };
 
 const container = {
-  maxWidth: "680px",
+  maxWidth: "460px",
   margin: "0 auto",
-};
-
-const backButton = {
-  background: "transparent",
-  border: "1px solid rgba(212,176,106,0.22)",
-  color: "#D4B06A",
-  borderRadius: "999px",
-  padding: "10px 16px",
-  fontSize: "14px",
-  fontWeight: "700",
-  cursor: "pointer",
-  marginBottom: "24px",
 };
 
 const eyebrow = {
   color: "#D4B06A",
-  letterSpacing: "5px",
+  letterSpacing: "7px",
   fontSize: "14px",
+  marginTop: "34px",
+  marginBottom: "18px",
 };
 
 const heading = {
-  fontSize: "64px",
-  lineHeight: "0.95",
-  margin: "20px 0 36px",
-  fontWeight: "800",
+  fontSize: "58px",
+  lineHeight: "0.92",
+  fontWeight: "900",
+  letterSpacing: "-3px",
+  marginBottom: "34px",
 };
 
 const card = {
-  background: "rgba(20,20,20,0.95)",
-  border: "1px solid rgba(212,176,106,0.18)",
-  borderRadius: "32px",
   padding: "28px",
-  marginBottom: "24px",
+  marginBottom: "20px",
+  borderRadius: "30px",
+  background:
+    "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.78)",
+  border: "1px solid rgba(212,176,106,0.18)",
+  boxShadow: "0 20px 60px rgba(0,0,0,0.55)",
 };
 
 const title = {
   color: "#D4B06A",
-  fontSize: "22px",
-  marginBottom: "14px",
+  fontSize: "24px",
+  fontWeight: "900",
+  marginBottom: "16px",
 };
 
 const text = {
-  color: "#A5A5A5",
-  fontSize: "18px",
-  lineHeight: "1.6",
-  marginBottom: "22px",
-};
-
-const successText = {
-  color: "#7DFFA1",
+  color: "rgba(255,255,255,0.72)",
   fontSize: "17px",
-  fontWeight: "800",
   lineHeight: "1.6",
 };
 
@@ -653,69 +594,76 @@ const prescriptionRule = {
   color: "#fff",
   fontSize: "20px",
   fontWeight: "900",
-  lineHeight: "1.5",
-  marginBottom: "22px",
+  lineHeight: "1.45",
+  marginTop: "22px",
 };
 
 const scoreText = {
+  color: "#D4B06A",
   fontSize: "54px",
   fontWeight: "900",
-  color: "#D4B06A",
-  margin: "10px 0",
-};
-
-const button = {
-  width: "100%",
-  border: "none",
-  borderRadius: "18px",
-  padding: "18px",
-  fontSize: "16px",
-  fontWeight: "800",
-  cursor: "pointer",
-};
-
-const goldButton = {
-  width: "100%",
-  border: "none",
-  borderRadius: "18px",
-  padding: "18px",
-  fontSize: "16px",
-  fontWeight: "900",
-  cursor: "pointer",
-  background: "#D4B06A",
-  color: "#000",
-  marginBottom: "14px",
-};
-
-const secondaryButton = {
-  width: "100%",
-  border: "1px solid rgba(212,176,106,0.22)",
-  borderRadius: "18px",
-  padding: "18px",
-  fontSize: "16px",
-  fontWeight: "800",
-  cursor: "pointer",
-  background: "rgba(255,255,255,0.04)",
-  color: "#fff",
-  marginBottom: "14px",
+  margin: "20px 0",
 };
 
 const pill = {
-  border: "1px solid rgba(255,255,255,0.08)",
+  padding: "12px 18px",
   borderRadius: "999px",
-  padding: "12px 16px",
-  margin: "6px",
-  fontWeight: "700",
+  margin: "8px 8px 0 0",
+  border: "1px solid rgba(255,255,255,0.10)",
+  fontWeight: "800",
   cursor: "pointer",
 };
 
 const checkItem = {
   display: "flex",
-  gap: "12px",
+  gap: "14px",
   alignItems: "center",
   padding: "16px 0",
-  borderBottom: "1px solid rgba(255,255,255,0.06)",
-  color: "#fff",
+  borderBottom: "1px solid rgba(255,255,255,0.08)",
   fontSize: "16px",
+  fontWeight: "700",
   cursor: "pointer",
+};
+
+const goldButton = {
+  width: "100%",
+  marginTop: "18px",
+  padding: "17px",
+  borderRadius: "18px",
+  border: "none",
+  background: "#D4B06A",
+  color: "#000",
+  fontWeight: "900",
+  fontSize: "15px",
+  cursor: "pointer",
+};
+
+const secondaryButton = {
+  width: "100%",
+  marginTop: "12px",
+  padding: "17px",
+  borderRadius: "18px",
+  border: "1px solid rgba(212,176,106,0.25)",
+  background: "rgba(255,255,255,0.04)",
+  color: "#fff",
+  fontWeight: "900",
+  fontSize: "15px",
+  cursor: "pointer",
+};
+
+const backButton = {
+  padding: "10px 18px",
+  borderRadius: "999px",
+  border: "1px solid rgba(212,176,106,0.25)",
+  background: "transparent",
+  color: "#D4B06A",
+  fontWeight: "800",
+  cursor: "pointer",
+};
+
+const successText = {
+  color: "#7DFFA1",
+  fontSize: "17px",
+  fontWeight: "900",
+  marginTop: "20px",
 };
