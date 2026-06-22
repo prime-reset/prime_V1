@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function SessionPage() {
-  const [discipline, setDiscipline] = useState(false);
   const [mentalState, setMentalState] = useState("");
+  const [postMentalState, setPostMentalState] = useState("");
+  const [planRespected, setPlanRespected] = useState(null);
+  const [improvementNote, setImprovementNote] = useState("");
+  const [sessionPnl, setSessionPnl] = useState("");
   const [checked, setChecked] = useState({});
   const [mistakes, setMistakes] = useState({});
   const [disciplineScore, setDisciplineScore] = useState(0);
@@ -36,9 +39,7 @@ export default function SessionPage() {
       .limit(1)
       .maybeSingle();
 
-    if (profileData) {
-      setPrimeProfile(profileData.profile);
-    }
+    if (profileData) setPrimeProfile(profileData.profile);
 
     const { data } = await supabase
       .from("prescriptions")
@@ -113,21 +114,17 @@ export default function SessionPage() {
     switch (primeProfile) {
       case "Trader Impulsif":
         return "Attendre la confirmation avant d'agir.";
-
       case "Trader Désorganisé":
         return "Structurer le plan avant l'exécution.";
-
       case "Trader FOMO":
         return "Accepter de laisser partir les opportunités.";
-
       default:
         return "Respecter le process avant le résultat.";
     }
   };
 
-  const calculateScore = (updatedChecks, updatedMistakes) => {
+  const calculateScore = (updatedChecks, updatedMistakes, respectedPlan = planRespected) => {
     const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
-
     const baseScore = Math.round((checkedCount / checklist.length) * 100);
 
     let malus = 0;
@@ -152,6 +149,8 @@ export default function SessionPage() {
         malus += 15;
       }
     });
+
+    if (respectedPlan === false) malus += 20;
 
     return Math.max(baseScore - malus, 0);
   };
@@ -179,7 +178,6 @@ export default function SessionPage() {
 
     if (existingSession) {
       setActiveSessionId(existingSession.id);
-      setDiscipline(true);
       return existingSession.id;
     }
 
@@ -206,7 +204,6 @@ export default function SessionPage() {
     }
 
     setActiveSessionId(newSession.id);
-    setDiscipline(true);
     return newSession.id;
   };
 
@@ -233,7 +230,6 @@ export default function SessionPage() {
 
     if (shouldComplete) {
       const successRate = newComplianceDays / durationDays;
-
       if (successRate >= 0.8) result = "success";
       else if (successRate >= 0.6) result = "partial";
       else result = "failed";
@@ -278,11 +274,7 @@ export default function SessionPage() {
     const sessionId = await getActiveSessionId();
     if (!sessionId) return;
 
-    const updatedChecks = {
-      ...checked,
-      [item]: !checked[item],
-    };
-
+    const updatedChecks = { ...checked, [item]: !checked[item] };
     setChecked(updatedChecks);
 
     const score = calculateScore(updatedChecks, mistakes);
@@ -298,11 +290,7 @@ export default function SessionPage() {
     const sessionId = await getActiveSessionId();
     if (!sessionId) return;
 
-    const updatedMistakes = {
-      ...mistakes,
-      [mistake]: !mistakes[mistake],
-    };
-
+    const updatedMistakes = { ...mistakes, [mistake]: !mistakes[mistake] };
     setMistakes(updatedMistakes);
 
     const score = calculateScore(checked, updatedMistakes);
@@ -313,15 +301,31 @@ export default function SessionPage() {
     );
 
     const dominantError =
-      activeMistakes.length > 0
-        ? activeMistakes[activeMistakes.length - 1]
-        : null;
+      activeMistakes.length > 0 ? activeMistakes[activeMistakes.length - 1] : null;
 
     await supabase
       .from("sessions")
       .update({
         discipline_score: score,
         dominant_error: dominantError,
+      })
+      .eq("id", sessionId);
+  };
+
+  const handlePlanRespected = async (value) => {
+    const sessionId = await getActiveSessionId();
+    if (!sessionId) return;
+
+    setPlanRespected(value);
+
+    const score = calculateScore(checked, mistakes, value);
+    setDisciplineScore(score);
+
+    await supabase
+      .from("sessions")
+      .update({
+        plan_respected: value,
+        discipline_score: score,
       })
       .eq("id", sessionId);
   };
@@ -340,37 +344,72 @@ export default function SessionPage() {
         status: "closed",
         discipline_score: disciplineScore,
         mental_state: mentalState || null,
+        post_mental_state: postMentalState || null,
+        plan_respected: planRespected,
+        improvement_note: improvementNote || null,
+        session_pnl: sessionPnl === "" ? null : Number(sessionPnl),
       })
       .eq("id", sessionId);
 
     setSessionFinished(true);
   };
 
+  const startNewSession = () => {
+    setMentalState("");
+    setPostMentalState("");
+    setPlanRespected(null);
+    setImprovementNote("");
+    setSessionPnl("");
+    setChecked({});
+    setMistakes({});
+    setDisciplineScore(0);
+    setActiveSessionId(null);
+    setSessionFinished(false);
+  };
+
   if (sessionFinished) {
     return (
       <main style={page}>
         <div style={container}>
-          <button style={backButton} onClick={() => (window.location.href = "/")}>
-            ← Retour
-          </button>
-
-          <p style={eyebrow}>SESSION TERMINÉE</p>
+          <p style={eyebrow}>SESSION ENREGISTRÉE</p>
 
           <h1 style={heading}>
-            Bravo.
+            Résultat
             <br />
-            Session clôturée.
+            PRIME.
           </h1>
 
           <section style={card}>
-            <h2 style={title}>Résumé PRIME</h2>
-            <p style={text}>Score discipline : {disciplineScore}%</p>
-            <p style={text}>État mental : {mentalState || "Non renseigné"}</p>
-            <p style={text}>XP gagnée : +40 XP</p>
-            <p style={text}>Streak : +1 jour</p>
+            <h2 style={title}>Résumé psycho-financier</h2>
+
+            <p style={scoreText}>{disciplineScore}%</p>
+
+            <p style={text}>État mental pré-session : {mentalState || "Non renseigné"}</p>
+            <p style={text}>État mental post-session : {postMentalState || "Non renseigné"}</p>
+            <p style={text}>
+              Plan respecté :{" "}
+              {planRespected === true
+                ? "Oui"
+                : planRespected === false
+                ? "Non"
+                : "Non renseigné"}
+            </p>
+            <p style={text}>
+              PnL :{" "}
+              {sessionPnl !== ""
+                ? `${Number(sessionPnl) > 0 ? "+" : ""}${sessionPnl}€`
+                : "Non renseigné"}
+            </p>
+            <p style={text}>
+              À améliorer : {improvementNote || "Non renseigné"}
+            </p>
           </section>
 
-          <button style={goldButton} onClick={() => (window.location.href = "/coach")}>
+          <button style={goldButton} onClick={startNewSession}>
+            + ENREGISTRER UNE NOUVELLE SESSION
+          </button>
+
+          <button style={secondaryButton} onClick={() => (window.location.href = "/coach")}>
             Voir mon Coach
           </button>
 
@@ -379,7 +418,7 @@ export default function SessionPage() {
           </button>
 
           <button style={secondaryButton} onClick={() => (window.location.href = "/")}>
-            Retour Home
+            Terminer ma journée
           </button>
         </div>
       </main>
@@ -401,17 +440,12 @@ export default function SessionPage() {
           Trading
         </h1>
 
+        <div style={sectionLabel}>AVANT TRADE</div>
+
         <section style={card}>
           <h2 style={title}>Identité active</h2>
 
-          <p
-            style={{
-              color: "#D4B06A",
-              fontSize: "28px",
-              fontWeight: "900",
-              marginBottom: "16px",
-            }}
-          >
+          <p style={profileTitle}>
             {primeProfile || "Profil en cours d'analyse"}
           </p>
 
@@ -435,9 +469,7 @@ export default function SessionPage() {
               <p style={successText}>Prescription renseignée aujourd’hui ✅</p>
             ) : (
               <>
-                <p style={text}>
-                  As-tu respecté cette prescription aujourd’hui ?
-                </p>
+                <p style={text}>As-tu respecté cette prescription aujourd’hui ?</p>
 
                 <button
                   style={goldButton}
@@ -458,7 +490,7 @@ export default function SessionPage() {
         )}
 
         <section style={card}>
-          <h2 style={title}>État mental</h2>
+          <h2 style={title}>État mental pré-session</h2>
           <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
 
           {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
@@ -484,29 +516,64 @@ export default function SessionPage() {
           <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
 
           {checklist.map((item) => (
-            <div
-              key={item}
-              onClick={() => handleChecklist(item)}
-              style={checkItem}
-            >
+            <div key={item} onClick={() => handleChecklist(item)} style={checkItem}>
               <span>{checked[item] ? "✅" : "◻️"}</span>
               <span>{item}</span>
             </div>
           ))}
         </section>
 
+        <div style={sectionLabel}>APRÈS TRADE / DÉBRIEF</div>
+
+        <section style={card}>
+          <h2 style={title}>État mental post-session</h2>
+          <p style={text}>Dans quel état tu ressors de ce trade ou de cette session ?</p>
+
+          {["Satisfaite", "Neutre", "Frustrée", "Stressée", "Fière", "Déçue"].map(
+            (state) => (
+              <button
+                key={state}
+                onClick={() => setPostMentalState(state)}
+                style={{
+                  ...pill,
+                  background:
+                    postMentalState === state ? "#D4B06A" : "rgba(255,255,255,0.06)",
+                  color: postMentalState === state ? "#000" : "#fff",
+                }}
+              >
+                {state}
+              </button>
+            )
+          )}
+        </section>
+
+        <section style={card}>
+          <h2 style={title}>Respect du plan</h2>
+          <p style={text}>As-tu respecté ton plan sur cette session ?</p>
+
+          <button
+            style={planRespected === true ? goldButton : secondaryButton}
+            onClick={() => handlePlanRespected(true)}
+          >
+            Oui, plan respecté
+          </button>
+
+          <button
+            style={planRespected === false ? dangerButton : secondaryButton}
+            onClick={() => handlePlanRespected(false)}
+          >
+            Non, hors plan
+          </button>
+        </section>
+
         <section style={card}>
           <h2 style={title}>Erreurs comportementales</h2>
           <p style={text}>
-            PRIME détecte les comportements qui détruisent ta discipline.
+            Coche les comportements qui se sont produits pendant cette session.
           </p>
 
           {mistakesList.map((mistake) => (
-            <div
-              key={mistake}
-              onClick={() => handleMistake(mistake)}
-              style={checkItem}
-            >
+            <div key={mistake} onClick={() => handleMistake(mistake)} style={checkItem}>
               <span>{mistakes[mistake] ? "🔥" : "◻️"}</span>
               <span>{mistake}</span>
             </div>
@@ -514,23 +581,53 @@ export default function SessionPage() {
         </section>
 
         <section style={card}>
+          <h2 style={title}>Amélioration</h2>
+          <p style={text}>Qu’est-ce que tu dois améliorer sur la prochaine session ?</p>
+
+          <textarea
+            value={improvementNote}
+            onChange={(e) => setImprovementNote(e.target.value)}
+            placeholder="Ex : attendre le pullback complet, réduire la taille, ne pas reprendre après une perte..."
+            style={textarea}
+          />
+        </section>
+
+        <section style={card}>
+          <h2 style={title}>PnL de la session</h2>
+          <p style={text}>
+            Note ton résultat financier. PRIME ne te juge pas sur le PnL, mais il
+            relie ta discipline à tes résultats.
+          </p>
+
+          <input
+            type="number"
+            value={sessionPnl}
+            onChange={(e) => setSessionPnl(e.target.value)}
+            placeholder="Ex : 150 ou -80"
+            style={input}
+          />
+        </section>
+
+        <div style={sectionLabel}>RÉSULTAT PRIME</div>
+
+        <section style={card}>
           <h2 style={title}>Discipline Score</h2>
           <p style={scoreText}>{disciplineScore}%</p>
           <p style={text}>
-            Ton score évolue selon le respect de ton process, ton identité PRIME
-            et tes erreurs comportementales.
+            Ton score évolue selon le respect de ton process, ton identité PRIME,
+            ton plan et tes erreurs comportementales.
           </p>
         </section>
 
         <section style={card}>
-          <h2 style={title}>Fin de session</h2>
+          <h2 style={title}>Enregistrer</h2>
           <p style={text}>
-            Lorsque ton trading est terminé, clôture la session pour envoyer les
-            données à PRIME Coach.
+            Enregistre cette session. Tu pourras ensuite ajouter une nouvelle
+            session si tu prends un autre trade aujourd’hui.
           </p>
 
           <button style={goldButton} onClick={finishSession}>
-            TERMINER MA SESSION
+            ENREGISTRER CETTE SESSION
           </button>
         </section>
       </div>
@@ -567,6 +664,18 @@ const heading = {
   marginBottom: "34px",
 };
 
+const sectionLabel = {
+  margin: "34px 0 16px",
+  padding: "12px 16px",
+  borderRadius: "999px",
+  background: "rgba(212,176,106,0.10)",
+  border: "1px solid rgba(212,176,106,0.20)",
+  color: "#D4B06A",
+  fontSize: "12px",
+  fontWeight: "900",
+  letterSpacing: "3px",
+};
+
 const card = {
   padding: "28px",
   marginBottom: "20px",
@@ -580,6 +689,13 @@ const card = {
 const title = {
   color: "#D4B06A",
   fontSize: "24px",
+  fontWeight: "900",
+  marginBottom: "16px",
+};
+
+const profileTitle = {
+  color: "#D4B06A",
+  fontSize: "28px",
   fontWeight: "900",
   marginBottom: "16px",
 };
@@ -625,6 +741,34 @@ const checkItem = {
   cursor: "pointer",
 };
 
+const input = {
+  width: "100%",
+  marginTop: "14px",
+  padding: "16px",
+  borderRadius: "18px",
+  border: "1px solid rgba(212,176,106,0.24)",
+  background: "rgba(255,255,255,0.04)",
+  color: "#fff",
+  fontSize: "18px",
+  fontWeight: "800",
+  outline: "none",
+};
+
+const textarea = {
+  width: "100%",
+  minHeight: "130px",
+  marginTop: "14px",
+  padding: "16px",
+  borderRadius: "18px",
+  border: "1px solid rgba(212,176,106,0.24)",
+  background: "rgba(255,255,255,0.04)",
+  color: "#fff",
+  fontSize: "16px",
+  lineHeight: "1.5",
+  outline: "none",
+  resize: "vertical",
+};
+
 const goldButton = {
   width: "100%",
   marginTop: "18px",
@@ -649,6 +793,12 @@ const secondaryButton = {
   fontWeight: "900",
   fontSize: "15px",
   cursor: "pointer",
+};
+
+const dangerButton = {
+  ...secondaryButton,
+  border: "1px solid rgba(255,120,120,0.35)",
+  color: "#ff9a9a",
 };
 
 const backButton = {
