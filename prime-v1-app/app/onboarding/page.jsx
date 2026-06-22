@@ -416,7 +416,7 @@ export default function PrimeIdentityPage() {
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Ex : Clémentine, Clem, Panther Trader..."
+            placeholder=""
           />
 
           <p className="text">
