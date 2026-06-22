@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Fingerprint,
   Target,
@@ -8,12 +8,15 @@ import {
   ShieldCheck,
   Sparkles,
   CheckCircle,
+  User,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
 export default function PrimeIdentityPage() {
+  const [displayName, setDisplayName] = useState("");
+
   const [profile, setProfile] = useState({
     tradingStyle: "",
     customStyle: "",
@@ -30,6 +33,28 @@ export default function PrimeIdentityPage() {
   const [result, setResult] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    loadDisplayName();
+  }, []);
+
+  const loadDisplayName = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.email) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (data?.display_name) {
+      setDisplayName(data.display_name);
+    }
+  };
+
   const updateField = (field, value) => {
     setProfile((prev) => ({
       ...prev,
@@ -40,6 +65,7 @@ export default function PrimeIdentityPage() {
   const isCustom = profile.tradingStyle === "Autre / personnalisé";
 
   const isComplete =
+    displayName &&
     profile.tradingStyle &&
     profile.asset &&
     profile.experience &&
@@ -138,6 +164,7 @@ export default function PrimeIdentityPage() {
     }
 
     const generatedProfile = {
+      displayName,
       detectedProfile,
       risk,
       strength,
@@ -168,6 +195,7 @@ export default function PrimeIdentityPage() {
 
     const payload = {
       email: user.email,
+      display_name: displayName,
       detected_profile: detectedProfile,
       risk,
       strength,
@@ -291,7 +319,8 @@ export default function PrimeIdentityPage() {
         }
 
         select,
-        textarea {
+        textarea,
+        input {
           width: 100%;
           background: rgba(15,15,15,0.86);
           color: white;
@@ -371,6 +400,27 @@ export default function PrimeIdentityPage() {
 
           <p className="subtitle">
             PRIME s’adapte à ta méthode, même si ton système ne rentre dans aucune case.
+          </p>
+        </section>
+
+        <section className="card">
+          <div className="icon-box">
+            <User size={26} />
+          </div>
+
+          <div className="card-label">IDENTITÉ PRIME</div>
+
+          <p className="question">Comment souhaites-tu être appelé dans PRIME ?</p>
+
+          <input
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Ex : Clémentine, Clem, Panther Trader..."
+          />
+
+          <p className="text">
+            Ce nom sera utilisé dans ton cockpit PRIME.
           </p>
         </section>
 
