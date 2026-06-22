@@ -6,9 +6,9 @@ import {
   Brain,
   Flame,
   ShieldAlert,
-  Sparkles,
   TrendingUp,
   CheckCircle,
+  CalendarDays,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
@@ -38,9 +38,7 @@ export default function JournalPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setSessions(data);
-    }
+    if (!error && data) setSessions(data);
 
     setLoading(false);
   };
@@ -61,6 +59,8 @@ export default function JournalPage() {
       ? Math.round((planRespectedCount / sessions.length) * 100)
       : 0;
 
+  const weekDays = getCurrentWeekData(sessions);
+
   return (
     <main className="journal-page">
       <style>{`
@@ -76,10 +76,7 @@ export default function JournalPage() {
             linear-gradient(180deg, #050505 0%, #000 100%);
         }
 
-        .page {
-          max-width: 460px;
-          margin: 0 auto;
-        }
+        .page { max-width: 460px; margin: 0 auto; }
 
         .brand {
           color: #D4B06A;
@@ -191,6 +188,52 @@ export default function JournalPage() {
           margin-top: 10px;
           font-size: 24px;
           font-weight: 900;
+        }
+
+        .week-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 22px;
+        }
+
+        .week-day {
+          padding: 16px;
+          border-radius: 22px;
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .week-top {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          align-items: center;
+        }
+
+        .week-name {
+          font-size: 15px;
+          font-weight: 900;
+        }
+
+        .week-pnl {
+          font-size: 18px;
+          font-weight: 900;
+        }
+
+        .week-status {
+          margin-top: 8px;
+          font-size: 13px;
+          color: rgba(255,255,255,0.72);
+          font-weight: 700;
+        }
+
+        .week-summary {
+          margin-top: 18px;
+          padding-top: 18px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
         }
 
         .timeline-title {
@@ -350,6 +393,79 @@ export default function JournalPage() {
 
             <section className="card">
               <div className="icon-box">
+                <CalendarDays size={26} />
+              </div>
+
+              <div className="card-label">VUE HEBDOMADAIRE PRIME</div>
+
+              <h2 className="card-title">Ta semaine d’exécution</h2>
+
+              <p className="text">
+                Vert = bonne exécution. Gris = gain hors plan. Rouge = perte
+                hors plan.
+              </p>
+
+              <div className="week-grid">
+                {weekDays.map((day) => (
+                  <div
+                    key={day.label}
+                    className="week-day"
+                    style={getWeekDayStyle(day)}
+                  >
+                    <div className="week-top">
+                      <div className="week-name">{day.label}</div>
+
+                      <div
+                        className="week-pnl"
+                        style={{
+                          color:
+                            day.pnl > 0
+                              ? "#7DFFA1"
+                              : day.pnl < 0
+                              ? "#FF7D7D"
+                              : "rgba(255,255,255,0.78)",
+                        }}
+                      >
+                        {day.pnl > 0 ? "+" : ""}
+                        {day.pnl}€
+                      </div>
+                    </div>
+
+                    <div className="week-status">{getWeekStatus(day)}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="week-summary">
+                <div>
+                  <div className="mini-label">Total semaine</div>
+                  <div
+                    className="mini-value"
+                    style={{
+                      color:
+                        weekDays.reduce((s, d) => s + d.pnl, 0) > 0
+                          ? "#7DFFA1"
+                          : weekDays.reduce((s, d) => s + d.pnl, 0) < 0
+                          ? "#FF7D7D"
+                          : "#fff",
+                    }}
+                  >
+                    {weekDays.reduce((s, d) => s + d.pnl, 0) > 0 ? "+" : ""}
+                    {weekDays.reduce((s, d) => s + d.pnl, 0)}€
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mini-label">Plans respectés</div>
+                  <div className="mini-value">
+                    {getWeekPlanRate(weekDays)}%
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="card">
+              <div className="icon-box">
                 <ShieldAlert size={26} />
               </div>
 
@@ -466,6 +582,130 @@ export default function JournalPage() {
       <BottomNav active="Journal" />
     </main>
   );
+}
+
+function getCurrentWeekData(sessions) {
+  const today = new Date();
+  const monday = new Date(today);
+  const day = monday.getDay();
+  const diff = monday.getDate() - day + (day === 0 ? -6 : 1);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+
+  const labels = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+  return labels.map((label, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+
+    const daySessions = sessions.filter((session) => {
+      const sessionDate = new Date(session.created_at);
+      return sessionDate.toDateString() === date.toDateString();
+    });
+
+    const pnl = daySessions.reduce(
+      (sum, session) => sum + Number(session.session_pnl || 0),
+      0
+    );
+
+    const hasSession = daySessions.length > 0;
+
+    const respectedCount = daySessions.filter(
+      (session) => session.plan_respected === true
+    ).length;
+
+    const notRespectedCount = daySessions.filter(
+      (session) => session.plan_respected === false
+    ).length;
+
+    const planRespected =
+      hasSession && notRespectedCount === 0 && respectedCount > 0;
+
+    const planNotRespected = hasSession && notRespectedCount > 0;
+
+    return {
+      label,
+      date,
+      pnl,
+      hasSession,
+      planRespected,
+      planNotRespected,
+      sessionsCount: daySessions.length,
+    };
+  });
+}
+
+function getWeekDayStyle(day) {
+  if (!day.hasSession) {
+    return {
+      background: "rgba(255,255,255,0.035)",
+      border: "1px solid rgba(255,255,255,0.07)",
+    };
+  }
+
+  if (day.planRespected && day.pnl >= 0) {
+    return {
+      background: "rgba(125,255,161,0.12)",
+      border: "1px solid rgba(125,255,161,0.30)",
+    };
+  }
+
+  if (day.planRespected && day.pnl < 0) {
+    return {
+      background: "rgba(125,255,161,0.12)",
+      border: "1px solid rgba(125,255,161,0.30)",
+    };
+  }
+
+  if (day.planNotRespected && day.pnl > 0) {
+    return {
+      background: "rgba(255,255,255,0.07)",
+      border: "1px solid rgba(255,255,255,0.14)",
+    };
+  }
+
+  if (day.planNotRespected && day.pnl < 0) {
+    return {
+      background: "rgba(255,80,80,0.13)",
+      border: "1px solid rgba(255,80,80,0.32)",
+    };
+  }
+
+  return {
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.10)",
+  };
+}
+
+function getWeekStatus(day) {
+  if (!day.hasSession) return "Aucune session";
+
+  if (day.planRespected && day.pnl >= 0) {
+    return `Plan respecté · ${day.sessionsCount} session(s)`;
+  }
+
+  if (day.planRespected && day.pnl < 0) {
+    return `Bon stop loss · plan respecté`;
+  }
+
+  if (day.planNotRespected && day.pnl > 0) {
+    return `Gain hors plan · à surveiller`;
+  }
+
+  if (day.planNotRespected && day.pnl < 0) {
+    return `Hors plan + perte`;
+  }
+
+  return `${day.sessionsCount} session(s) enregistrée(s)`;
+}
+
+function getWeekPlanRate(days) {
+  const tradedDays = days.filter((day) => day.hasSession);
+  if (tradedDays.length === 0) return 0;
+
+  const respectedDays = tradedDays.filter((day) => day.planRespected).length;
+
+  return Math.round((respectedDays / tradedDays.length) * 100);
 }
 
 function getJournalInsight(session) {
