@@ -237,9 +237,15 @@ export default function CoachPage() {
       .limit(1)
       .maybeSingle();
 
-    if (lastIdentity?.profile === currentIdentity.profile) {
-      return;
-    }
+   if (
+  lastIdentity?.profile === currentIdentity.profile &&
+  Math.abs(
+    currentAverage -
+    Number(lastIdentity?.discipline_average || 0)
+  ) < 5
+) {
+  return;
+}
 
     const progression =
       currentAverage - Number(lastIdentity?.discipline_average || 0);
