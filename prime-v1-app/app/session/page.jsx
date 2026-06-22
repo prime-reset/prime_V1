@@ -475,7 +475,7 @@ export default function SessionPage() {
           <h2 style={title}>État mental pré-session</h2>
           <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
 
-          {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
+          {["Calme", "Focus", "Stressé", "Impatient", "Fatigué"].map(
             (state) => (
               <button
                 key={state}
