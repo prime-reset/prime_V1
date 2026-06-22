@@ -123,7 +123,11 @@ export default function SessionPage() {
     }
   };
 
-  const calculateScore = (updatedChecks, updatedMistakes, respectedPlan = planRespected) => {
+  const calculateScore = (
+    updatedChecks,
+    updatedMistakes,
+    respectedPlan = planRespected
+  ) => {
     const checkedCount = Object.values(updatedChecks).filter(Boolean).length;
     const baseScore = Math.round((checkedCount / checklist.length) * 100);
 
@@ -301,7 +305,9 @@ export default function SessionPage() {
     );
 
     const dominantError =
-      activeMistakes.length > 0 ? activeMistakes[activeMistakes.length - 1] : null;
+      activeMistakes.length > 0
+        ? activeMistakes[activeMistakes.length - 1]
+        : null;
 
     await supabase
       .from("sessions")
@@ -384,8 +390,12 @@ export default function SessionPage() {
 
             <p style={scoreText}>{disciplineScore}%</p>
 
-            <p style={text}>État mental pré-session : {mentalState || "Non renseigné"}</p>
-            <p style={text}>État mental post-session : {postMentalState || "Non renseigné"}</p>
+            <p style={text}>
+              État mental pré-session : {mentalState || "Non renseigné"}
+            </p>
+            <p style={text}>
+              État mental post-session : {postMentalState || "Non renseigné"}
+            </p>
             <p style={text}>
               Plan respecté :{" "}
               {planRespected === true
@@ -409,15 +419,24 @@ export default function SessionPage() {
             + ENREGISTRER UNE NOUVELLE SESSION
           </button>
 
-          <button style={secondaryButton} onClick={() => (window.location.href = "/coach")}>
+          <button
+            style={secondaryButton}
+            onClick={() => (window.location.href = "/coach")}
+          >
             Voir mon Coach
           </button>
 
-          <button style={secondaryButton} onClick={() => (window.location.href = "/journal")}>
+          <button
+            style={secondaryButton}
+            onClick={() => (window.location.href = "/journal")}
+          >
             Voir mon Journal
           </button>
 
-          <button style={secondaryButton} onClick={() => (window.location.href = "/")}>
+          <button
+            style={secondaryButton}
+            onClick={() => (window.location.href = "/")}
+          >
             Terminer ma journée
           </button>
         </div>
@@ -452,6 +471,48 @@ export default function SessionPage() {
           <p style={text}>Focus du jour : {getFocusMessage()}</p>
         </section>
 
+        <section style={card}>
+          <h2 style={title}>État mental pré-session</h2>
+          <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
+
+          {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
+            (state) => (
+              <button
+                key={state}
+                onClick={() => handleMentalState(state)}
+                style={{
+                  ...pill,
+                  background:
+                    mentalState === state
+                      ? "#D4B06A"
+                      : "rgba(255,255,255,0.06)",
+                  color: mentalState === state ? "#000" : "#fff",
+                }}
+              >
+                {state}
+              </button>
+            )
+          )}
+        </section>
+
+        <section style={card}>
+          <h2 style={title}>Checklist pré-trade</h2>
+          <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
+
+          {checklist.map((item) => (
+            <div
+              key={item}
+              onClick={() => handleChecklist(item)}
+              style={checkItem}
+            >
+              <span>{checked[item] ? "✅" : "◻️"}</span>
+              <span>{item}</span>
+            </div>
+          ))}
+        </section>
+
+        <div style={sectionLabel}>APRÈS TRADE / DÉBRIEF</div>
+
         {activePrescription && (
           <section style={card}>
             <h2 style={title}>Prescription active</h2>
@@ -469,7 +530,9 @@ export default function SessionPage() {
               <p style={successText}>Prescription renseignée aujourd’hui ✅</p>
             ) : (
               <>
-                <p style={text}>As-tu respecté cette prescription aujourd’hui ?</p>
+                <p style={text}>
+                  As-tu respecté cette prescription sur cette session ?
+                </p>
 
                 <button
                   style={goldButton}
@@ -490,44 +553,10 @@ export default function SessionPage() {
         )}
 
         <section style={card}>
-          <h2 style={title}>État mental pré-session</h2>
-          <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
-
-          {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
-            (state) => (
-              <button
-                key={state}
-                onClick={() => handleMentalState(state)}
-                style={{
-                  ...pill,
-                  background:
-                    mentalState === state ? "#D4B06A" : "rgba(255,255,255,0.06)",
-                  color: mentalState === state ? "#000" : "#fff",
-                }}
-              >
-                {state}
-              </button>
-            )
-          )}
-        </section>
-
-        <section style={card}>
-          <h2 style={title}>Checklist pré-trade</h2>
-          <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
-
-          {checklist.map((item) => (
-            <div key={item} onClick={() => handleChecklist(item)} style={checkItem}>
-              <span>{checked[item] ? "✅" : "◻️"}</span>
-              <span>{item}</span>
-            </div>
-          ))}
-        </section>
-
-        <div style={sectionLabel}>APRÈS TRADE / DÉBRIEF</div>
-
-        <section style={card}>
           <h2 style={title}>État mental post-session</h2>
-          <p style={text}>Dans quel état tu ressors de ce trade ou de cette session ?</p>
+          <p style={text}>
+            Dans quel état tu ressors de ce trade ou de cette session ?
+          </p>
 
           {["Satisfaite", "Neutre", "Frustrée", "Stressée", "Fière", "Déçue"].map(
             (state) => (
@@ -537,7 +566,9 @@ export default function SessionPage() {
                 style={{
                   ...pill,
                   background:
-                    postMentalState === state ? "#D4B06A" : "rgba(255,255,255,0.06)",
+                    postMentalState === state
+                      ? "#D4B06A"
+                      : "rgba(255,255,255,0.06)",
                   color: postMentalState === state ? "#000" : "#fff",
                 }}
               >
@@ -573,7 +604,11 @@ export default function SessionPage() {
           </p>
 
           {mistakesList.map((mistake) => (
-            <div key={mistake} onClick={() => handleMistake(mistake)} style={checkItem}>
+            <div
+              key={mistake}
+              onClick={() => handleMistake(mistake)}
+              style={checkItem}
+            >
               <span>{mistakes[mistake] ? "🔥" : "◻️"}</span>
               <span>{mistake}</span>
             </div>
@@ -582,7 +617,9 @@ export default function SessionPage() {
 
         <section style={card}>
           <h2 style={title}>Amélioration</h2>
-          <p style={text}>Qu’est-ce que tu dois améliorer sur la prochaine session ?</p>
+          <p style={text}>
+            Qu’est-ce que tu dois améliorer sur la prochaine session ?
+          </p>
 
           <textarea
             value={improvementNote}
@@ -595,8 +632,8 @@ export default function SessionPage() {
         <section style={card}>
           <h2 style={title}>PnL de la session</h2>
           <p style={text}>
-            Note ton résultat financier. PRIME ne te juge pas sur le PnL, mais il
-            relie ta discipline à tes résultats.
+            Note ton résultat financier. PRIME ne te juge pas sur le PnL, mais
+            il relie ta discipline à tes résultats.
           </p>
 
           <input
@@ -614,8 +651,8 @@ export default function SessionPage() {
           <h2 style={title}>Discipline Score</h2>
           <p style={scoreText}>{disciplineScore}%</p>
           <p style={text}>
-            Ton score évolue selon le respect de ton process, ton identité PRIME,
-            ton plan et tes erreurs comportementales.
+            Ton score évolue selon le respect de ton process, ton identité
+            PRIME, ton plan et tes erreurs comportementales.
           </p>
         </section>
 
