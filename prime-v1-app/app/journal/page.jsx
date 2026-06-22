@@ -7,6 +7,8 @@ import {
   Flame,
   ShieldAlert,
   Sparkles,
+  TrendingUp,
+  CheckCircle,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
@@ -45,6 +47,20 @@ export default function JournalPage() {
 
   const lastSession = sessions[0];
 
+  const totalPnl = sessions.reduce(
+    (sum, session) => sum + Number(session.session_pnl || 0),
+    0
+  );
+
+  const planRespectedCount = sessions.filter(
+    (session) => session.plan_respected === true
+  ).length;
+
+  const planRespectedRate =
+    sessions.length > 0
+      ? Math.round((planRespectedCount / sessions.length) * 100)
+      : 0;
+
   return (
     <main className="journal-page">
       <style>{`
@@ -56,12 +72,8 @@ export default function JournalPage() {
           color: white;
           font-family: Inter, Arial, sans-serif;
           background:
-            linear-gradient(
-              180deg,
-              rgba(0,0,0,0.86),
-              rgba(0,0,0,0.96)
-            ),
-            #000;
+            radial-gradient(circle at top right, rgba(212,176,106,0.14), transparent 34%),
+            linear-gradient(180deg, #050505 0%, #000 100%);
         }
 
         .page {
@@ -105,11 +117,7 @@ export default function JournalPage() {
           margin-bottom: 18px;
           border-radius: 34px;
           background:
-            linear-gradient(
-              145deg,
-              rgba(255,255,255,0.08),
-              rgba(255,255,255,0.02)
-            ),
+            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
             rgba(5,5,5,0.78);
           border: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(22px);
@@ -165,11 +173,7 @@ export default function JournalPage() {
           padding: 20px;
           border-radius: 26px;
           background:
-            linear-gradient(
-              145deg,
-              rgba(255,255,255,0.08),
-              rgba(255,255,255,0.02)
-            ),
+            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
             rgba(5,5,5,0.78);
           border: 1px solid rgba(255,255,255,0.08);
           backdrop-filter: blur(20px);
@@ -194,12 +198,12 @@ export default function JournalPage() {
           letter-spacing: 3px;
           font-size: 12px;
           text-transform: uppercase;
-          margin: 26px 0 16px;
+          margin: 28px 0 16px;
         }
 
         .session-card {
           padding: 22px;
-          margin-bottom: 14px;
+          margin-bottom: 16px;
           border-radius: 28px;
           background: rgba(255,255,255,0.045);
           border: 1px solid rgba(255,255,255,0.08);
@@ -210,6 +214,7 @@ export default function JournalPage() {
           align-items: center;
           justify-content: space-between;
           gap: 14px;
+          margin-bottom: 16px;
         }
 
         .session-date {
@@ -227,11 +232,24 @@ export default function JournalPage() {
           font-size: 20px;
         }
 
-        .session-text {
-          margin: 14px 0 0;
-          color: rgba(255,255,255,0.70);
+        .session-row {
+          padding: 12px 0;
+          border-top: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .session-label {
+          color: rgba(212,176,106,0.78);
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+
+        .session-value {
+          color: rgba(255,255,255,0.78);
           font-size: 15px;
           line-height: 1.6;
+          font-weight: 650;
         }
 
         .empty {
@@ -251,13 +269,13 @@ export default function JournalPage() {
           <div className="brand">JOURNAL PRIME</div>
 
           <h1 className="title">
-            Ton évolution
-            <span>automatique.</span>
+            Ton journal
+            <span>d’exécution.</span>
           </h1>
 
           <p className="subtitle">
-            PRIME transforme tes sessions en timeline comportementale, sans te
-            forcer à remplir un journal interminable.
+            Un journal façon Notion PRIME : discipline, PnL, état mental,
+            respect du plan et axes d’amélioration.
           </p>
         </section>
 
@@ -272,13 +290,13 @@ export default function JournalPage() {
             {loading
               ? "Chargement..."
               : sessions.length > 0
-              ? `${sessions.length} sessions enregistrées`
+              ? `${sessions.length} analyses enregistrées`
               : "Ton journal est vide"}
           </h2>
 
           <p className="text">
             {sessions.length > 0
-              ? "Chaque session devient une trace de ta discipline, de ton état mental et de tes erreurs comportementales."
+              ? "Chaque session devient une trace psycho-financière : ce que tu as ressenti, ce que tu as respecté, ce que tu as gagné ou perdu, et ce que tu dois améliorer."
               : "Lance une session PRIME pour créer ta première trace comportementale."}
           </p>
         </section>
@@ -288,18 +306,45 @@ export default function JournalPage() {
             <section className="grid">
               <div className="mini-card">
                 <Brain size={24} color="#D4B06A" />
-                <div className="mini-label">Mental</div>
+                <div className="mini-label">Mental post</div>
                 <div className="mini-value">
-                  {lastSession.mental_state || "Non noté"}
+                  {lastSession.post_mental_state || "Non noté"}
                 </div>
               </div>
 
               <div className="mini-card">
                 <Flame size={24} color="#D4B06A" />
-                <div className="mini-label">Score</div>
+                <div className="mini-label">Dernier score</div>
                 <div className="mini-value">
                   {lastSession.discipline_score ?? 0}%
                 </div>
+              </div>
+            </section>
+
+            <section className="grid">
+              <div className="mini-card">
+                <TrendingUp size={24} color="#D4B06A" />
+                <div className="mini-label">PnL total</div>
+                <div
+                  className="mini-value"
+                  style={{
+                    color:
+                      totalPnl > 0
+                        ? "#7DFFA1"
+                        : totalPnl < 0
+                        ? "#FF7D7D"
+                        : "#fff",
+                  }}
+                >
+                  {totalPnl > 0 ? "+" : ""}
+                  {totalPnl}€
+                </div>
+              </div>
+
+              <div className="mini-card">
+                <CheckCircle size={24} color="#D4B06A" />
+                <div className="mini-label">Plans respectés</div>
+                <div className="mini-value">{planRespectedRate}%</div>
               </div>
             </section>
 
@@ -314,67 +359,108 @@ export default function JournalPage() {
                 {lastSession.dominant_error || "Aucune erreur dominante"}
               </h2>
 
-              <p className="text">
-                {getJournalInsight(lastSession)}
-              </p>
-            </section>
-
-            <section className="card">
-              <div className="icon-box">
-                <Sparkles size={26} />
-              </div>
-
-              <div className="card-label">NOTE RAPIDE</div>
-
-              <h2 className="card-title">
-                Deux questions seulement.
-              </h2>
-
-              <p className="text">
-                Qu’est-ce que tu as bien exécuté ? Qu’est-ce que tu dois
-                améliorer à la prochaine session ? Cette partie sera connectée
-                en V1 finale.
-              </p>
+              <p className="text">{getJournalInsight(lastSession)}</p>
             </section>
           </>
         )}
 
-        <div className="timeline-title">Timeline des sessions</div>
+        <div className="timeline-title">JOURNAL COMPORTEMENTAL PRIME</div>
 
         {sessions.length === 0 && (
           <div className="card">
             <p className="empty">
-              Aucune session pour le moment. Va dans Session, active ta
-              discipline, renseigne ton état mental et coche ta checklist.
+              Aucune session pour le moment. Va dans Session, renseigne ton état
+              mental, coche ta checklist, fais ton débrief et enregistre ta
+              session.
             </p>
           </div>
         )}
 
-        {sessions.slice(0, 8).map((session) => (
-          <div key={session.id} className="session-card">
-            <div className="session-top">
-              <p className="session-date">
-                {formatDate(session.created_at)}
-              </p>
+        {sessions.slice(0, 12).map((session) => {
+          const pnl = Number(session.session_pnl || 0);
 
-              <p className="session-score">
-                {session.discipline_score ?? 0}%
-              </p>
+          return (
+            <div key={session.id} className="session-card">
+              <div className="session-top">
+                <p className="session-date">{formatDate(session.created_at)}</p>
+
+                <p className="session-score">
+                  {session.discipline_score ?? 0}%
+                </p>
+              </div>
+
+              <div className="session-row">
+                <div className="session-label">PnL</div>
+                <div
+                  className="session-value"
+                  style={{
+                    color:
+                      pnl > 0
+                        ? "#7DFFA1"
+                        : pnl < 0
+                        ? "#FF7D7D"
+                        : "rgba(255,255,255,0.78)",
+                    fontWeight: 900,
+                    fontSize: "18px",
+                  }}
+                >
+                  {pnl > 0 ? "+" : ""}
+                  {pnl}€
+                </div>
+              </div>
+
+              <div className="session-row">
+                <div className="session-label">Respect du plan</div>
+                <div
+                  className="session-value"
+                  style={{
+                    color:
+                      session.plan_respected === true
+                        ? "#7DFFA1"
+                        : session.plan_respected === false
+                        ? "#FF7D7D"
+                        : "rgba(255,255,255,0.78)",
+                    fontWeight: 900,
+                  }}
+                >
+                  {session.plan_respected === true
+                    ? "✓ Plan respecté"
+                    : session.plan_respected === false
+                    ? "✗ Hors plan"
+                    : "Plan non renseigné"}
+                </div>
+              </div>
+
+              <div className="session-row">
+                <div className="session-label">Mental pré-session</div>
+                <div className="session-value">
+                  {session.mental_state || "Non renseigné"}
+                </div>
+              </div>
+
+              <div className="session-row">
+                <div className="session-label">Mental post-session</div>
+                <div className="session-value">
+                  {session.post_mental_state || "Non renseigné"}
+                </div>
+              </div>
+
+              <div className="session-row">
+                <div className="session-label">Erreur dominante</div>
+                <div className="session-value">
+                  {session.dominant_error || "Aucune"}
+                </div>
+              </div>
+
+              <div className="session-row">
+                <div className="session-label">Amélioration</div>
+                <div className="session-value">
+                  {session.improvement_note || "Aucune note"}
+                </div>
+              </div>
             </div>
-
-            <p className="session-text">
-              Mental : {session.mental_state || "non renseigné"} · Erreur :
-              {" "}
-              {session.dominant_error || "aucune"}
-            </p>
-
-            <p className="session-text">
-              Statut : {session.status || "non défini"} · XP :
-              {" "}
-              {session.xp_gain || 0}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <BottomNav active="Journal" />
@@ -407,7 +493,7 @@ function getJournalInsight(session) {
     return "Très bonne trace comportementale. Le process semble avoir été respecté avec stabilité.";
   }
 
-  return "Trace enregistrée. PRIME commence à construire ton historique comportemental.";
+  return "Trace enregistrée. PRIME construit ton historique psycho-financier.";
 }
 
 function formatDate(value) {
