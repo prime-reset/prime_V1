@@ -19,8 +19,8 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
-import BottomNav from "./components/BottomNav";
+import { supabase } from "../../lib/supabase";
+import BottomNav from "../components/BottomNav";
 
 export default function HomePage() {
   const router = useRouter();
