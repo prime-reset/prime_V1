@@ -9,6 +9,8 @@ import {
   TrendingUp,
   CheckCircle,
   CalendarDays,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
@@ -43,55 +45,65 @@ export default function JournalPage() {
     setLoading(false);
   };
 
-  const lastSession = sessions[0];
+  const lastSession = sessions[0] || null;
+  const weekDays = getCurrentWeekData(sessions);
 
-  const totalPnl = sessions.reduce(
-    (sum, session) => sum + Number(session.session_pnl || 0),
-    0
-  );
+  const weekPnl = weekDays.reduce((sum, day) => sum + day.pnl, 0);
+  const weekSessions = weekDays.reduce((sum, day) => sum + day.sessionsCount, 0);
+  const weekPlanRate = getWeekPlanRate(weekDays);
 
-  const planRespectedCount = sessions.filter(
-    (session) => session.plan_respected === true
-  ).length;
+  const scores = sessions
+    .map((session) => Number(session.discipline_score))
+    .filter((score) => !Number.isNaN(score));
 
-  const planRespectedRate =
-    sessions.length > 0
-      ? Math.round((planRespectedCount / sessions.length) * 100)
+  const averageScore =
+    scores.length > 0
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
 
-  const weekDays = getCurrentWeekData(sessions);
+  const lastPnl = Number(lastSession?.session_pnl || 0);
 
   return (
     <main className="journal-page">
       <style>{`
         * { box-sizing: border-box; }
 
-        .journal-page {
-          min-height: 100vh;
-          padding: 32px 20px 150px;
-          color: white;
-          font-family: Inter, Arial, sans-serif;
-          background:
-            radial-gradient(circle at top right, rgba(212,176,106,0.14), transparent 34%),
-            linear-gradient(180deg, #050505 0%, #000 100%);
+        body {
+          margin: 0;
+          background: #050505;
         }
 
-        .page { max-width: 460px; margin: 0 auto; }
+        .journal-page {
+          min-height: 100vh;
+          padding: 30px 18px 128px;
+          color: white;
+          font-family: Inter, Arial, sans-serif;
+          background: #050505;
+        }
+
+        .page {
+          max-width: 460px;
+          margin: 0 auto;
+        }
 
         .brand {
           color: #D4B06A;
-          letter-spacing: 6px;
-          font-size: 14px;
+          letter-spacing: 7px;
+          font-size: 13px;
           text-transform: uppercase;
           margin-bottom: 18px;
         }
 
+        .hero {
+          margin-bottom: 22px;
+        }
+
         .title {
-          font-size: 58px;
-          line-height: 0.92;
-          font-weight: 900;
-          letter-spacing: -3px;
           margin: 0;
+          font-size: 46px;
+          line-height: 1;
+          font-weight: 950;
+          letter-spacing: -2.6px;
         }
 
         .title span {
@@ -100,394 +112,463 @@ export default function JournalPage() {
         }
 
         .subtitle {
-          margin-top: 24px;
-          font-size: 18px;
-          line-height: 1.7;
-          color: rgba(255,255,255,0.68);
-          margin-bottom: 30px;
+          margin-top: 14px;
+          font-size: 17px;
+          line-height: 1.5;
+          color: rgba(255,255,255,0.62);
         }
 
-        .card {
-          position: relative;
-          overflow: hidden;
-          padding: 26px;
-          margin-bottom: 18px;
-          border-radius: 34px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-            rgba(5,5,5,0.78);
-          border: 1px solid rgba(255,255,255,0.08);
-          backdrop-filter: blur(22px);
-          box-shadow:
-            0 20px 60px rgba(0,0,0,0.55),
-            inset 0 1px 0 rgba(255,255,255,0.04);
+        .card,
+        .metric-card,
+        .session-card,
+        .summary-card {
+          border-radius: 26px;
+          background: #101010;
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.38);
         }
 
-        .icon-box {
-          width: 54px;
-          height: 54px;
-          border-radius: 18px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-          background: rgba(212,176,106,0.10);
-          border: 1px solid rgba(212,176,106,0.18);
-          color: #D4B06A;
-        }
-
-        .card-label {
-          color: rgba(212,176,106,0.82);
-          font-size: 12px;
-          letter-spacing: 3px;
-          text-transform: uppercase;
+        .summary-card {
+          padding: 22px;
           margin-bottom: 14px;
         }
 
-        .card-title {
-          font-size: 27px;
-          line-height: 1.18;
-          font-weight: 850;
-          margin: 0;
-          color: #D4B06A;
+        .summary-top {
+          display: flex;
+          justify-content: space-between;
+          gap: 18px;
+          align-items: flex-start;
         }
 
-        .text {
-          margin-top: 18px;
-          font-size: 17px;
-          line-height: 1.75;
-          color: rgba(255,255,255,0.72);
+        .summary-pnl {
+          margin: 0;
+          font-size: 42px;
+          line-height: 0.95;
+          font-weight: 950;
+          letter-spacing: -1.5px;
+        }
+
+        .summary-caption {
+          margin: 10px 0 0;
+          color: rgba(255,255,255,0.62);
+          font-size: 15px;
+          line-height: 1.45;
+        }
+
+        .label {
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          font-weight: 900;
+          margin: 0 0 12px;
         }
 
         .grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 14px;
-          margin-bottom: 18px;
+          margin-bottom: 14px;
         }
 
-        .mini-card {
-          padding: 20px;
-          border-radius: 26px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-            rgba(5,5,5,0.78);
-          border: 1px solid rgba(255,255,255,0.08);
-          backdrop-filter: blur(20px);
+        .metric-card {
+          min-height: 128px;
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
         }
 
-        .mini-label {
-          margin-top: 14px;
-          font-size: 12px;
-          color: rgba(212,176,106,0.82);
-          letter-spacing: 2px;
+        .metric-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .icon {
+          color: #D4B06A;
+        }
+
+        .metric-title {
+          margin: 0;
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 1.5px;
           text-transform: uppercase;
-        }
-
-        .mini-value {
-          margin-top: 10px;
-          font-size: 24px;
           font-weight: 900;
         }
 
-        .week-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-          margin-top: 22px;
+        .metric-value {
+          margin: 10px 0 0;
+          font-size: 27px;
+          font-weight: 950;
+          line-height: 1.05;
+          letter-spacing: -0.5px;
         }
 
-        .week-day {
-          padding: 16px;
-          border-radius: 22px;
+        .metric-caption {
+          margin: 9px 0 0;
+          color: rgba(255,255,255,0.62);
+          font-size: 13px;
+          line-height: 1.45;
+        }
+
+        .card {
+          padding: 22px;
+          margin-bottom: 14px;
+        }
+
+        .card-title {
+          margin: 0;
+          font-size: 25px;
+          line-height: 1.16;
+          font-weight: 950;
+          color: #D4B06A;
+        }
+
+        .text {
+          margin-top: 14px;
+          color: rgba(255,255,255,0.68);
+          font-size: 15px;
+          line-height: 1.6;
+        }
+
+        .week-dots {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 8px;
+          margin-top: 18px;
+        }
+
+        .week-dot {
+          min-height: 62px;
+          border-radius: 17px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
           border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .week-top {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          align-items: center;
-        }
-
-        .week-name {
-          font-size: 15px;
+        .week-label {
+          font-size: 11px;
+          color: rgba(255,255,255,0.62);
           font-weight: 900;
         }
 
         .week-pnl {
-          font-size: 18px;
-          font-weight: 900;
+          font-size: 12px;
+          color: rgba(255,255,255,0.82);
+          font-weight: 950;
         }
 
-        .week-status {
-          margin-top: 8px;
-          font-size: 13px;
-          color: rgba(255,255,255,0.72);
-          font-weight: 700;
-        }
-
-        .week-summary {
-          margin-top: 18px;
-          padding-top: 18px;
-          border-top: 1px solid rgba(255,255,255,0.08);
+        .last-session {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 12px;
+          margin-top: 18px;
+        }
+
+        .data-box {
+          padding: 14px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .data-label {
+          color: rgba(212,176,106,0.78);
+          font-size: 10px;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin-bottom: 8px;
+          font-weight: 900;
+        }
+
+        .data-value {
+          color: white;
+          font-size: 16px;
+          line-height: 1.35;
+          font-weight: 900;
         }
 
         .timeline-title {
-          color: rgba(255,255,255,0.50);
+          color: rgba(255,255,255,0.44);
           letter-spacing: 3px;
           font-size: 12px;
           text-transform: uppercase;
-          margin: 28px 0 16px;
+          margin: 26px 0 14px;
+          font-weight: 950;
         }
 
         .session-card {
-          padding: 22px;
-          margin-bottom: 16px;
-          border-radius: 28px;
-          background: rgba(255,255,255,0.045);
-          border: 1px solid rgba(255,255,255,0.08);
+          padding: 18px;
+          margin-bottom: 12px;
         }
 
         .session-top {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          gap: 14px;
-          margin-bottom: 16px;
+          align-items: flex-start;
+          gap: 12px;
+          margin-bottom: 12px;
         }
 
         .session-date {
           margin: 0;
-          color: rgba(255,255,255,0.46);
-          font-size: 12px;
+          color: rgba(255,255,255,0.50);
+          font-size: 11px;
           letter-spacing: 2px;
           text-transform: uppercase;
+          font-weight: 900;
         }
 
         .session-score {
           margin: 0;
           color: #D4B06A;
-          font-weight: 900;
           font-size: 20px;
+          font-weight: 950;
         }
 
-        .session-row {
-          padding: 12px 0;
+        .session-main {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+
+        .session-note {
+          padding-top: 12px;
           border-top: 1px solid rgba(255,255,255,0.07);
-        }
-
-        .session-label {
-          color: rgba(212,176,106,0.78);
-          font-size: 11px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          margin-bottom: 6px;
-        }
-
-        .session-value {
-          color: rgba(255,255,255,0.78);
-          font-size: 15px;
-          line-height: 1.6;
-          font-weight: 650;
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.5;
         }
 
         .empty {
-          color: rgba(255,255,255,0.68);
-          font-size: 17px;
-          line-height: 1.7;
+          color: rgba(255,255,255,0.66);
+          font-size: 16px;
+          line-height: 1.6;
         }
 
-        @media(max-width:520px) {
-          .title { font-size: 50px; }
-          .grid { grid-template-columns: 1fr; }
+        @media(max-width:390px) {
+          .title { font-size: 40px; }
+          .grid,
+          .last-session,
+          .session-main {
+            grid-template-columns: 1fr;
+          }
+          .week-dots { gap: 6px; }
+          .week-dot { min-height: 56px; border-radius: 15px; }
         }
       `}</style>
 
       <div className="page">
-        <section>
-          <div className="brand">JOURNAL PRIME</div>
+        <section className="hero">
+          <p className="brand">JOURNAL PRIME</p>
 
           <h1 className="title">
-            Ton journal
+            Journal
             <span>d’exécution.</span>
           </h1>
 
           <p className="subtitle">
-            Un journal façon Notion PRIME : discipline, PnL, état mental,
-            respect du plan et axes d’amélioration.
+            Ta semaine, tes sessions et tes décisions. Lis ton comportement, pas seulement ton PnL.
           </p>
         </section>
 
-        <section className="card">
-          <div className="icon-box">
-            <BookOpen size={26} />
+        <section className="summary-card">
+          <p className="label">SEMAINE EN COURS</p>
+
+          <div className="summary-top">
+            <div>
+              <p
+                className="summary-pnl"
+                style={{
+                  color:
+                    weekPnl > 0
+                      ? "#6BE28B"
+                      : weekPnl < 0
+                      ? "#F05B5B"
+                      : "#fff",
+                }}
+              >
+                {weekPnl > 0 ? "+" : ""}
+                {weekPnl}€
+              </p>
+
+              <p className="summary-caption">
+                {weekSessions} session(s) · {weekPlanRate}% plan respecté
+              </p>
+            </div>
+
+            <CalendarDays size={30} className="icon" />
+          </div>
+        </section>
+
+        <section className="grid">
+          <div className="metric-card">
+            <div className="metric-top">
+              <p className="metric-title">Score moyen</p>
+              <Flame size={22} className="icon" />
+            </div>
+
+            <div>
+              <p className="metric-value">{averageScore}%</p>
+              <p className="metric-caption">Qualité d’exécution globale</p>
+            </div>
           </div>
 
-          <div className="card-label">SYNTHÈSE JOURNAL</div>
+          <div className="metric-card">
+            <div className="metric-top">
+              <p className="metric-title">Total sessions</p>
+              <BookOpen size={22} className="icon" />
+            </div>
 
-          <h2 className="card-title">
-            {loading
-              ? "Chargement..."
-              : sessions.length > 0
-              ? `${sessions.length} analyses enregistrées`
-              : "Ton journal est vide"}
-          </h2>
+            <div>
+              <p className="metric-value">{sessions.length}</p>
+              <p className="metric-caption">Traces comportementales</p>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-top">
+              <p className="metric-title">Plan semaine</p>
+              <CheckCircle size={22} className="icon" />
+            </div>
+
+            <div>
+              <p className="metric-value">{weekPlanRate}%</p>
+              <p className="metric-caption">Respect du cadre</p>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-top">
+              <p className="metric-title">Mental récent</p>
+              <Brain size={22} className="icon" />
+            </div>
+
+            <div>
+              <p className="metric-value" style={{ fontSize: "22px" }}>
+                {lastSession?.post_mental_state || lastSession?.mental_state || "—"}
+              </p>
+              <p className="metric-caption">Dernière session</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="card">
+          <p className="label">CALENDRIER PRIME</p>
+          <h2 className="card-title">Ta semaine d’exécution</h2>
+
+          <div className="week-dots">
+            {weekDays.map((day) => (
+              <div key={day.label} className="week-dot" style={getWeekDayStyle(day)}>
+                <div className="week-label">{day.label}</div>
+                <div
+                  className="week-pnl"
+                  style={{
+                    color:
+                      day.pnl > 0
+                        ? "#6BE28B"
+                        : day.pnl < 0
+                        ? "#F05B5B"
+                        : "rgba(255,255,255,0.68)",
+                  }}
+                >
+                  {day.pnl > 0 ? "+" : ""}
+                  {day.pnl}€
+                </div>
+              </div>
+            ))}
+          </div>
 
           <p className="text">
-            {sessions.length > 0
-              ? "Chaque session devient une trace psycho-financière : ce que tu as ressenti, ce que tu as respecté, ce que tu as gagné ou perdu, et ce que tu dois améliorer."
-              : "Lance une session PRIME pour créer ta première trace comportementale."}
+            Vert = plan respecté. Gris = gain hors plan. Rouge = perte hors plan.
           </p>
         </section>
 
         {lastSession && (
-          <>
-            <section className="grid">
-              <div className="mini-card">
-                <Brain size={24} color="#D4B06A" />
-                <div className="mini-label">Mental post</div>
-                <div className="mini-value">
-                  {lastSession.post_mental_state || "Non noté"}
-                </div>
-              </div>
+          <section className="card">
+            <p className="label">DERNIÈRE SESSION</p>
+            <h2 className="card-title">{getJournalInsightTitle(lastSession)}</h2>
 
-              <div className="mini-card">
-                <Flame size={24} color="#D4B06A" />
-                <div className="mini-label">Dernier score</div>
-                <div className="mini-value">
-                  {lastSession.discipline_score ?? 0}%
-                </div>
-              </div>
-            </section>
-
-            <section className="grid">
-              <div className="mini-card">
-                <TrendingUp size={24} color="#D4B06A" />
-                <div className="mini-label">PnL total</div>
+            <div className="last-session">
+              <div className="data-box">
+                <div className="data-label">PnL</div>
                 <div
-                  className="mini-value"
+                  className="data-value"
                   style={{
                     color:
-                      totalPnl > 0
-                        ? "#7DFFA1"
-                        : totalPnl < 0
-                        ? "#FF7D7D"
+                      lastPnl > 0
+                        ? "#6BE28B"
+                        : lastPnl < 0
+                        ? "#F05B5B"
                         : "#fff",
                   }}
                 >
-                  {totalPnl > 0 ? "+" : ""}
-                  {totalPnl}€
+                  {lastPnl > 0 ? "+" : ""}
+                  {lastPnl}€
                 </div>
               </div>
 
-              <div className="mini-card">
-                <CheckCircle size={24} color="#D4B06A" />
-                <div className="mini-label">Plans respectés</div>
-                <div className="mini-value">{planRespectedRate}%</div>
-              </div>
-            </section>
-
-            <section className="card">
-              <div className="icon-box">
-                <CalendarDays size={26} />
-              </div>
-
-              <div className="card-label">VUE HEBDOMADAIRE PRIME</div>
-
-              <h2 className="card-title">Ta semaine d’exécution</h2>
-
-              <p className="text">
-                Vert = bonne exécution. Gris = gain hors plan. Rouge = perte
-                hors plan.
-              </p>
-
-              <div className="week-grid">
-                {weekDays.map((day) => (
-                  <div
-                    key={day.label}
-                    className="week-day"
-                    style={getWeekDayStyle(day)}
-                  >
-                    <div className="week-top">
-                      <div className="week-name">{day.label}</div>
-
-                      <div
-                        className="week-pnl"
-                        style={{
-                          color:
-                            day.pnl > 0
-                              ? "#7DFFA1"
-                              : day.pnl < 0
-                              ? "#FF7D7D"
-                              : "rgba(255,255,255,0.78)",
-                        }}
-                      >
-                        {day.pnl > 0 ? "+" : ""}
-                        {day.pnl}€
-                      </div>
-                    </div>
-
-                    <div className="week-status">{getWeekStatus(day)}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="week-summary">
-                <div>
-                  <div className="mini-label">Total semaine</div>
-                  <div
-                    className="mini-value"
-                    style={{
-                      color:
-                        weekDays.reduce((s, d) => s + d.pnl, 0) > 0
-                          ? "#7DFFA1"
-                          : weekDays.reduce((s, d) => s + d.pnl, 0) < 0
-                          ? "#FF7D7D"
-                          : "#fff",
-                    }}
-                  >
-                    {weekDays.reduce((s, d) => s + d.pnl, 0) > 0 ? "+" : ""}
-                    {weekDays.reduce((s, d) => s + d.pnl, 0)}€
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mini-label">Plans respectés</div>
-                  <div className="mini-value">
-                    {getWeekPlanRate(weekDays)}%
-                  </div>
+              <div className="data-box">
+                <div className="data-label">Plan</div>
+                <div
+                  className="data-value"
+                  style={{
+                    color:
+                      lastSession.plan_respected === true
+                        ? "#6BE28B"
+                        : lastSession.plan_respected === false
+                        ? "#F05B5B"
+                        : "#fff",
+                  }}
+                >
+                  {lastSession.plan_respected === true
+                    ? "Respecté"
+                    : lastSession.plan_respected === false
+                    ? "Hors plan"
+                    : "Non renseigné"}
                 </div>
               </div>
-            </section>
 
-            <section className="card">
-              <div className="icon-box">
-                <ShieldAlert size={26} />
+              <div className="data-box">
+                <div className="data-label">Score</div>
+                <div className="data-value">
+                  {lastSession.discipline_score ?? 0}%
+                </div>
               </div>
 
-              <div className="card-label">DERNIÈRE TRACE</div>
+              <div className="data-box">
+                <div className="data-label">Mental</div>
+                <div className="data-value">
+                  {lastSession.post_mental_state ||
+                    lastSession.mental_state ||
+                    "Non renseigné"}
+                </div>
+              </div>
+            </div>
 
-              <h2 className="card-title">
-                {lastSession.dominant_error || "Aucune erreur dominante"}
-              </h2>
-
-              <p className="text">{getJournalInsight(lastSession)}</p>
-            </section>
-          </>
+            <p className="text">{getJournalInsight(lastSession)}</p>
+          </section>
         )}
 
-        <div className="timeline-title">JOURNAL COMPORTEMENTAL PRIME</div>
+        <div className="timeline-title">Historique compact</div>
 
-        {sessions.length === 0 && (
+        {loading && (
+          <div className="card">
+            <p className="empty">Chargement du journal...</p>
+          </div>
+        )}
+
+        {!loading && sessions.length === 0 && (
           <div className="card">
             <p className="empty">
-              Aucune session pour le moment. Va dans Session, renseigne ton état
-              mental, coche ta checklist, fais ton débrief et enregistre ta
-              session.
+              Aucune session pour le moment. Enregistre une première session pour créer ton journal PRIME.
             </p>
           </div>
         )}
@@ -498,81 +579,59 @@ export default function JournalPage() {
           return (
             <div key={session.id} className="session-card">
               <div className="session-top">
-                <p className="session-date">{formatDate(session.created_at)}</p>
+                <div>
+                  <p className="session-date">{formatDate(session.created_at)}</p>
+                </div>
 
-                <p className="session-score">
-                  {session.discipline_score ?? 0}%
-                </p>
+                <p className="session-score">{session.discipline_score ?? 0}%</p>
               </div>
 
-              <div className="session-row">
-                <div className="session-label">PnL</div>
-                <div
-                  className="session-value"
-                  style={{
-                    color:
-                      pnl > 0
-                        ? "#7DFFA1"
-                        : pnl < 0
-                        ? "#FF7D7D"
-                        : "rgba(255,255,255,0.78)",
-                    fontWeight: 900,
-                    fontSize: "18px",
-                  }}
-                >
-                  {pnl > 0 ? "+" : ""}
-                  {pnl}€
+              <div className="session-main">
+                <div className="data-box">
+                  <div className="data-label">PnL</div>
+                  <div
+                    className="data-value"
+                    style={{
+                      color:
+                        pnl > 0
+                          ? "#6BE28B"
+                          : pnl < 0
+                          ? "#F05B5B"
+                          : "#fff",
+                    }}
+                  >
+                    {pnl > 0 ? "+" : ""}
+                    {pnl}€
+                  </div>
+                </div>
+
+                <div className="data-box">
+                  <div className="data-label">Plan</div>
+                  <div
+                    className="data-value"
+                    style={{
+                      color:
+                        session.plan_respected === true
+                          ? "#6BE28B"
+                          : session.plan_respected === false
+                          ? "#F05B5B"
+                          : "#fff",
+                    }}
+                  >
+                    {session.plan_respected === true
+                      ? "Respecté"
+                      : session.plan_respected === false
+                      ? "Hors plan"
+                      : "—"}
+                  </div>
                 </div>
               </div>
 
-              <div className="session-row">
-                <div className="session-label">Respect du plan</div>
-                <div
-                  className="session-value"
-                  style={{
-                    color:
-                      session.plan_respected === true
-                        ? "#7DFFA1"
-                        : session.plan_respected === false
-                        ? "#FF7D7D"
-                        : "rgba(255,255,255,0.78)",
-                    fontWeight: 900,
-                  }}
-                >
-                  {session.plan_respected === true
-                    ? "✓ Plan respecté"
-                    : session.plan_respected === false
-                    ? "✗ Hors plan"
-                    : "Plan non renseigné"}
-                </div>
-              </div>
-
-              <div className="session-row">
-                <div className="session-label">Mental pré-session</div>
-                <div className="session-value">
-                  {session.mental_state || "Non renseigné"}
-                </div>
-              </div>
-
-              <div className="session-row">
-                <div className="session-label">Mental post-session</div>
-                <div className="session-value">
-                  {session.post_mental_state || "Non renseigné"}
-                </div>
-              </div>
-
-              <div className="session-row">
-                <div className="session-label">Erreur dominante</div>
-                <div className="session-value">
-                  {session.dominant_error || "Aucune"}
-                </div>
-              </div>
-
-              <div className="session-row">
-                <div className="session-label">Amélioration</div>
-                <div className="session-value">
-                  {session.improvement_note || "Aucune note"}
-                </div>
+              <div className="session-note">
+                <strong>Erreur :</strong> {session.dominant_error || "Aucune"}
+                <br />
+                <strong>Amélioration :</strong>{" "}
+                {session.improvement_note || "Aucune note"}
               </div>
             </div>
           );
@@ -643,17 +702,10 @@ function getWeekDayStyle(day) {
     };
   }
 
-  if (day.planRespected && day.pnl >= 0) {
+  if (day.planRespected) {
     return {
-      background: "rgba(125,255,161,0.12)",
-      border: "1px solid rgba(125,255,161,0.30)",
-    };
-  }
-
-  if (day.planRespected && day.pnl < 0) {
-    return {
-      background: "rgba(125,255,161,0.12)",
-      border: "1px solid rgba(125,255,161,0.30)",
+      background: "rgba(107,226,139,0.12)",
+      border: "1px solid rgba(107,226,139,0.30)",
     };
   }
 
@@ -666,8 +718,8 @@ function getWeekDayStyle(day) {
 
   if (day.planNotRespected && day.pnl < 0) {
     return {
-      background: "rgba(255,80,80,0.13)",
-      border: "1px solid rgba(255,80,80,0.32)",
+      background: "rgba(240,91,91,0.13)",
+      border: "1px solid rgba(240,91,91,0.32)",
     };
   }
 
@@ -675,28 +727,6 @@ function getWeekDayStyle(day) {
     background: "rgba(255,255,255,0.05)",
     border: "1px solid rgba(255,255,255,0.10)",
   };
-}
-
-function getWeekStatus(day) {
-  if (!day.hasSession) return "Aucune session";
-
-  if (day.planRespected && day.pnl >= 0) {
-    return `Plan respecté · ${day.sessionsCount} session(s)`;
-  }
-
-  if (day.planRespected && day.pnl < 0) {
-    return `Bon stop loss · plan respecté`;
-  }
-
-  if (day.planNotRespected && day.pnl > 0) {
-    return `Gain hors plan · à surveiller`;
-  }
-
-  if (day.planNotRespected && day.pnl < 0) {
-    return `Hors plan + perte`;
-  }
-
-  return `${day.sessionsCount} session(s) enregistrée(s)`;
 }
 
 function getWeekPlanRate(days) {
@@ -708,7 +738,35 @@ function getWeekPlanRate(days) {
   return Math.round((respectedDays / tradedDays.length) * 100);
 }
 
+function getJournalInsightTitle(session) {
+  if (session.plan_respected === true && Number(session.session_pnl || 0) < 0) {
+    return "Bonne perte.";
+  }
+
+  if (session.plan_respected === false && Number(session.session_pnl || 0) > 0) {
+    return "Gain à surveiller.";
+  }
+
+  if (session.plan_respected === false && Number(session.session_pnl || 0) < 0) {
+    return "Dérive coûteuse.";
+  }
+
+  if (Number(session.session_pnl || 0) > 0) {
+    return "Session positive.";
+  }
+
+  return "Trace enregistrée.";
+}
+
 function getJournalInsight(session) {
+  if (session.plan_respected === true && Number(session.session_pnl || 0) < 0) {
+    return "Tu as perdu de l’argent, mais tu as respecté ton plan. PRIME considère cette session comme une bonne décision d’exécution.";
+  }
+
+  if (session.plan_respected === false && Number(session.session_pnl || 0) > 0) {
+    return "Le PnL est positif, mais la décision était hors plan. PRIME surveille ce type de gain, car il peut renforcer un mauvais comportement.";
+  }
+
   if (session.dominant_error === "Revenge trade") {
     return "Cette session montre une tentative de récupération émotionnelle. La priorité est de couper la boucle après une perte.";
   }
@@ -745,3 +803,4 @@ function formatDate(value) {
     year: "numeric",
   });
 }
+
