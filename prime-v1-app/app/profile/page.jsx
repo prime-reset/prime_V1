@@ -1,70 +1,62 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  User,
-  Crown,
-  Flame,
-  ShieldCheck,
   Target,
+  Brain,
+  Flame,
+  ChevronRight,
   Sparkles,
-  CheckCircle,
-  TrendingUp,
-  CalendarDays,
-  Trophy,
-  Activity,
+  Crown,
+  ShieldAlert,
   BookOpen,
+  User,
+  TrendingUp,
+  CheckCircle,
+  PlayCircle,
+  CalendarDays,
 } from "lucide-react";
 
-import { supabase } from "../../lib/supabase";
-import BottomNav from "../components/BottomNav";
+import { supabase } from "../lib/supabase";
+import BottomNav from "./components/BottomNav";
 
-export default function ProfilePage() {
+export default function HomePage() {
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("Trader");
-  const [primeProfile, setPrimeProfile] = useState(null);
-  const [identityHistory, setIdentityHistory] = useState([]);
+  const [profile, setProfile] = useState("Trader en construction");
+  const [averageScore, setAverageScore] = useState(0);
+  const [sessionsCount, setSessionsCount] = useState(0);
   const [sessions, setSessions] = useState([]);
-  const [prescriptions, setPrescriptions] = useState([]);
   const [activePrescription, setActivePrescription] = useState(null);
+  const [riskState, setRiskState] = useState("Sous contrôle");
+  const [focus, setFocus] = useState("Respecter le process avant le résultat.");
 
   useEffect(() => {
-    loadProfile();
+    loadHome();
   }, []);
 
-  const loadProfile = async () => {
+  const loadHome = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const savedProfile = localStorage.getItem("primeProfile");
-
-    if (savedProfile) {
-      try {
-        setPrimeProfile(JSON.parse(savedProfile));
-      } catch {
-        localStorage.removeItem("primeProfile");
-      }
+    if (!user) {
+      router.push("/auth");
+      return;
     }
-
-    if (!user) return;
 
     const { data: profileData } = await supabase
       .from("profiles")
-      .select("*")
+      .select("display_name")
       .eq("email", user.email)
       .maybeSingle();
 
-    if (profileData?.display_name) setDisplayName(profileData.display_name);
-
-    if (profileData?.detected_profile) {
-      setPrimeProfile({
-        detectedProfile: profileData.detected_profile,
-        risk: profileData.risk,
-        strength: profileData.strength,
-        weakness: profileData.weakness,
-        prescription: profileData.prescription,
-        checklist: profileData.checklist || [],
-      });
+    if (profileData?.display_name) {
+      setDisplayName(profileData.display_name);
     }
 
     const { data: identityData } = await supabase
@@ -72,9 +64,13 @@ export default function ProfilePage() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(6);
+      .limit(1)
+      .maybeSingle();
 
-    if (identityData) setIdentityHistory(identityData);
+    if (identityData) {
+      setProfile(identityData.profile || "Trader en construction");
+      setAverageScore(identityData.discipline_average || 0);
+    }
 
     const { data: sessionsData } = await supabase
       .from("sessions")
@@ -83,9 +79,23 @@ export default function ProfilePage() {
       .eq("status", "closed")
       .order("created_at", { ascending: false });
 
-    if (sessionsData) setSessions(sessionsData);
+    if (sessionsData) {
+      setSessions(sessionsData);
+      setSessionsCount(sessionsData.length);
 
-    const { data: activePrescriptionData } = await supabase
+      const scores = sessionsData
+        .map((s) => Number(s.discipline_score))
+        .filter((score) => !Number.isNaN(score));
+
+      if (!identityData && scores.length > 0) {
+        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        setAverageScore(avg);
+      }
+
+      setRiskState(getRiskFromSessions(sessionsData));
+    }
+
+    const { data: prescriptionData } = await supabase
       .from("prescriptions")
       .select("*")
       .eq("user_id", user.id)
@@ -94,334 +104,681 @@ export default function ProfilePage() {
       .limit(1)
       .maybeSingle();
 
-    if (activePrescriptionData) setActivePrescription(activePrescriptionData);
+    if (prescriptionData) {
+      setActivePrescription(prescriptionData);
+    }
 
-    const { data: completedPrescriptionData } = await supabase
-      .from("prescriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "completed")
-      .order("completed_at", { ascending: false })
-      .limit(10);
-
-    if (completedPrescriptionData) setPrescriptions(completedPrescriptionData);
+    setFocus(getFocusByProfile(identityData?.profile));
+    setLoading(false);
   };
 
-  const scores = sessions
-    .map((s) => Number(s.discipline_score))
-    .filter((score) => !Number.isNaN(score));
+  if (loading) {
+    return (
+      <main className="loading-screen">
+        <style>{`
+          .loading-screen {
+            min-height: 100vh;
+            background: #050505;
+            color: #D4B06A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Inter, Arial, sans-serif;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+          }
+        `}</style>
+        Chargement PRIME...
+      </main>
+    );
+  }
 
-  const averageScore =
-    scores.length > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : 0;
-
-  const totalPnl = sessions.reduce(
-    (total, s) => total + Number(s.session_pnl || 0),
-    0
-  );
-
-  const respectedPlans = sessions.filter((s) => s.plan_respected === true).length;
-  const planRespectRate =
-    sessions.length > 0 ? Math.round((respectedPlans / sessions.length) * 100) : 0;
-
-  const completedPrescriptions = prescriptions.length;
-  const level = getPrimeLevel(averageScore, sessions.length);
-  const nextLevel = getNextLevel(averageScore, sessions.length);
-  const levelProgress = getLevelProgress(averageScore, sessions.length);
-
-  const currentIdentity =
-    identityHistory[0]?.profile ||
-    primeProfile?.detectedProfile ||
-    "Profil en construction";
-
-  const previousIdentity = identityHistory[1]?.profile || "Premier profil";
-
-  const dominantError = getDominantValue(
-    sessions.map((s) => s.dominant_error).filter(Boolean)
-  );
-
-  const dominantMental = getDominantValue(
-    sessions.map((s) => s.post_mental_state || s.mental_state).filter(Boolean)
-  );
-
+  const lastSession = sessions[0] || null;
   const weekDays = getCurrentWeekData(sessions);
   const weekPnl = weekDays.reduce((sum, day) => sum + day.pnl, 0);
   const weekPlanRate = getWeekPlanRate(weekDays);
 
-  const activePrescriptionProgress = activePrescription
+  const prescriptionProgress = activePrescription
     ? (activePrescription.compliance_days || 0) +
       (activePrescription.missed_days || 0)
     : 0;
 
-  const activePrescriptionDuration = activePrescription?.duration_days || 7;
+  const prescriptionDuration = activePrescription?.duration_days || 7;
 
-  const activePrescriptionPercent = activePrescription
-    ? Math.min(
-        Math.round((activePrescriptionProgress / activePrescriptionDuration) * 100),
-        100
-      )
+  const prescriptionPercent = activePrescription
+    ? Math.min(Math.round((prescriptionProgress / prescriptionDuration) * 100), 100)
     : 0;
 
+  const lastPnl = Number(lastSession?.session_pnl || 0);
+
   return (
-    <main className="profile-page">
+    <main className="prime-home">
       <style>{`
         * { box-sizing: border-box; }
-        body { margin: 0; background: #000; }
-        .profile-page {
+
+        body {
+          margin: 0;
+          background: #050505;
+        }
+
+        .prime-home {
           min-height: 100vh;
-          padding: 32px 20px 150px;
+          padding: 30px 18px 128px;
           color: white;
           font-family: Inter, Arial, sans-serif;
+          background: #050505;
+        }
+
+        .page {
+          max-width: 460px;
+          margin: 0 auto;
+        }
+
+        .brand {
+          color: #D4B06A;
+          letter-spacing: 7px;
+          font-size: 13px;
+          text-transform: uppercase;
+          margin-bottom: 22px;
+        }
+
+        .hero {
+          margin-bottom: 24px;
+        }
+
+        .title {
+          margin: 0;
+          font-size: 46px;
+          line-height: 1;
+          font-weight: 900;
+          letter-spacing: -2.6px;
+        }
+
+        .title strong {
+          color: #D4B06A;
+          font-weight: 900;
+        }
+
+        .subtitle {
+          margin-top: 14px;
+          font-size: 18px;
+          line-height: 1.45;
+          color: rgba(255,255,255,0.62);
+        }
+
+        .card,
+        .score-card,
+        .metric-card,
+        .cta-card,
+        .action-card {
+          border-radius: 26px;
+          background: #101010;
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.38);
+        }
+
+        .score-card {
+          padding: 24px;
+          margin-bottom: 14px;
+        }
+
+        .score-grid {
+          display: grid;
+          grid-template-columns: 0.9fr 1.1fr;
+          gap: 20px;
+          align-items: center;
+        }
+
+        .score-ring {
+          width: 128px;
+          height: 128px;
+          border-radius: 50%;
           background:
-            radial-gradient(circle at top right, rgba(212,176,106,0.15), transparent 34%),
-            linear-gradient(180deg, #050505 0%, #000 100%);
-        }
-        .page { max-width: 460px; margin: 0 auto; }
-        .brand { color: #D4B06A; letter-spacing: 6px; font-size: 14px; text-transform: uppercase; margin-bottom: 18px; }
-        .title { font-size: 56px; line-height: 0.94; font-weight: 900; letter-spacing: -3px; margin: 0; }
-        .title span { display: block; color: rgba(255,255,255,0.88); }
-        .subtitle { margin-top: 24px; font-size: 18px; line-height: 1.7; color: rgba(255,255,255,0.68); margin-bottom: 30px; }
-        .card {
+            conic-gradient(#D4B06A ${averageScore * 3.6}deg, rgba(255,255,255,0.10) 0deg);
+          display: flex;
+          align-items: center;
+          justify-content: center;
           position: relative;
+          box-shadow: 0 0 28px rgba(212,176,106,0.12);
+        }
+
+        .score-ring::before {
+          content: "";
+          position: absolute;
+          width: 104px;
+          height: 104px;
+          border-radius: 50%;
+          background: #050505;
+        }
+
+        .score-number {
+          position: relative;
+          z-index: 1;
+          font-size: 36px;
+          font-weight: 950;
+          letter-spacing: -1px;
+        }
+
+        .label {
+          color: #D4B06A;
+          font-size: 12px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          font-weight: 900;
+          margin-bottom: 12px;
+        }
+
+        .score-title {
+          margin: 0;
+          font-size: 22px;
+          line-height: 1.25;
+          font-weight: 900;
+        }
+
+        .score-text {
+          margin-top: 12px;
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.55;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 14px;
+        }
+
+        .metric-card {
+          min-height: 150px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .metric-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .icon {
+          color: #D4B06A;
+        }
+
+        .arrow {
+          color: rgba(255,255,255,0.34);
+        }
+
+        .metric-title {
+          margin: 0;
+          color: #D4B06A;
+          font-size: 12px;
+          letter-spacing: 1.4px;
+          text-transform: uppercase;
+          font-weight: 900;
+        }
+
+        .metric-value {
+          margin: 10px 0 0;
+          font-size: 28px;
+          font-weight: 950;
+          line-height: 1.05;
+          letter-spacing: -0.6px;
+        }
+
+        .metric-caption {
+          margin: 10px 0 0;
+          color: rgba(255,255,255,0.64);
+          font-size: 14px;
+          line-height: 1.45;
+        }
+
+        .progress-track {
+          margin-top: 14px;
+          height: 8px;
+          width: 100%;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
           overflow: hidden;
-          padding: 26px;
-          margin-bottom: 18px;
-          border-radius: 34px;
-          background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.78);
+        }
+
+        .progress-bar {
+          height: 100%;
+          border-radius: 999px;
+          background: #D4B06A;
+        }
+
+        .cta-card {
+          margin: 14px 0 18px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          text-decoration: none;
+          background: linear-gradient(90deg, #D4B06A, #f0d28a);
+          color: #050505;
+          border: none;
+        }
+
+        .cta-icon {
+          width: 46px;
+          height: 46px;
+          border-radius: 16px;
+          background: rgba(0,0,0,0.10);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 0 auto;
+        }
+
+        .cta-title {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 950;
+          letter-spacing: -0.2px;
+        }
+
+        .cta-subtitle {
+          margin: 6px 0 0;
+          color: rgba(0,0,0,0.62);
+          font-size: 14px;
+          font-weight: 800;
+        }
+
+        .card {
+          padding: 22px;
+          margin-bottom: 14px;
+        }
+
+        .card-title {
+          margin: 0;
+          font-size: 25px;
+          line-height: 1.16;
+          font-weight: 950;
+          color: #D4B06A;
+        }
+
+        .text {
+          margin-top: 14px;
+          color: rgba(255,255,255,0.68);
+          font-size: 15px;
+          line-height: 1.6;
+        }
+
+        .week-dots {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 8px;
+          margin-top: 18px;
+        }
+
+        .week-dot {
+          min-height: 62px;
+          border-radius: 17px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
           border: 1px solid rgba(255,255,255,0.08);
-          backdrop-filter: blur(22px);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04);
         }
-        .gold-card {
-          border: 1px solid rgba(212,176,106,0.22);
-          background: radial-gradient(circle at top right, rgba(212,176,106,0.16), transparent 38%), linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.82);
+
+        .week-label {
+          font-size: 11px;
+          color: rgba(255,255,255,0.62);
+          font-weight: 900;
         }
-        .icon-box { width: 54px; height: 54px; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; background: rgba(212,176,106,0.10); border: 1px solid rgba(212,176,106,0.18); color: #D4B06A; }
-        .card-label { color: rgba(212,176,106,0.82); font-size: 12px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; }
-        .card-title { font-size: 29px; line-height: 1.18; font-weight: 900; margin: 0; color: #D4B06A; }
-        .text { margin-top: 18px; font-size: 17px; line-height: 1.75; color: rgba(255,255,255,0.72); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
-        .mini-card { padding: 20px; border-radius: 26px; background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.78); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(20px); }
-        .mini-label { margin-top: 14px; font-size: 12px; color: rgba(212,176,106,0.82); letter-spacing: 2px; text-transform: uppercase; }
-        .mini-value { margin-top: 10px; font-size: 25px; font-weight: 900; line-height: 1.08; }
-        .progress-track { margin-top: 20px; height: 12px; width: 100%; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
-        .progress-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #9d742f, #D4B06A, #fff2b8); }
-        .evolution { display: grid; gap: 12px; margin-top: 20px; }
-        .evolution-item { padding: 16px; border-radius: 22px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.08); }
-        .evolution-date { color: rgba(255,255,255,0.46); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; }
-        .evolution-profile { color: white; font-size: 18px; font-weight: 900; }
-        .badge-grid { display: grid; gap: 12px; margin-top: 20px; }
-        .badge { padding: 16px; border-radius: 22px; background: rgba(212,176,106,0.08); border: 1px solid rgba(212,176,106,0.16); }
-        .badge.locked { opacity: 0.42; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); }
-        .badge-title { margin: 0; color: white; font-weight: 900; font-size: 16px; }
-        .badge-text { margin: 8px 0 0; color: rgba(255,255,255,0.66); font-size: 14px; line-height: 1.5; }
-        .list-item { display: flex; align-items: flex-start; gap: 12px; margin-top: 16px; }
-        .list-text { margin: 0; color: rgba(255,255,255,0.78); font-size: 16px; line-height: 1.6; }
-        .week-dots { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 20px; }
-        .week-dot { min-height: 56px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; border: 1px solid rgba(255,255,255,0.08); }
-        .week-label { font-size: 11px; color: rgba(255,255,255,0.70); font-weight: 800; }
-        .week-pnl { font-size: 11px; color: rgba(255,255,255,0.82); font-weight: 900; }
-        @media(max-width:520px) { .title { font-size: 50px; } .grid { grid-template-columns: 1fr; } }
-        @media(max-width:390px) { .week-dots { gap: 6px; } .week-dot { min-height: 52px; border-radius: 15px; } }
+
+        .week-pnl {
+          font-size: 12px;
+          color: rgba(255,255,255,0.82);
+          font-weight: 950;
+        }
+
+        .actions-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: 14px;
+        }
+
+        .action-card {
+          min-height: 105px;
+          padding: 18px;
+          color: white;
+          text-decoration: none;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+
+        .action-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+
+        .action-label {
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin: 0 0 8px;
+          font-weight: 900;
+        }
+
+        .action-title {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 950;
+        }
+
+        @media(max-width: 390px) {
+          .title { font-size: 40px; }
+          .score-grid {
+            grid-template-columns: 1fr;
+          }
+          .score-ring {
+            margin: 0 auto;
+          }
+          .grid,
+          .actions-grid {
+            grid-template-columns: 1fr;
+          }
+          .week-dots { gap: 6px; }
+          .week-dot { min-height: 56px; border-radius: 15px; }
+        }
       `}</style>
 
       <div className="page">
-        <section>
-          <div className="brand">ADN TRADER</div>
-          <h1 className="title">Profil<span>PRIME.</span></h1>
-          <p className="subtitle">
-            Bonjour {displayName}. Ici, PRIME suit ton évolution, ton niveau,
-            tes comportements et ta progression réelle de trader.
-          </p>
+        <section className="hero">
+          <p className="brand">PRIME</p>
+
+          <h1 className="title">
+            Bonjour <strong>{displayName}.</strong>
+          </h1>
+
+          <p className="subtitle">Focus. Discipline. Maîtrise.</p>
         </section>
 
-        <section className="card gold-card">
-          <div className="icon-box"><Crown size={26} /></div>
-          <div className="card-label">NIVEAU PRIME</div>
-          <h2 className="card-title">{level}</h2>
-          <p className="text">
-            Identité actuelle : <strong>{currentIdentity}</strong><br />
-            Prochain objectif : <strong>{nextLevel}</strong>
-          </p>
-          <div className="progress-track"><div className="progress-bar" style={{ width: `${levelProgress}%` }} /></div>
-          <p className="text">Progression vers le prochain niveau : <strong>{levelProgress}%</strong></p>
-        </section>
+        <section className="score-card">
+          <div className="label">SCORE PRIME</div>
 
-        <section className="card">
-          <div className="icon-box"><User size={26} /></div>
-          <div className="card-label">PROFIL DÉTECTÉ</div>
-          <h2 className="card-title">{primeProfile?.detectedProfile || currentIdentity || "Profil non généré"}</h2>
-          <p className="text">
-            {primeProfile
-              ? `Risque dominant : ${primeProfile.risk || dominantError || "Non défini"}`
-              : "Va dans PRIME Identity pour générer ton profil trader personnalisé."}
-          </p>
-        </section>
+          <div className="score-grid">
+            <div className="score-ring">
+              <div className="score-number">{averageScore}%</div>
+            </div>
 
-        <section className="grid">
-          <Mini icon={<ShieldCheck size={24} color="#D4B06A" />} label="Score moyen" value={`${averageScore}%`} />
-          <Mini icon={<BookOpen size={24} color="#D4B06A" />} label="Sessions" value={sessions.length} />
-          <Mini icon={<CheckCircle size={24} color="#D4B06A" />} label="Plans respectés" value={`${planRespectRate}%`} />
-          <div className="mini-card">
-            <TrendingUp size={24} color="#D4B06A" />
-            <div className="mini-label">PnL total</div>
-            <div className="mini-value" style={{ color: totalPnl > 0 ? "#7DFFA1" : totalPnl < 0 ? "#FF7D7D" : "#fff" }}>
-              {totalPnl > 0 ? "+" : ""}{totalPnl}€
+            <div>
+              <h2 className="score-title">Score d’exécution</h2>
+
+              <p className="score-text">
+                Ce score mesure la qualité de ton exécution : checklist respectée,
+                plan suivi, erreurs comportementales évitées.
+                <br />
+                <br />
+                Il ne juge pas ton PnL. Une perte avec un plan respecté peut être
+                une bonne session.
+              </p>
             </div>
           </div>
         </section>
 
         <section className="grid">
-          <Mini icon={<Activity size={24} color="#D4B06A" />} label="Mental dominant" value={dominantMental || "Non noté"} />
-          <Mini icon={<Flame size={24} color="#D4B06A" />} label="Erreur dominante" value={dominantError || "Aucune"} />
+          <div className="metric-card">
+            <div className="metric-top">
+              <div>
+                <p className="metric-title">Dernière session</p>
+              </div>
+              <Flame size={22} className="icon" />
+            </div>
+
+            <div>
+              <p
+                className="metric-value"
+                style={{
+                  color:
+                    lastPnl > 0
+                      ? "#6BE28B"
+                      : lastPnl < 0
+                      ? "#F05B5B"
+                      : "#fff",
+                }}
+              >
+                {lastPnl > 0 ? "+" : ""}
+                {lastPnl}€
+              </p>
+
+              <p className="metric-caption">
+                Discipline : {lastSession?.discipline_score ?? 0}% ·{" "}
+                {lastSession?.plan_respected === true
+                  ? "Plan respecté"
+                  : lastSession?.plan_respected === false
+                  ? "Hors plan"
+                  : "Plan non renseigné"}
+              </p>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-top">
+              <div>
+                <p className="metric-title">PnL semaine</p>
+              </div>
+              <TrendingUp size={22} className="icon" />
+            </div>
+
+            <div>
+              <p
+                className="metric-value"
+                style={{
+                  color:
+                    weekPnl > 0
+                      ? "#6BE28B"
+                      : weekPnl < 0
+                      ? "#F05B5B"
+                      : "#fff",
+                }}
+              >
+                {weekPnl > 0 ? "+" : ""}
+                {weekPnl}€
+              </p>
+
+              <p className="metric-caption">{sessionsCount} sessions analysées</p>
+            </div>
+          </div>
         </section>
 
+        <section className="grid">
+          <div className="metric-card">
+            <div className="metric-top">
+              <Target size={28} className="icon" />
+              <ChevronRight size={20} className="arrow" />
+            </div>
+
+            <div>
+              <p className="metric-title">Prescription active</p>
+              <p className="metric-caption">
+                {activePrescription
+                  ? activePrescription.rule
+                  : "Aucune prescription active."}
+              </p>
+
+              {activePrescription && (
+                <>
+                  <p className="metric-caption">
+                    <strong>{prescriptionProgress}</strong> / {prescriptionDuration} jours
+                  </p>
+                  <div className="progress-track">
+                    <div
+                      className="progress-bar"
+                      style={{ width: `${prescriptionPercent}%` }}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <div className="metric-top">
+              <ShieldAlert size={28} className="icon" />
+              <ChevronRight size={20} className="arrow" />
+            </div>
+
+            <div>
+              <p className="metric-title">Risque actuel</p>
+              <p className="metric-value" style={{ fontSize: "22px", color: "#D4B06A" }}>
+                {riskState}
+              </p>
+              <p className="metric-caption">{focus}</p>
+            </div>
+          </div>
+        </section>
+
+        <Link href="/session" className="cta-card">
+          <div className="cta-icon">
+            <PlayCircle size={27} />
+          </div>
+
+          <div style={{ flex: 1 }}>
+            <p className="cta-title">Démarrer une session</p>
+            <p className="cta-subtitle">Avant ou après ton trade.</p>
+          </div>
+
+          <ChevronRight size={25} />
+        </Link>
+
         <section className="card">
-          <div className="icon-box"><CalendarDays size={26} /></div>
-          <div className="card-label">SEMAINE PRIME</div>
-          <h2 className="card-title">{weekPnl > 0 ? "+" : ""}{weekPnl}€</h2>
-          <p className="text">Respect du plan cette semaine : <strong>{weekPlanRate}%</strong></p>
+          <div className="label">CALENDRIER PRIME</div>
+          <h2 className="card-title">Ta semaine d’exécution</h2>
+
           <div className="week-dots">
             {weekDays.map((day) => (
               <div key={day.label} className="week-dot" style={getWeekDayStyle(day)}>
                 <div className="week-label">{day.label}</div>
-                <div className="week-pnl">{day.pnl > 0 ? "+" : ""}{day.pnl}€</div>
+                <div
+                  className="week-pnl"
+                  style={{
+                    color:
+                      day.pnl > 0
+                        ? "#6BE28B"
+                        : day.pnl < 0
+                        ? "#F05B5B"
+                        : "rgba(255,255,255,0.68)",
+                  }}
+                >
+                  {day.pnl > 0 ? "+" : ""}
+                  {day.pnl}€
+                </div>
               </div>
             ))}
           </div>
-        </section>
 
-        <section className="card">
-          <div className="icon-box"><Target size={26} /></div>
-          <div className="card-label">PRESCRIPTION ACTIVE</div>
-          <h2 className="card-title">{activePrescription ? activePrescription.title : primeProfile?.prescription || "Aucune prescription active"}</h2>
           <p className="text">
-            {activePrescription
-              ? activePrescription.rule
-              : "PRIME activera une prescription active lorsqu’un pattern comportemental sera détecté."}
+            Respect du plan cette semaine : <strong>{weekPlanRate}%</strong>
           </p>
-          {activePrescription && (
-            <>
-              <div className="progress-track"><div className="progress-bar" style={{ width: `${activePrescriptionPercent}%` }} /></div>
-              <p className="text">Progression : {activePrescriptionProgress} / {activePrescriptionDuration} jours</p>
-            </>
-          )}
         </section>
 
         <section className="card">
-          <div className="icon-box"><Sparkles size={26} /></div>
-          <div className="card-label">ÉVOLUTION PRIME</div>
-          <h2 className="card-title">{previousIdentity} → {currentIdentity}</h2>
-          <p className="text">PRIME conserve ton historique d’identité lorsque ton comportement change ou lorsque ton score progresse significativement.</p>
-          <div className="evolution">
-            {identityHistory.length > 0 ? (
-              identityHistory.map((item) => (
-                <div key={item.id} className="evolution-item">
-                  <div className="evolution-date">{formatDate(item.created_at)}</div>
-                  <div className="evolution-profile">{item.profile}</div>
-                  <p className="text" style={{ marginTop: "8px" }}>
-                    Score moyen : {item.discipline_average || 0}% · Sessions : {item.total_sessions || 0}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="text">Ton évolution apparaîtra après plusieurs sessions clôturées.</p>
-            )}
-          </div>
+          <div className="label">PROFIL ACTUEL</div>
+          <h2 className="card-title">{profile}</h2>
+          <p className="text">
+            Niveau : <strong>{getPrimeLevel(averageScore, sessionsCount)}</strong>
+            <br />
+            Sessions analysées : <strong>{sessionsCount}</strong>
+          </p>
         </section>
 
-        <section className="card">
-          <div className="icon-box"><Trophy size={26} /></div>
-          <div className="card-label">BADGES PRIME</div>
-          <h2 className="card-title">Ta progression débloque des niveaux.</h2>
-          <div className="badge-grid">
-            <Badge unlocked={sessions.length >= 1} title="Première session" text="Tu as créé ta première trace comportementale." />
-            <Badge unlocked={sessions.length >= 10} title="10 sessions analysées" text="PRIME commence à lire tes vrais patterns." />
-            <Badge unlocked={averageScore >= 70 && sessions.length >= 5} title="Cadre confirmé" text="Ton score moyen dépasse 70% avec assez de données." />
-            <Badge unlocked={completedPrescriptions >= 1} title="Prescription terminée" text="Tu as tenu une règle comportementale dans le temps." />
-            <Badge unlocked={planRespectRate >= 80 && sessions.length >= 5} title="Plan souverain" text="Tu respectes ton plan sur la majorité de tes sessions." />
-          </div>
-        </section>
-
-        <section className="card">
-          <div className="icon-box"><CheckCircle size={26} /></div>
-          <div className="card-label">CHECKLIST PERSONNALISÉE</div>
-          {primeProfile?.checklist?.length > 0 ? (
-            primeProfile.checklist.map((item) => (
-              <div key={item} className="list-item">
-                <CheckCircle size={18} color="#D4B06A" />
-                <p className="list-text">{item}</p>
-              </div>
-            ))
-          ) : (
-            <p className="text">Ta checklist personnalisée apparaîtra après la création de ton profil PRIME Identity.</p>
-          )}
+        <section className="actions-grid">
+          <ActionButton href="/onboarding" icon={<Crown size={22} />} label="PRIME" title="Identity" />
+          <ActionButton href="/profile" icon={<User size={22} />} label="Compte" title="Profil" />
+          <ActionButton href="/coach" icon={<Brain size={22} />} label="Analyse" title="Coach" />
+          <ActionButton href="/journal" icon={<BookOpen size={22} />} label="Historique" title="Journal" />
         </section>
       </div>
 
-      <BottomNav active="Profil" />
+      <BottomNav active="Prime" />
     </main>
   );
 }
 
-function Mini({ icon, label, value }) {
+function ActionButton({ href, icon, label, title }) {
   return (
-    <div className="mini-card">
-      {icon}
-      <div className="mini-label">{label}</div>
-      <div className="mini-value">{value}</div>
-    </div>
+    <Link href={href} className="action-card">
+      <div className="action-top">
+        <div className="icon">{icon}</div>
+        <ChevronRight size={18} className="arrow" />
+      </div>
+
+      <div>
+        <p className="action-label">{label}</p>
+        <h3 className="action-title">{title}</h3>
+      </div>
+    </Link>
   );
 }
 
-function Badge({ unlocked, title, text }) {
-  return (
-    <div className={unlocked ? "badge" : "badge locked"}>
-      <p className="badge-title">{unlocked ? "🏅 " : "🔒 "}{title}</p>
-      <p className="badge-text">{text}</p>
-    </div>
-  );
-}
-
-function getDominantValue(values) {
-  if (!values || values.length === 0) return null;
-
-  return values.sort(
-    (a, b) =>
-      values.filter((value) => value === b).length -
-      values.filter((value) => value === a).length
-  )[0];
+function getFocusByProfile(profile) {
+  switch (profile) {
+    case "Trader Impulsif":
+      return "Ralentir avant d’agir.";
+    case "Trader FOMO":
+      return "Accepter de laisser partir une opportunité.";
+    case "Trader Désorganisé":
+      return "Structurer ton plan avant l’exécution.";
+    case "Trader Patient":
+      return "Maintenir ton cadre sans excès de confiance.";
+    case "Trader Agressif":
+      return "Rendre ton invalidation non négociable.";
+    default:
+      return "Respecter le process avant le résultat.";
+  }
 }
 
 function getPrimeLevel(score, count) {
   if (count < 5) return "En construction";
-  if (score >= 90) return "Institutionnel";
-  if (score >= 85) return "Elite";
-  if (score >= 75) return "Consistant";
-  if (score >= 65) return "Confirmé";
-  if (score >= 50) return "Intermédiaire";
+  if (score >= 85) return "Consistant";
+  if (score >= 70) return "Confirmé";
+  if (score >= 55) return "Intermédiaire";
   return "À stabiliser";
 }
 
-function getNextLevel(score, count) {
-  if (count < 5) return "5 sessions analysées";
-  if (score < 50) return "Intermédiaire";
-  if (score < 65) return "Confirmé";
-  if (score < 75) return "Consistant";
-  if (score < 85) return "Elite";
-  if (score < 90) return "Institutionnel";
-  return "Maintenir l'excellence";
-}
+function getRiskFromSessions(sessions) {
+  const closedSessions = sessions
+    .filter((s) => s.status === "closed")
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-function getLevelProgress(score, count) {
-  if (count < 5) return Math.min(Math.round((count / 5) * 100), 100);
-  if (score >= 90) return 100;
-  if (score >= 85) return Math.round(((score - 85) / 5) * 100);
-  if (score >= 75) return Math.round(((score - 75) / 10) * 100);
-  if (score >= 65) return Math.round(((score - 65) / 10) * 100);
-  if (score >= 50) return Math.round(((score - 50) / 15) * 100);
-  return Math.max(Math.round((score / 50) * 100), 0);
+  const lastThree = closedSessions.slice(0, 3);
+  const lastFive = closedSessions.slice(0, 5);
+
+  const lowDiscipline =
+    lastThree.length === 3 &&
+    lastThree.every((s) => Number(s.discipline_score) < 65);
+
+  if (lowDiscipline) return "Discipline en baisse";
+
+  const revengeCount = lastFive.filter(
+    (s) => s.dominant_error === "Revenge trade"
+  ).length;
+
+  if (revengeCount >= 2) return "Revenge Trading détecté";
+
+  const overtradingCount = lastFive.filter(
+    (s) => s.dominant_error === "Overtrading"
+  ).length;
+
+  if (overtradingCount >= 2) return "Overtrading détecté";
+
+  const fomoCount = lastFive.filter((s) => s.dominant_error === "Entrée FOMO").length;
+
+  if (fomoCount >= 2) return "FOMO à surveiller";
+
+  return "Sous contrôle";
 }
 
 function getCurrentWeekData(sessions) {
@@ -449,36 +806,70 @@ function getCurrentWeekData(sessions) {
     );
 
     const hasSession = daySessions.length > 0;
-    const respectedCount = daySessions.filter((session) => session.plan_respected === true).length;
-    const notRespectedCount = daySessions.filter((session) => session.plan_respected === false).length;
-    const planRespected = hasSession && notRespectedCount === 0 && respectedCount > 0;
+
+    const respectedCount = daySessions.filter(
+      (session) => session.plan_respected === true
+    ).length;
+
+    const notRespectedCount = daySessions.filter(
+      (session) => session.plan_respected === false
+    ).length;
+
+    const planRespected =
+      hasSession && notRespectedCount === 0 && respectedCount > 0;
+
     const planNotRespected = hasSession && notRespectedCount > 0;
 
-    return { label, pnl, hasSession, planRespected, planNotRespected };
+    return {
+      label,
+      pnl,
+      hasSession,
+      planRespected,
+      planNotRespected,
+    };
   });
 }
 
 function getWeekDayStyle(day) {
-  if (!day.hasSession) return { background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" };
-  if (day.planRespected) return { background: "rgba(125,255,161,0.12)", border: "1px solid rgba(125,255,161,0.30)" };
-  if (day.planNotRespected && day.pnl > 0) return { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)" };
-  if (day.planNotRespected && day.pnl < 0) return { background: "rgba(255,80,80,0.13)", border: "1px solid rgba(255,80,80,0.32)" };
-  return { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)" };
+  if (!day.hasSession) {
+    return {
+      background: "rgba(255,255,255,0.035)",
+      border: "1px solid rgba(255,255,255,0.07)",
+    };
+  }
+
+  if (day.planRespected) {
+    return {
+      background: "rgba(107,226,139,0.12)",
+      border: "1px solid rgba(107,226,139,0.30)",
+    };
+  }
+
+  if (day.planNotRespected && day.pnl > 0) {
+    return {
+      background: "rgba(255,255,255,0.07)",
+      border: "1px solid rgba(255,255,255,0.14)",
+    };
+  }
+
+  if (day.planNotRespected && day.pnl < 0) {
+    return {
+      background: "rgba(240,91,91,0.13)",
+      border: "1px solid rgba(240,91,91,0.32)",
+    };
+  }
+
+  return {
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.10)",
+  };
 }
 
 function getWeekPlanRate(days) {
   const tradedDays = days.filter((day) => day.hasSession);
   if (tradedDays.length === 0) return 0;
+
   const respectedDays = tradedDays.filter((day) => day.planRespected).length;
   return Math.round((respectedDays / tradedDays.length) * 100);
-}
-
-function formatDate(value) {
-  if (!value) return "Date inconnue";
-  return new Date(value).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
