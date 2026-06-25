@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Brain,
+  CheckCircle,
+  Target,
+  ShieldAlert,
+  TrendingUp,
+  Save,
+  RotateCcw,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
+
 import { supabase } from "../../lib/supabase";
+import BottomNav from "../components/BottomNav";
 
 export default function SessionPage() {
   const [mentalState, setMentalState] = useState("");
@@ -17,14 +30,15 @@ export default function SessionPage() {
   const [activePrescription, setActivePrescription] = useState(null);
   const [prescriptionAnswered, setPrescriptionAnswered] = useState(false);
   const [primeProfile, setPrimeProfile] = useState(null);
+  const [todaySessionCount, setTodaySessionCount] = useState(0);
 
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    loadActivePrescription();
+    loadInitialData();
   }, []);
 
-  const loadActivePrescription = async () => {
+  const loadInitialData = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -41,7 +55,7 @@ export default function SessionPage() {
 
     if (profileData) setPrimeProfile(profileData.profile);
 
-    const { data } = await supabase
+    const { data: prescriptionData } = await supabase
       .from("prescriptions")
       .select("*")
       .eq("user_id", user.id)
@@ -50,57 +64,24 @@ export default function SessionPage() {
       .limit(1)
       .maybeSingle();
 
-    if (data) {
-      setActivePrescription(data);
-      setPrescriptionAnswered(data.last_check_date === today);
+    if (prescriptionData) {
+      setActivePrescription(prescriptionData);
+      setPrescriptionAnswered(prescriptionData.last_check_date === today);
     }
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const { data: todaySessions } = await supabase
+      .from("sessions")
+      .select("id")
+      .eq("user_id", user.id)
+      .gte("created_at", start.toISOString());
+
+    setTodaySessionCount(todaySessions?.length || 0);
   };
 
-  const getChecklistByProfile = () => {
-    switch (primeProfile) {
-      case "Trader Impulsif":
-        return [
-          "J’ai attendu mon setup complet",
-          "Je ne trade pas une émotion",
-          "Je ne suis pas en revenge trade",
-          "Mon risque est défini",
-          "Mon invalidation est définie",
-          "Je respecte mon cadre",
-        ];
-
-      case "Trader Désorganisé":
-        return [
-          "Mon scénario est écrit",
-          "Mon invalidation est définie",
-          "Mon risque est calculé",
-          "J’ai identifié la tendance HTF",
-          "J’ai identifié les liquidités",
-          "Je sais exactement pourquoi j'entre",
-        ];
-
-      case "Trader FOMO":
-        return [
-          "J’ai attendu la confirmation",
-          "Je n’anticipe pas le mouvement",
-          "Le setup est complet",
-          "J’accepte de rater un trade",
-          "Mon entrée est validée",
-          "Je respecte mon plan",
-        ];
-
-      default:
-        return [
-          "J’ai identifié la tendance HTF",
-          "J’ai repéré les zones de liquidité",
-          "J’ai défini mon scénario principal",
-          "J’ai défini mon invalidation",
-          "Je connais mon risque max",
-          "Je ne trade pas par impatience",
-        ];
-    }
-  };
-
-  const checklist = getChecklistByProfile();
+  const checklist = getChecklistByProfile(primeProfile);
 
   const mistakesList = [
     "Revenge trade",
@@ -110,18 +91,7 @@ export default function SessionPage() {
     "Trade hors plan",
   ];
 
-  const getFocusMessage = () => {
-    switch (primeProfile) {
-      case "Trader Impulsif":
-        return "Attendre la confirmation avant d'agir.";
-      case "Trader Désorganisé":
-        return "Structurer le plan avant l'exécution.";
-      case "Trader FOMO":
-        return "Accepter de laisser partir les opportunités.";
-      default:
-        return "Respecter le process avant le résultat.";
-    }
-  };
+  const focus = getFocusMessage(primeProfile);
 
   const calculateScore = (
     updatedChecks,
@@ -208,6 +178,7 @@ export default function SessionPage() {
     }
 
     setActiveSessionId(newSession.id);
+    setTodaySessionCount((prev) => prev + 1);
     return newSession.id;
   };
 
@@ -344,7 +315,7 @@ export default function SessionPage() {
       return;
     }
 
-    await supabase
+    const { error } = await supabase
       .from("sessions")
       .update({
         status: "closed",
@@ -356,6 +327,11 @@ export default function SessionPage() {
         session_pnl: sessionPnl === "" ? null : Number(sessionPnl),
       })
       .eq("id", sessionId);
+
+    if (error) {
+      alert("Erreur sauvegarde session : " + error.message);
+      return;
+    }
 
     setSessionFinished(true);
   };
@@ -371,486 +347,824 @@ export default function SessionPage() {
     setDisciplineScore(0);
     setActiveSessionId(null);
     setSessionFinished(false);
+    setPrescriptionAnswered(activePrescription?.last_check_date === today);
   };
+
+  const selectedMistakes = Object.values(mistakes).filter(Boolean).length;
+  const checklistProgress = Math.round(
+    (Object.values(checked).filter(Boolean).length / checklist.length) * 100
+  );
 
   if (sessionFinished) {
     return (
-      <main style={page}>
-        <div style={container}>
-          <p style={eyebrow}>SESSION ENREGISTRÉE</p>
+      <main className="session-page">
+        <BaseStyles />
 
-          <h1 style={heading}>
-            Résultat
-            <br />
-            PRIME.
-          </h1>
+        <div className="page">
+          <section className="hero">
+            <p className="brand">SESSION ENREGISTRÉE</p>
 
-          <section style={card}>
-            <h2 style={title}>Résumé psycho-financier</h2>
+            <h1 className="title">
+              Résultat
+              <span>PRIME.</span>
+            </h1>
 
-            <p style={scoreText}>{disciplineScore}%</p>
-
-            <p style={text}>
-              État mental pré-session : {mentalState || "Non renseigné"}
-            </p>
-            <p style={text}>
-              État mental post-session : {postMentalState || "Non renseigné"}
-            </p>
-            <p style={text}>
-              Plan respecté :{" "}
-              {planRespected === true
-                ? "Oui"
-                : planRespected === false
-                ? "Non"
-                : "Non renseigné"}
-            </p>
-            <p style={text}>
-              PnL :{" "}
-              {sessionPnl !== ""
-                ? `${Number(sessionPnl) > 0 ? "+" : ""}${sessionPnl}€`
-                : "Non renseigné"}
-            </p>
-            <p style={text}>
-              À améliorer : {improvementNote || "Non renseigné"}
+            <p className="subtitle">
+              Ta trace psycho-financière est sauvegardée.
             </p>
           </section>
 
-          <button style={goldButton} onClick={startNewSession}>
-            + ENREGISTRER UNE NOUVELLE SESSION
-          </button>
+          <section className="score-card">
+            <div className="score-ring">
+              <div className="score-number">{disciplineScore}%</div>
+            </div>
 
-          <button
-            style={secondaryButton}
-            onClick={() => (window.location.href = "/coach")}
-          >
-            Voir mon Coach
-          </button>
+            <div>
+              <p className="label">SCORE D’EXÉCUTION</p>
+              <h2 className="card-title">Résumé de session</h2>
 
-          <button
-            style={secondaryButton}
-            onClick={() => (window.location.href = "/journal")}
-          >
-            Voir mon Journal
-          </button>
+              <p className="text">
+                PnL :{" "}
+                <strong
+                  style={{
+                    color:
+                      Number(sessionPnl || 0) > 0
+                        ? "#6BE28B"
+                        : Number(sessionPnl || 0) < 0
+                        ? "#F05B5B"
+                        : "#fff",
+                  }}
+                >
+                  {sessionPnl !== ""
+                    ? `${Number(sessionPnl) > 0 ? "+" : ""}${sessionPnl}€`
+                    : "Non renseigné"}
+                </strong>
+                <br />
+                Plan :{" "}
+                <strong
+                  style={{
+                    color:
+                      planRespected === true
+                        ? "#6BE28B"
+                        : planRespected === false
+                        ? "#F05B5B"
+                        : "#fff",
+                  }}
+                >
+                  {planRespected === true
+                    ? "Respecté"
+                    : planRespected === false
+                    ? "Hors plan"
+                    : "Non renseigné"}
+                </strong>
+                <br />
+                Mental post-session : <strong>{postMentalState || "Non renseigné"}</strong>
+              </p>
+            </div>
+          </section>
 
-          <button
-            style={secondaryButton}
-            onClick={() => (window.location.href = "/")}
-          >
-            Terminer ma journée
-          </button>
+          <section className="cta-stack">
+            <button className="gold-button" onClick={startNewSession}>
+              <RotateCcw size={20} />
+              Enregistrer une nouvelle session
+            </button>
+
+            <button className="secondary-button" onClick={() => (window.location.href = "/coach")}>
+              Voir mon Coach
+            </button>
+
+            <button className="secondary-button" onClick={() => (window.location.href = "/journal")}>
+              Voir mon Journal
+            </button>
+
+            <button className="secondary-button" onClick={() => (window.location.href = "/")}>
+              Terminer ma journée
+            </button>
+          </section>
         </div>
+
+        <BottomNav active="Session" />
       </main>
     );
   }
 
   return (
-    <main style={page}>
-      <div style={container}>
-        <button style={backButton} onClick={() => (window.location.href = "/")}>
-          ← Retour
-        </button>
+    <main className="session-page">
+      <BaseStyles />
 
-        <p style={eyebrow}>PRIME SESSION</p>
+      <div className="page">
+        <section className="hero">
+          <p className="brand">COCKPIT D’EXÉCUTION</p>
 
-        <h1 style={heading}>
-          Session
-          <br />
-          Trading
-        </h1>
+          <h1 className="title">
+            Session #{todaySessionCount + (activeSessionId ? 0 : 1)}
+            <span>Aujourd’hui.</span>
+          </h1>
 
-        <div style={sectionLabel}>AVANT TRADE</div>
-
-        <section style={card}>
-          <h2 style={title}>Identité active</h2>
-
-          <p style={profileTitle}>
-            {primeProfile || "Profil en cours d'analyse"}
+          <p className="subtitle">
+            Prépare ta décision, exécute ton plan, puis débriefe ton comportement.
           </p>
-
-          <p style={text}>Focus du jour : {getFocusMessage()}</p>
         </section>
 
-        <section style={card}>
-          <h2 style={title}>État mental pré-session</h2>
-          <p style={text}>Dans quel état tu arrives sur les marchés ?</p>
+        <section className="status-card">
+          <div>
+            <p className="label">IDENTITÉ ACTIVE</p>
+            <h2 className="card-title">{primeProfile || "Profil en analyse"}</h2>
+            <p className="text">{focus}</p>
+          </div>
 
-          {["Calme", "Focus", "Stressé", "Impatient", "Fatigué"].map(
-            (state) => (
-              <button
-                key={state}
-                onClick={() => handleMentalState(state)}
-                style={{
-                  ...pill,
-                  background:
-                    mentalState === state
-                      ? "#D4B06A"
-                      : "rgba(255,255,255,0.06)",
-                  color: mentalState === state ? "#000" : "#fff",
-                }}
-              >
-                {state}
-              </button>
-            )
-          )}
+          <div className="score-pill">
+            {disciplineScore}%
+          </div>
         </section>
 
-        <section style={card}>
-          <h2 style={title}>Checklist pré-trade</h2>
-          <p style={text}>Tu ne cherches pas un trade. Tu valides un plan.</p>
+        <div className="section-heading">
+          <span>AVANT TRADE</span>
+        </div>
 
-          {checklist.map((item) => (
-            <div
-              key={item}
-              onClick={() => handleChecklist(item)}
-              style={checkItem}
-            >
-              <span>{checked[item] ? "✅" : "◻️"}</span>
-              <span>{item}</span>
-            </div>
-          ))}
-        </section>
+        <section className="card compact-card">
+          <div className="card-top">
+            <Brain size={23} className="icon" />
+            <p className="label">ÉTAT MENTAL</p>
+          </div>
 
-        <div style={sectionLabel}>APRÈS TRADE / DÉBRIEF</div>
-
-        {activePrescription && (
-          <section style={card}>
-            <h2 style={title}>Prescription active</h2>
-
-            <p style={text}>{activePrescription.title}</p>
-
-            <p style={prescriptionRule}>{activePrescription.rule}</p>
-
-            <p style={text}>
-              Progression : {activePrescription.compliance_days || 0} jour(s)
-              respecté(s) / {activePrescription.duration_days || 7}
-            </p>
-
-            {prescriptionAnswered ? (
-              <p style={successText}>Prescription renseignée aujourd’hui ✅</p>
-            ) : (
-              <>
-                <p style={text}>
-                  As-tu respecté cette prescription sur cette session ?
-                </p>
-
+          <div className="pill-grid">
+            {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
+              (state) => (
                 <button
-                  style={goldButton}
-                  onClick={() => updatePrescriptionCompliance(true)}
+                  key={state}
+                  onClick={() => handleMentalState(state)}
+                  className={mentalState === state ? "pill active" : "pill"}
                 >
-                  Oui, respectée
+                  {state}
                 </button>
-
-                <button
-                  style={secondaryButton}
-                  onClick={() => updatePrescriptionCompliance(false)}
-                >
-                  Non, pas respectée
-                </button>
-              </>
+              )
             )}
-          </section>
-        )}
+          </div>
+        </section>
 
-        <section style={card}>
-          <h2 style={title}>État mental post-session</h2>
-          <p style={text}>
-            Dans quel état tu ressors de ce trade ou de cette session ?
-          </p>
+        <section className="card">
+          <div className="card-top">
+            <CheckCircle size={23} className="icon" />
+            <p className="label">CHECKLIST PRÉ-TRADE</p>
+          </div>
 
-          {["Satisfaite", "Neutre", "Frustrée", "Stressée", "Fière", "Déçue"].map(
-            (state) => (
+          <div className="progress-track">
+            <div className="progress-bar" style={{ width: `${checklistProgress}%` }} />
+          </div>
+
+          <div className="checklist-grid">
+            {checklist.map((item) => (
               <button
-                key={state}
-                onClick={() => setPostMentalState(state)}
-                style={{
-                  ...pill,
-                  background:
-                    postMentalState === state
-                      ? "#D4B06A"
-                      : "rgba(255,255,255,0.06)",
-                  color: postMentalState === state ? "#000" : "#fff",
-                }}
+                key={item}
+                onClick={() => handleChecklist(item)}
+                className={checked[item] ? "check active" : "check"}
               >
-                {state}
+                <span>{checked[item] ? "✓" : ""}</span>
+                {item}
               </button>
-            )
-          )}
+            ))}
+          </div>
         </section>
 
-        <section style={card}>
-          <h2 style={title}>Respect du plan</h2>
-          <p style={text}>As-tu respecté ton plan sur cette session ?</p>
+        <div className="section-heading">
+          <span>APRÈS TRADE</span>
+        </div>
 
-          <button
-            style={planRespected === true ? goldButton : secondaryButton}
-            onClick={() => handlePlanRespected(true)}
-          >
-            Oui, plan respecté
-          </button>
+        <section className="grid">
+          <div className="card mini">
+            <TrendingUp size={24} className="icon" />
+            <p className="label">PNL</p>
+            <input
+              type="number"
+              value={sessionPnl}
+              onChange={(e) => setSessionPnl(e.target.value)}
+              placeholder="0"
+              className="pnl-input"
+            />
+          </div>
 
-          <button
-            style={planRespected === false ? dangerButton : secondaryButton}
-            onClick={() => handlePlanRespected(false)}
-          >
-            Non, hors plan
-          </button>
-        </section>
-
-        <section style={card}>
-          <h2 style={title}>Erreurs comportementales</h2>
-          <p style={text}>
-            Coche les comportements qui se sont produits pendant cette session.
-          </p>
-
-          {mistakesList.map((mistake) => (
-            <div
-              key={mistake}
-              onClick={() => handleMistake(mistake)}
-              style={checkItem}
-            >
-              <span>{mistakes[mistake] ? "🔥" : "◻️"}</span>
-              <span>{mistake}</span>
+          <div className="card mini">
+            <Target size={24} className="icon" />
+            <p className="label">PLAN</p>
+            <div className="two-buttons">
+              <button
+                className={planRespected === true ? "choice success active" : "choice"}
+                onClick={() => handlePlanRespected(true)}
+              >
+                Oui
+              </button>
+              <button
+                className={planRespected === false ? "choice danger active" : "choice"}
+                onClick={() => handlePlanRespected(false)}
+              >
+                Non
+              </button>
             </div>
-          ))}
+          </div>
         </section>
 
-        <section style={card}>
-          <h2 style={title}>Amélioration</h2>
-          <p style={text}>
-            Qu’est-ce que tu dois améliorer sur la prochaine session ?
-          </p>
+        <section className="card compact-card">
+          <div className="card-top">
+            <Brain size={23} className="icon" />
+            <p className="label">MENTAL POST-SESSION</p>
+          </div>
+
+          <div className="pill-grid">
+            {["Satisfaite", "Neutre", "Frustrée", "Stressée", "Fière", "Déçue"].map(
+              (state) => (
+                <button
+                  key={state}
+                  onClick={() => setPostMentalState(state)}
+                  className={postMentalState === state ? "pill active" : "pill"}
+                >
+                  {state}
+                </button>
+              )
+            )}
+          </div>
+        </section>
+
+        <section className="card compact-card">
+          <div className="card-top">
+            <ShieldAlert size={23} className="icon" />
+            <p className="label">ERREURS COMPORTEMENTALES</p>
+            <span className="count">{selectedMistakes}</span>
+          </div>
+
+          <div className="pill-grid">
+            {mistakesList.map((mistake) => (
+              <button
+                key={mistake}
+                onClick={() => handleMistake(mistake)}
+                className={mistakes[mistake] ? "pill danger active" : "pill"}
+              >
+                {mistake}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="card">
+          <div className="card-top">
+            <Sparkles size={23} className="icon" />
+            <p className="label">AMÉLIORATION</p>
+          </div>
 
           <textarea
             value={improvementNote}
             onChange={(e) => setImprovementNote(e.target.value)}
-            placeholder="Ex : attendre le pullback complet, réduire la taille, ne pas reprendre après une perte..."
-            style={textarea}
+            placeholder="Ce que je dois corriger à la prochaine session..."
+            className="note"
           />
         </section>
 
-        <section style={card}>
-          <h2 style={title}>PnL de la session</h2>
-          <p style={text}>
-            Note ton résultat financier. PRIME ne te juge pas sur le PnL, mais
-            il relie ta discipline à tes résultats.
-          </p>
+        {activePrescription && (
+          <section className="card">
+            <div className="card-top">
+              <Target size={23} className="icon" />
+              <p className="label">PRESCRIPTION ACTIVE</p>
+            </div>
 
-          <input
-            type="number"
-            value={sessionPnl}
-            onChange={(e) => setSessionPnl(e.target.value)}
-            placeholder="Ex : 150 ou -80"
-            style={input}
-          />
-        </section>
+            <h2 className="card-title small">{activePrescription.title}</h2>
+            <p className="text">{activePrescription.rule}</p>
 
-        <div style={sectionLabel}>RÉSULTAT PRIME</div>
+            <p className="text">
+              Progression : {activePrescription.compliance_days || 0} /{" "}
+              {activePrescription.duration_days || 7} jours
+            </p>
 
-        <section style={card}>
-          <h2 style={title}>Discipline Score</h2>
-          <p style={scoreText}>{disciplineScore}%</p>
-          <p style={text}>
-            Ton score évolue selon le respect de ton process, ton identité
-            PRIME, ton plan et tes erreurs comportementales.
-          </p>
-        </section>
+            {prescriptionAnswered ? (
+              <p className="success-text">Prescription renseignée aujourd’hui ✓</p>
+            ) : (
+              <div className="two-buttons">
+                <button
+                  className="choice success"
+                  onClick={() => updatePrescriptionCompliance(true)}
+                >
+                  Respectée
+                </button>
 
-        <section style={card}>
-          <h2 style={title}>Enregistrer</h2>
-          <p style={text}>
-            Enregistre cette session. Tu pourras ensuite ajouter une nouvelle
-            session si tu prends un autre trade aujourd’hui.
-          </p>
+                <button
+                  className="choice danger"
+                  onClick={() => updatePrescriptionCompliance(false)}
+                >
+                  Non respectée
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
-          <button style={goldButton} onClick={finishSession}>
-            ENREGISTRER CETTE SESSION
+        <section className="save-card">
+          <div>
+            <p className="label">SCORE ACTUEL</p>
+            <h2>{disciplineScore}%</h2>
+          </div>
+
+          <button className="save-button" onClick={finishSession}>
+            <Save size={20} />
+            Enregistrer
           </button>
         </section>
       </div>
+
+      <BottomNav active="Session" />
     </main>
   );
 }
 
-const page = {
-  minHeight: "100vh",
-  background: "#000",
-  color: "#fff",
-  padding: "28px 18px 120px",
-  fontFamily: "Inter, Arial, sans-serif",
-};
+function BaseStyles() {
+  return (
+    <style>{`
+      * { box-sizing: border-box; }
 
-const container = {
-  maxWidth: "460px",
-  margin: "0 auto",
-};
+      body {
+        margin: 0;
+        background: #050505;
+      }
 
-const eyebrow = {
-  color: "#D4B06A",
-  letterSpacing: "7px",
-  fontSize: "14px",
-  marginTop: "34px",
-  marginBottom: "18px",
-};
+      .session-page {
+        min-height: 100vh;
+        padding: 30px 18px 128px;
+        color: white;
+        font-family: Inter, Arial, sans-serif;
+        background: #050505;
+      }
 
-const heading = {
-  fontSize: "58px",
-  lineHeight: "0.92",
-  fontWeight: "900",
-  letterSpacing: "-3px",
-  marginBottom: "34px",
-};
+      .page {
+        max-width: 460px;
+        margin: 0 auto;
+      }
 
-const sectionLabel = {
-  margin: "34px 0 16px",
-  padding: "12px 16px",
-  borderRadius: "999px",
-  background: "rgba(212,176,106,0.10)",
-  border: "1px solid rgba(212,176,106,0.20)",
-  color: "#D4B06A",
-  fontSize: "12px",
-  fontWeight: "900",
-  letterSpacing: "3px",
-};
+      .brand {
+        color: #D4B06A;
+        letter-spacing: 6px;
+        font-size: 13px;
+        text-transform: uppercase;
+        margin-bottom: 18px;
+      }
 
-const card = {
-  padding: "28px",
-  marginBottom: "20px",
-  borderRadius: "30px",
-  background:
-    "linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)), rgba(5,5,5,0.78)",
-  border: "1px solid rgba(212,176,106,0.18)",
-  boxShadow: "0 20px 60px rgba(0,0,0,0.55)",
-};
+      .title {
+        margin: 0;
+        font-size: 46px;
+        line-height: 1;
+        font-weight: 950;
+        letter-spacing: -2.6px;
+      }
 
-const title = {
-  color: "#D4B06A",
-  fontSize: "24px",
-  fontWeight: "900",
-  marginBottom: "16px",
-};
+      .title span {
+        display: block;
+        color: rgba(255,255,255,0.88);
+      }
 
-const profileTitle = {
-  color: "#D4B06A",
-  fontSize: "28px",
-  fontWeight: "900",
-  marginBottom: "16px",
-};
+      .subtitle {
+        margin-top: 14px;
+        font-size: 17px;
+        line-height: 1.5;
+        color: rgba(255,255,255,0.62);
+      }
 
-const text = {
-  color: "rgba(255,255,255,0.72)",
-  fontSize: "17px",
-  lineHeight: "1.6",
-};
+      .hero {
+        margin-bottom: 22px;
+      }
 
-const prescriptionRule = {
-  color: "#fff",
-  fontSize: "20px",
-  fontWeight: "900",
-  lineHeight: "1.45",
-  marginTop: "22px",
-};
+      .card,
+      .status-card,
+      .save-card,
+      .score-card {
+        border-radius: 26px;
+        background: #101010;
+        border: 1px solid rgba(255,255,255,0.07);
+        box-shadow: 0 18px 45px rgba(0,0,0,0.38);
+      }
 
-const scoreText = {
-  color: "#D4B06A",
-  fontSize: "54px",
-  fontWeight: "900",
-  margin: "20px 0",
-};
+      .card {
+        padding: 20px;
+        margin-bottom: 14px;
+      }
 
-const pill = {
-  padding: "12px 18px",
-  borderRadius: "999px",
-  margin: "8px 8px 0 0",
-  border: "1px solid rgba(255,255,255,0.10)",
-  fontWeight: "800",
-  cursor: "pointer",
-};
+      .compact-card {
+        padding-bottom: 18px;
+      }
 
-const checkItem = {
-  display: "flex",
-  gap: "14px",
-  alignItems: "center",
-  padding: "16px 0",
-  borderBottom: "1px solid rgba(255,255,255,0.08)",
-  fontSize: "16px",
-  fontWeight: "700",
-  cursor: "pointer",
-};
+      .status-card {
+        padding: 22px;
+        margin-bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+      }
 
-const input = {
-  width: "100%",
-  marginTop: "14px",
-  padding: "16px",
-  borderRadius: "18px",
-  border: "1px solid rgba(212,176,106,0.24)",
-  background: "rgba(255,255,255,0.04)",
-  color: "#fff",
-  fontSize: "18px",
-  fontWeight: "800",
-  outline: "none",
-};
+      .score-pill {
+        width: 68px;
+        height: 68px;
+        border-radius: 22px;
+        background: rgba(212,176,106,0.10);
+        border: 1px solid rgba(212,176,106,0.22);
+        color: #D4B06A;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 950;
+        font-size: 20px;
+        flex: 0 0 auto;
+      }
 
-const textarea = {
-  width: "100%",
-  minHeight: "130px",
-  marginTop: "14px",
-  padding: "16px",
-  borderRadius: "18px",
-  border: "1px solid rgba(212,176,106,0.24)",
-  background: "rgba(255,255,255,0.04)",
-  color: "#fff",
-  fontSize: "16px",
-  lineHeight: "1.5",
-  outline: "none",
-  resize: "vertical",
-};
+      .label {
+        color: #D4B06A;
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 900;
+        margin: 0 0 12px;
+      }
 
-const goldButton = {
-  width: "100%",
-  marginTop: "18px",
-  padding: "17px",
-  borderRadius: "18px",
-  border: "none",
-  background: "#D4B06A",
-  color: "#000",
-  fontWeight: "900",
-  fontSize: "15px",
-  cursor: "pointer",
-};
+      .card-title {
+        margin: 0;
+        color: #D4B06A;
+        font-size: 25px;
+        line-height: 1.12;
+        font-weight: 950;
+      }
 
-const secondaryButton = {
-  width: "100%",
-  marginTop: "12px",
-  padding: "17px",
-  borderRadius: "18px",
-  border: "1px solid rgba(212,176,106,0.25)",
-  background: "rgba(255,255,255,0.04)",
-  color: "#fff",
-  fontWeight: "900",
-  fontSize: "15px",
-  cursor: "pointer",
-};
+      .card-title.small {
+        font-size: 21px;
+      }
 
-const dangerButton = {
-  ...secondaryButton,
-  border: "1px solid rgba(255,120,120,0.35)",
-  color: "#ff9a9a",
-};
+      .text {
+        margin: 12px 0 0;
+        color: rgba(255,255,255,0.68);
+        font-size: 15px;
+        line-height: 1.6;
+      }
 
-const backButton = {
-  padding: "10px 18px",
-  borderRadius: "999px",
-  border: "1px solid rgba(212,176,106,0.25)",
-  background: "transparent",
-  color: "#D4B06A",
-  fontWeight: "800",
-  cursor: "pointer",
-};
+      .section-heading {
+        margin: 20px 0 12px;
+        color: rgba(255,255,255,0.42);
+        font-size: 12px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 950;
+      }
 
-const successText = {
-  color: "#7DFFA1",
-  fontSize: "17px",
-  fontWeight: "900",
-  marginTop: "20px",
-};
+      .card-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .card-top .label {
+        margin: 0;
+      }
+
+      .icon {
+        color: #D4B06A;
+        flex: 0 0 auto;
+      }
+
+      .count {
+        margin-left: auto;
+        min-width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.68);
+        font-weight: 900;
+      }
+
+      .pill-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+      }
+
+      .pill {
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.045);
+        color: rgba(255,255,255,0.82);
+        padding: 11px 13px;
+        border-radius: 999px;
+        font-weight: 850;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .pill.active {
+        background: #D4B06A;
+        border-color: #D4B06A;
+        color: #050505;
+      }
+
+      .pill.danger.active {
+        background: rgba(240,91,91,0.18);
+        border-color: rgba(240,91,91,0.38);
+        color: #F05B5B;
+      }
+
+      .progress-track {
+        height: 8px;
+        width: 100%;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        border-radius: 999px;
+        background: #D4B06A;
+      }
+
+      .checklist-grid {
+        display: grid;
+        gap: 9px;
+      }
+
+      .check {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+        padding: 13px;
+        border-radius: 17px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.035);
+        color: rgba(255,255,255,0.80);
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      .check span {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        border: 1px solid rgba(255,255,255,0.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #050505;
+        font-size: 13px;
+        font-weight: 950;
+        flex: 0 0 auto;
+      }
+
+      .check.active {
+        border-color: rgba(212,176,106,0.35);
+        background: rgba(212,176,106,0.08);
+        color: white;
+      }
+
+      .check.active span {
+        background: #D4B06A;
+        border-color: #D4B06A;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .mini {
+        min-height: 154px;
+      }
+
+      .pnl-input {
+        width: 100%;
+        margin-top: 12px;
+        border: none;
+        background: transparent;
+        color: white;
+        font-size: 34px;
+        font-weight: 950;
+        outline: none;
+      }
+
+      .pnl-input::placeholder {
+        color: rgba(255,255,255,0.25);
+      }
+
+      .two-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .choice {
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.045);
+        color: white;
+        border-radius: 16px;
+        padding: 13px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .choice.success.active,
+      .choice.success {
+        border-color: rgba(107,226,139,0.28);
+      }
+
+      .choice.success.active {
+        background: rgba(107,226,139,0.16);
+        color: #6BE28B;
+      }
+
+      .choice.danger.active,
+      .choice.danger {
+        border-color: rgba(240,91,91,0.28);
+      }
+
+      .choice.danger.active {
+        background: rgba(240,91,91,0.16);
+        color: #F05B5B;
+      }
+
+      .note {
+        width: 100%;
+        min-height: 94px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.035);
+        color: white;
+        border-radius: 18px;
+        padding: 15px;
+        font-size: 15px;
+        line-height: 1.5;
+        outline: none;
+        resize: vertical;
+        font-family: Inter, Arial, sans-serif;
+      }
+
+      .success-text {
+        margin-top: 14px;
+        color: #6BE28B;
+        font-weight: 900;
+      }
+
+      .save-card {
+        padding: 20px;
+        margin-top: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .save-card h2 {
+        margin: 0;
+        color: #D4B06A;
+        font-size: 36px;
+        font-weight: 950;
+      }
+
+      .save-button,
+      .gold-button,
+      .secondary-button {
+        border: none;
+        border-radius: 18px;
+        padding: 15px 18px;
+        font-weight: 950;
+        cursor: pointer;
+      }
+
+      .save-button,
+      .gold-button {
+        background: #D4B06A;
+        color: #050505;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+      }
+
+      .secondary-button {
+        width: 100%;
+        background: #101010;
+        color: white;
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .cta-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .score-card {
+        padding: 22px;
+        display: grid;
+        grid-template-columns: 116px 1fr;
+        gap: 18px;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+
+      .score-ring {
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        background:
+          conic-gradient(#D4B06A var(--score), rgba(255,255,255,0.10) 0deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .score-ring::before {
+        content: "";
+        position: absolute;
+        width: 92px;
+        height: 92px;
+        border-radius: 50%;
+        background: #050505;
+      }
+
+      .score-number {
+        position: relative;
+        z-index: 1;
+        font-size: 30px;
+        font-weight: 950;
+      }
+
+      @media(max-width:390px) {
+        .title { font-size: 40px; }
+        .grid,
+        .two-buttons,
+        .score-card {
+          grid-template-columns: 1fr;
+        }
+        .score-ring {
+          margin: 0 auto;
+        }
+      }
+    `}</style>
+  );
+}
+
+function getChecklistByProfile(profile) {
+  switch (profile) {
+    case "Trader Impulsif":
+      return [
+        "J’ai attendu mon setup complet",
+        "Je ne trade pas une émotion",
+        "Je ne suis pas en revenge trade",
+        "Mon risque est défini",
+        "Mon invalidation est définie",
+        "Je respecte mon cadre",
+      ];
+
+    case "Trader Désorganisé":
+      return [
+        "Mon scénario est écrit",
+        "Mon invalidation est définie",
+        "Mon risque est calculé",
+        "J’ai identifié la tendance HTF",
+        "J’ai identifié les liquidités",
+        "Je sais exactement pourquoi j'entre",
+      ];
+
+    case "Trader FOMO":
+      return [
+        "J’ai attendu la confirmation",
+        "Je n’anticipe pas le mouvement",
+        "Le setup est complet",
+        "J’accepte de rater un trade",
+        "Mon entrée est validée",
+        "Je respecte mon plan",
+      ];
+
+    default:
+      return [
+        "J’ai identifié la tendance HTF",
+        "J’ai repéré les zones de liquidité",
+        "J’ai défini mon scénario principal",
+        "J’ai défini mon invalidation",
+        "Je connais mon risque max",
+        "Je ne trade pas par impatience",
+      ];
+  }
+}
+
+function getFocusMessage(profile) {
+  switch (profile) {
+    case "Trader Impulsif":
+      return "Ralentis avant d'agir. Tu ne cherches pas une opportunité, tu valides une décision.";
+    case "Trader Désorganisé":
+      return "Structure ton plan avant l’exécution. Pas de cadre, pas de trade.";
+    case "Trader FOMO":
+      return "Laisse partir les opportunités incomplètes. Ton edge est dans l’attente.";
+    default:
+      return "Respecte le process avant le résultat.";
+  }
+}
+
