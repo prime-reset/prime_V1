@@ -13,7 +13,9 @@ import {
   TrendingUp,
   CheckCircle,
   PlayCircle,
+  ExternalLink,
   BarChart3,
+  Target,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -34,7 +36,6 @@ export default function HomePage() {
     label: "Sous observation",
     message: "PRIME collecte encore assez de données pour lire ton comportement.",
   });
-  const [focus, setFocus] = useState("Respecter le process avant le résultat.");
 
   useEffect(() => {
     loadHome();
@@ -109,7 +110,6 @@ export default function HomePage() {
       setActivePrescription(prescriptionData);
     }
 
-    setFocus(getFocusByProfile(identityData?.profile));
     setLoading(false);
   };
 
@@ -153,7 +153,6 @@ export default function HomePage() {
   const chartData = getDisciplineChartData(sessions, averageScore);
   const structure = getBehaviorStructure(chartData);
   const scoreTrend = getScoreTrend(chartData);
-
   const primeMessage = getPrimeMessage({
     score: averageScore,
     risk,
@@ -173,50 +172,58 @@ export default function HomePage() {
           color: white;
           font-family: Inter, Arial, sans-serif;
           background:
-            radial-gradient(circle at 86% 4%, rgba(212,176,106,0.11), transparent 28%),
-            radial-gradient(circle at 12% 22%, rgba(255,255,255,0.035), transparent 18%),
+            radial-gradient(circle at 86% 4%, rgba(212,176,106,0.105), transparent 28%),
             linear-gradient(180deg, #020202 0%, #000 48%, #000 100%);
           overflow-x: hidden;
         }
 
         .page {
-          max-width: 1024px;
+          max-width: 480px;
           margin: 0 auto;
         }
 
         .hero-shell {
           position: relative;
-          min-height: 560px;
-          margin: -6px 0 22px;
-          padding: 18px 10px 0;
+          min-height: 405px;
+          margin: -6px -4px 18px;
+          padding: 18px 4px 0;
           overflow: hidden;
           isolation: isolate;
         }
 
+        .hero-shell::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          background:
+            linear-gradient(90deg, #000 0%, rgba(0,0,0,0.95) 28%, rgba(0,0,0,0.58) 55%, rgba(0,0,0,0.08) 78%, transparent 100%),
+            linear-gradient(180deg, transparent 0%, transparent 58%, rgba(0,0,0,0.88) 88%, #000 100%);
+        }
+
         .panther {
           position: absolute;
-          top: 38px;
-          right: -38px;
-          width: 570px;
+          top: 44px;
+          right: -82px;
+          width: 340px;
           height: auto;
-          opacity: 0.42;
-          filter: brightness(0.55) contrast(1.65) saturate(0.9);
+          max-width: none;
+          opacity: 0.82;
+          filter: brightness(0.62) contrast(1.55) saturate(0.92);
           mix-blend-mode: screen;
           pointer-events: none;
           z-index: 0;
-          transform: translateZ(0);
 
           -webkit-mask-image:
-            radial-gradient(circle at 48% 43%, #000 0%, #000 32%, rgba(0,0,0,0.74) 48%, rgba(0,0,0,0.18) 68%, transparent 84%),
-            linear-gradient(90deg, transparent 0%, #000 20%, #000 76%, transparent 100%);
+            radial-gradient(circle at 48% 42%, #000 0%, #000 34%, rgba(0,0,0,0.68) 53%, transparent 83%);
           mask-image:
-            radial-gradient(circle at 48% 43%, #000 0%, #000 32%, rgba(0,0,0,0.74) 48%, rgba(0,0,0,0.18) 68%, transparent 84%),
-            linear-gradient(90deg, transparent 0%, #000 20%, #000 76%, transparent 100%);
+            radial-gradient(circle at 48% 42%, #000 0%, #000 34%, rgba(0,0,0,0.68) 53%, transparent 83%);
         }
 
         .hero {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           animation: fadeUp .55s ease both;
         }
 
@@ -225,7 +232,7 @@ export default function HomePage() {
           align-items: center;
           justify-content: space-between;
           gap: 14px;
-          margin-bottom: 22px;
+          margin-bottom: 30px;
         }
 
         .brand {
@@ -234,12 +241,6 @@ export default function HomePage() {
           font-size: 13px;
           font-weight: 950;
           text-transform: uppercase;
-        }
-
-        .hero-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
         }
 
         .live-pill {
@@ -259,11 +260,6 @@ export default function HomePage() {
           white-space: nowrap;
         }
 
-        .bell {
-          color: #D4B06A;
-          filter: drop-shadow(0 0 10px rgba(212,176,106,0.24));
-        }
-
         .pulse {
           width: 7px;
           height: 7px;
@@ -275,27 +271,27 @@ export default function HomePage() {
 
         .title {
           margin: 0;
-          max-width: 390px;
-          font-size: 58px;
+          max-width: 260px;
+          font-size: 43px;
           line-height: 0.96;
           font-weight: 1000;
           letter-spacing: -2.8px;
         }
 
         .subtitle {
-          max-width: 390px;
-          margin-top: 20px;
-          font-size: 17px;
-          line-height: 1.55;
-          color: rgba(255,255,255,0.68);
+          max-width: 300px;
+          margin-top: 17px;
+          font-size: 16px;
+          line-height: 1.58;
+          color: rgba(255,255,255,0.66);
         }
 
         .prime-says {
           position: relative;
-          z-index: 1;
-          margin-top: 20px;
+          z-index: 2;
+          margin-top: 22px;
           padding: 20px;
-          max-width: 410px;
+          max-width: 330px;
           border-radius: 26px;
           background:
             linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
@@ -319,14 +315,15 @@ export default function HomePage() {
 
         .prime-says-text {
           margin: 0;
-          font-size: 16px;
+          font-size: 15.5px;
           line-height: 1.45;
-          font-weight: 750;
+          font-weight: 760;
           color: rgba(255,255,255,0.93);
         }
 
         .card,
         .score-panel,
+        .workspace-card,
         .chart-card,
         .mini-card,
         .action-card {
@@ -338,35 +335,16 @@ export default function HomePage() {
           backdrop-filter: blur(18px);
         }
 
-
         .top-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 18px;
-          margin-bottom: 18px;
+          grid-template-columns: 1fr;
+          gap: 14px;
+          margin-bottom: 16px;
         }
 
-        .top-grid .score-panel,
-        .top-grid .workspace-card {
-          text-decoration: none;
-          color: white;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          gap: 16px;
-          padding: 22px;
-          border-radius: 30px;
-          background:
-            linear-gradient(145deg, rgba(212,176,106,0.12), rgba(255,255,255,0.02)),
-            rgba(8,8,8,0.92);
-          border: 1px solid rgba(212,176,106,0.30);
-          box-shadow: 0 18px 50px rgba(0,0,0,0.58);
-          cursor: pointer;
-        }
         .score-panel {
           border-radius: 30px;
           padding: 21px;
-          margin-bottom: 16px;
           animation: fadeUp .7s ease both;
         }
 
@@ -447,6 +425,81 @@ export default function HomePage() {
           color: #D4B06A;
         }
 
+        .workspace-card {
+          text-decoration: none;
+          color: white;
+          display: block;
+          padding: 20px;
+          border-radius: 30px;
+          cursor: pointer;
+        }
+
+        .workspace-head {
+          display: flex;
+          justify-content: space-between;
+          gap: 14px;
+          align-items: flex-start;
+        }
+
+        .workspace-title {
+          margin: 0;
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 3.4px;
+          font-weight: 950;
+          text-transform: uppercase;
+        }
+
+        .workspace-main {
+          margin: 8px 0 0;
+          font-size: 21px;
+          line-height: 1.1;
+          font-weight: 1000;
+          letter-spacing: -0.5px;
+        }
+
+        .workspace-checks {
+          margin: 15px 0 17px;
+          display: grid;
+          gap: 9px;
+          color: rgba(255,255,255,0.86);
+          font-size: 14px;
+          font-weight: 760;
+        }
+
+        .workspace-checks span {
+          color: #D4B06A;
+          margin-right: 7px;
+        }
+
+        .tv-button {
+          width: 100%;
+          min-height: 52px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 11px;
+          background: linear-gradient(95deg, #9d742f, #d6b25f 52%, #fff2b8);
+          color: #000;
+          font-size: 16px;
+          font-weight: 1000;
+          letter-spacing: -0.2px;
+        }
+
+        .tv-icon {
+          width: 32px;
+          height: 32px;
+          border-radius: 9px;
+          border: 2px solid rgba(0,0,0,0.82);
+          display: grid;
+          place-items: center;
+          color: #000;
+          font-weight: 1000;
+          font-size: 13px;
+          letter-spacing: -1px;
+        }
+
         .cta-card {
           display: flex;
           align-items: center;
@@ -474,79 +527,6 @@ export default function HomePage() {
           color: rgba(0,0,0,0.62);
           font-size: 13px;
           font-weight: 850;
-        }
-
-        .workspace-card {
-          text-decoration: none;
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 18px;
-          border-radius: 26px;
-          margin-bottom: 16px;
-          background:
-            linear-gradient(145deg, rgba(212,176,106,0.10), rgba(255,255,255,0.02)),
-            rgba(8,8,8,0.92);
-          border: 1px solid rgba(212,176,106,0.24);
-          box-shadow: 0 18px 50px rgba(0,0,0,0.58);
-        }
-
-        .workspace-checks {
-          display: grid;
-          gap: 8px;
-          margin-top: 14px;
-          color: rgba(255,255,255,0.78);
-          font-size: 13px;
-          font-weight: 750;
-        }
-
-        .workspace-checks span {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .workspace-checks b {
-          color: #D4B06A;
-          font-size: 14px;
-        }
-
-        .workspace-button {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 14px 16px;
-          border-radius: 15px;
-          background: linear-gradient(95deg, #9d742f, #d6b25f 50%, #fff2b8);
-          color: #000;
-          font-size: 16px;
-          font-weight: 1000;
-          letter-spacing: -0.2px;
-        }
-
-        .workspace-title {
-          margin: 0;
-          color: #D4B06A;
-          font-size: 11px;
-          letter-spacing: 3px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .workspace-main {
-          margin: 7px 0 0;
-          font-size: 18px;
-          font-weight: 950;
-        }
-
-        .workspace-sub {
-          margin: 5px 0 0;
-          color: rgba(255,255,255,0.58);
-          font-size: 13px;
-          line-height: 1.35;
         }
 
         .chart-card {
@@ -653,15 +633,14 @@ export default function HomePage() {
           border: 1px solid rgba(255,255,255,0.07);
         }
 
-        .tv-badge {
+        .structure-icon {
           width: 45px;
           height: 45px;
           border-radius: 12px;
           border: 1px solid rgba(212,176,106,0.24);
           display: grid;
           place-items: center;
-          color: #fff;
-          font-weight: 1000;
+          color: #D4B06A;
           background: rgba(0,0,0,0.35);
           flex-shrink: 0;
         }
@@ -700,7 +679,7 @@ export default function HomePage() {
 
         .card-title {
           margin: 0;
-          font-size: 26px;
+          font-size: 25px;
           line-height: 1.08;
           font-weight: 1000;
           color: #D4B06A;
@@ -830,15 +809,19 @@ export default function HomePage() {
           50% { opacity: 1; transform: scale(1.25); }
         }
 
-        @media(max-width: 760px) {
+        @media(min-width: 440px) {
+          .top-grid { grid-template-columns: 1fr 1fr; }
+          .score-panel,
+          .workspace-card { min-height: 210px; }
+        }
+
+        @media(max-width: 390px) {
           .prime-home { padding-left: 14px; padding-right: 14px; }
-          .page { max-width: 480px; }
-          .title { font-size: 40px; max-width: 250px; }
-          .subtitle { max-width: 285px; font-size: 16px; }
-          .panther { width: 350px; right: -125px; top: 64px; opacity: .36; }
-          .hero-shell { min-height: 390px; }
+          .title { font-size: 38px; max-width: 245px; }
+          .subtitle { max-width: 270px; font-size: 16px; }
+          .panther { width: 310px; right: -96px; top: 58px; opacity: .76; }
+          .hero-shell { min-height: 382px; }
           .prime-says { max-width: 300px; }
-          .top-grid { grid-template-columns: 1fr; }
           .score-grid { grid-template-columns: 1fr; }
           .score-ring { justify-self: center; }
           .dashboard-grid { grid-template-columns: 1fr; }
@@ -850,17 +833,20 @@ export default function HomePage() {
 
       <div className="page">
         <section className="hero-shell">
-          <img className="panther" src="/prime-panther.png" alt="" aria-hidden="true" />
+          <img
+            className="panther"
+            src="/prime-panther.png"
+            alt=""
+            aria-hidden="true"
+          />
 
           <div className="hero">
             <div className="brand-row">
               <div className="brand">PRIME</div>
 
-              <div className="hero-actions">
-                <div className="live-pill">
-                  <span className="pulse" />
-                  Analyse live
-                </div>
+              <div className="live-pill">
+                <span className="pulse" />
+                Analyse live
               </div>
             </div>
 
@@ -914,17 +900,22 @@ export default function HomePage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <div>
-              <p className="workspace-title">Workspace</p>
-              <p className="workspace-main">TradingView</p>
-              <div className="workspace-checks">
-                <span><b>✓</b> Checklist validée</span>
-                <span><b>✓</b> Mental renseigné</span>
-                <span><b>✓</b> Plan validé</span>
+            <div className="workspace-head">
+              <div>
+                <p className="workspace-title">Workspace</p>
+                <p className="workspace-main">TradingView</p>
               </div>
+              <ExternalLink size={25} color="#D4B06A" />
             </div>
-            <div className="workspace-button">
-              <BarChart3 size={21} />
+
+            <div className="workspace-checks">
+              <div><span>✓</span>Checklist validée</div>
+              <div><span>✓</span>Mental renseigné</div>
+              <div><span>✓</span>Plan validé</div>
+            </div>
+
+            <div className="tv-button">
+              <span className="tv-icon">TV</span>
               Ouvrir TradingView
             </div>
           </a>
@@ -954,7 +945,9 @@ export default function HomePage() {
           <DisciplineTradingChart data={chartData} score={averageScore} />
 
           <div className="structure-box">
-            <div className="tv-badge"><TrendingUp size={22} /></div>
+            <div className="structure-icon">
+              <TrendingUp size={23} />
+            </div>
             <div>
               <p className="structure-label">Structure comportementale</p>
               <p className="structure-title">
@@ -1237,23 +1230,6 @@ function DisciplineTradingChart({ data, score }) {
       </svg>
     </div>
   );
-}
-
-function getFocusByProfile(profile) {
-  switch (profile) {
-    case "Trader Impulsif":
-      return "Ralentir avant d’agir.";
-    case "Trader FOMO":
-      return "Laisser passer ce qui n’est pas parfait.";
-    case "Trader Désorganisé":
-      return "Structurer ton plan avant l’exécution.";
-    case "Trader Patient":
-      return "Maintenir ton cadre sans excès de confiance.";
-    case "Trader Agressif":
-      return "Rendre ton invalidation non négociable.";
-    default:
-      return "Respecter le process avant le résultat.";
-  }
 }
 
 function getPrimeMessage({ score, risk, activePrescription, sessionsCount }) {
