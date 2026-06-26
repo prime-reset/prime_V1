@@ -8,12 +8,13 @@ import {
   ChevronRight,
   Sparkles,
   Crown,
-  ShieldAlert,
   BookOpen,
   User,
   TrendingUp,
   CheckCircle,
   PlayCircle,
+  Bell,
+  ExternalLink,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -150,10 +151,13 @@ export default function HomePage() {
     ? Math.min(Math.round((prescriptionProgress / prescriptionDuration) * 100), 100)
     : 0;
 
+  const chartData = getDisciplineChartData(sessions, averageScore);
+  const structure = getBehaviorStructure(chartData);
+  const scoreTrend = getScoreTrend(chartData);
+
   const primeMessage = getPrimeMessage({
     score: averageScore,
     risk,
-    profile,
     activePrescription,
     sessionsCount,
   });
@@ -166,47 +170,103 @@ export default function HomePage() {
 
         .prime-home {
           min-height: 100vh;
-          padding: 28px 18px 140px;
+          padding: 28px 16px 124px;
           color: white;
           font-family: Inter, Arial, sans-serif;
           background:
-            radial-gradient(circle at 80% 0%, rgba(212,176,106,0.26), transparent 30%),
-            radial-gradient(circle at 10% 20%, rgba(255,255,255,0.06), transparent 24%),
-            linear-gradient(180deg, #080808 0%, #000 100%);
+            radial-gradient(circle at 86% 4%, rgba(212,176,106,0.11), transparent 28%),
+            radial-gradient(circle at 12% 22%, rgba(255,255,255,0.035), transparent 18%),
+            linear-gradient(180deg, #020202 0%, #000 48%, #000 100%);
+          overflow-x: hidden;
         }
 
-        .page { max-width: 460px; margin: 0 auto; }
+        .page {
+          max-width: 480px;
+          margin: 0 auto;
+        }
 
-        .hero { margin-bottom: 20px; animation: fadeUp .55s ease both; }
+        .hero-shell {
+          position: relative;
+          min-height: 354px;
+          margin: -6px -4px 18px;
+          padding: 10px 4px 0;
+          overflow: hidden;
+        }
+
+        .panther {
+          position: absolute;
+          top: 46px;
+          right: -72px;
+          width: 315px;
+          height: 315px;
+          background-image:
+            linear-gradient(90deg, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.34) 42%, rgba(0,0,0,0) 100%),
+            url("/prime-panther.png");
+          background-size: cover;
+          background-position: center;
+          opacity: 0.88;
+          filter: contrast(1.1) saturate(0.92);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .panther::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(circle at 52% 42%, rgba(212,176,106,0.18), transparent 12%),
+            linear-gradient(180deg, rgba(0,0,0,0) 30%, #000 96%);
+        }
+
+        .hero {
+          position: relative;
+          z-index: 1;
+          animation: fadeUp .55s ease both;
+        }
 
         .brand-row {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 14px;
           margin-bottom: 22px;
         }
 
         .brand {
           color: #D4B06A;
-          letter-spacing: 7px;
-          font-size: 12px;
-          font-weight: 900;
+          letter-spacing: 8px;
+          font-size: 13px;
+          font-weight: 950;
           text-transform: uppercase;
+        }
+
+        .hero-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
         }
 
         .live-pill {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 9px 12px;
+          padding: 9px 13px;
           border-radius: 999px;
-          background: rgba(212,176,106,0.10);
-          border: 1px solid rgba(212,176,106,0.22);
+          background: rgba(212,176,106,0.055);
+          border: 1px solid rgba(212,176,106,0.32);
           color: #D4B06A;
           font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 1px;
+          font-weight: 950;
+          letter-spacing: 1.7px;
           text-transform: uppercase;
+          box-shadow: inset 0 0 18px rgba(212,176,106,0.05);
+          white-space: nowrap;
+        }
+
+        .bell {
+          color: #D4B06A;
+          filter: drop-shadow(0 0 10px rgba(212,176,106,0.24));
         }
 
         .pulse {
@@ -220,29 +280,34 @@ export default function HomePage() {
 
         .title {
           margin: 0;
-          font-size: 44px;
-          line-height: 0.95;
-          font-weight: 950;
-          letter-spacing: -2.6px;
+          max-width: 290px;
+          font-size: 43px;
+          line-height: 0.96;
+          font-weight: 1000;
+          letter-spacing: -2.8px;
         }
 
         .subtitle {
+          max-width: 330px;
           margin-top: 16px;
           font-size: 17px;
           line-height: 1.55;
-          color: rgba(255,255,255,0.66);
+          color: rgba(255,255,255,0.68);
         }
 
         .prime-says {
-          margin: 22px 0;
-          padding: 22px;
-          border-radius: 32px;
+          position: relative;
+          z-index: 1;
+          margin-top: 20px;
+          padding: 20px;
+          max-width: 360px;
+          border-radius: 26px;
           background:
-            linear-gradient(145deg, rgba(212,176,106,0.18), rgba(255,255,255,0.035)),
-            rgba(5,5,5,0.85);
-          border: 1px solid rgba(212,176,106,0.22);
-          box-shadow: 0 22px 60px rgba(0,0,0,0.58);
-          animation: fadeUp .65s ease both;
+            linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
+            rgba(5,5,5,0.84);
+          border: 1px solid rgba(212,176,106,0.24);
+          box-shadow: 0 20px 55px rgba(0,0,0,0.62);
+          backdrop-filter: blur(14px);
         }
 
         .prime-says-label {
@@ -252,119 +317,114 @@ export default function HomePage() {
           color: #D4B06A;
           font-size: 12px;
           font-weight: 950;
-          letter-spacing: 2.5px;
+          letter-spacing: 2.7px;
           text-transform: uppercase;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         .prime-says-text {
           margin: 0;
-          font-size: 21px;
-          line-height: 1.35;
-          font-weight: 850;
-          letter-spacing: -0.5px;
+          font-size: 16px;
+          line-height: 1.45;
+          font-weight: 750;
+          color: rgba(255,255,255,0.93);
         }
 
-        .score-card,
         .card,
+        .score-panel,
+        .chart-card,
         .mini-card,
         .action-card {
           background:
-            linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.025)),
-            rgba(5,5,5,0.82);
-          border: 1px solid rgba(255,255,255,0.09);
-          box-shadow: 0 22px 70px rgba(0,0,0,0.58);
+            linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.018)),
+            rgba(8,8,8,0.9);
+          border: 1px solid rgba(255,255,255,0.095);
+          box-shadow: 0 22px 70px rgba(0,0,0,0.62);
           backdrop-filter: blur(18px);
         }
 
-        .score-card {
-          position: relative;
-          overflow: hidden;
-          border-radius: 38px;
-          padding: 28px;
-          margin-bottom: 18px;
-          animation: fadeUp .75s ease both;
+        .score-panel {
+          border-radius: 30px;
+          padding: 21px;
+          margin-bottom: 16px;
+          animation: fadeUp .7s ease both;
         }
 
-        .score-card::before {
-          content: "";
-          position: absolute;
-          inset: -40%;
-          background: radial-gradient(circle, rgba(212,176,106,0.19), transparent 45%);
-          animation: slowGlow 5s ease-in-out infinite alternate;
-        }
-
-        .score-content { position: relative; z-index: 1; }
-
-        .score-top {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
+        .score-grid {
+          display: grid;
+          grid-template-columns: 1fr 122px;
           gap: 18px;
-          margin-bottom: 24px;
+          align-items: center;
         }
 
         .label {
-          color: rgba(212,176,106,0.88);
-          font-size: 12px;
-          font-weight: 900;
-          letter-spacing: 3px;
+          color: rgba(212,176,106,0.92);
+          font-size: 11px;
+          font-weight: 950;
+          letter-spacing: 3.4px;
           text-transform: uppercase;
-          margin: 0 0 10px;
+          margin: 0 0 12px;
         }
 
-        .score-status {
-          margin: 0;
-          font-size: 25px;
-          line-height: 1.05;
-          font-weight: 950;
-          letter-spacing: -0.8px;
+        .score-line {
+          display: flex;
+          align-items: flex-end;
+          gap: 8px;
         }
+
+        .score-big {
+          font-size: 55px;
+          font-weight: 1000;
+          line-height: .92;
+          letter-spacing: -2.8px;
+        }
+
+        .score-outof {
+          padding-bottom: 7px;
+          color: #D4B06A;
+          font-size: 20px;
+          font-weight: 950;
+        }
+
+        .trend-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          margin-top: 14px;
+          padding: 7px 10px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.045);
+          border: 1px solid rgba(255,255,255,0.08);
+          font-size: 12px;
+          color: rgba(255,255,255,0.72);
+        }
+
+        .trend-up { color: #7DFFA1; }
+        .trend-down { color: #ff6b6b; }
 
         .score-ring {
-          width: 152px;
-          height: 152px;
+          width: 120px;
+          height: 120px;
           border-radius: 50%;
           display: grid;
           place-items: center;
           background:
-            conic-gradient(#D4B06A ${averageScore * 3.6}deg, rgba(255,255,255,0.07) 0deg);
-          box-shadow: 0 0 42px rgba(212,176,106,0.14);
-          flex-shrink: 0;
+            conic-gradient(#D4B06A ${averageScore * 3.6}deg, rgba(255,255,255,0.075) 0deg);
+          box-shadow: 0 0 42px rgba(212,176,106,0.15);
         }
 
         .score-ring-inner {
-          width: 124px;
-          height: 124px;
+          width: 94px;
+          height: 94px;
           border-radius: 50%;
-          background: #050505;
+          background:
+            radial-gradient(circle at 50% 35%, rgba(212,176,106,0.12), transparent 45%),
+            #030303;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
           border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .score-number {
-          font-size: 48px;
-          font-weight: 1000;
-          letter-spacing: -2px;
-          line-height: 1;
-        }
-
-        .score-word {
-          margin-top: 5px;
           color: #D4B06A;
-          font-size: 11px;
-          font-weight: 950;
-          letter-spacing: 2px;
-        }
-
-        .score-copy {
-          color: rgba(255,255,255,0.72);
-          font-size: 15.5px;
-          line-height: 1.65;
-          margin: 0;
         }
 
         .cta-card {
@@ -372,111 +432,279 @@ export default function HomePage() {
           align-items: center;
           justify-content: space-between;
           gap: 16px;
-          padding: 23px;
-          border-radius: 30px;
-          margin-bottom: 18px;
+          padding: 20px;
+          border-radius: 28px;
+          margin-bottom: 16px;
           text-decoration: none;
           color: #000;
-          background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
+          background: linear-gradient(95deg, #9d742f, #d6b25f 50%, #fff2b8);
           border: none;
-          box-shadow: 0 18px 48px rgba(212,176,106,0.22);
-          animation: fadeUp .85s ease both;
+          box-shadow: 0 20px 50px rgba(212,176,106,0.18);
         }
 
         .cta-title {
           margin: 0;
-          font-size: 21px;
+          font-size: 19px;
           font-weight: 1000;
-          letter-spacing: -0.6px;
+          letter-spacing: -0.4px;
         }
 
         .cta-subtitle {
           margin: 6px 0 0;
           color: rgba(0,0,0,0.62);
-          font-size: 14px;
-          font-weight: 800;
+          font-size: 13px;
+          font-weight: 850;
+        }
+
+        .workspace-card {
+          text-decoration: none;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 18px;
+          border-radius: 26px;
+          margin-bottom: 16px;
+          background:
+            linear-gradient(145deg, rgba(212,176,106,0.10), rgba(255,255,255,0.02)),
+            rgba(8,8,8,0.92);
+          border: 1px solid rgba(212,176,106,0.24);
+          box-shadow: 0 18px 50px rgba(0,0,0,0.58);
+        }
+
+        .workspace-title {
+          margin: 0;
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 3px;
+          font-weight: 950;
+          text-transform: uppercase;
+        }
+
+        .workspace-main {
+          margin: 7px 0 0;
+          font-size: 18px;
+          font-weight: 950;
+        }
+
+        .workspace-sub {
+          margin: 5px 0 0;
+          color: rgba(255,255,255,0.58);
+          font-size: 13px;
+          line-height: 1.35;
+        }
+
+        .chart-card {
+          border-radius: 30px;
+          padding: 20px;
+          margin-bottom: 16px;
+          overflow: hidden;
+        }
+
+        .chart-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 14px;
+          margin-bottom: 12px;
+        }
+
+        .chart-title {
+          margin: 0;
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 3.4px;
+          font-weight: 950;
+          text-transform: uppercase;
+        }
+
+        .chart-legend {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-top: 10px;
+          color: rgba(255,255,255,0.58);
+          font-size: 12px;
+        }
+
+        .legend-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #D4B06A;
+          display: inline-block;
+          margin-right: 6px;
+        }
+
+        .legend-line {
+          display: inline-block;
+          width: 15px;
+          height: 1px;
+          background: rgba(255,255,255,0.55);
+          margin-right: 6px;
+          vertical-align: middle;
+        }
+
+        .range-pill {
+          padding: 8px 11px;
+          border-radius: 11px;
+          color: rgba(255,255,255,0.7);
+          border: 1px solid rgba(212,176,106,0.18);
+          background: rgba(0,0,0,0.24);
+          font-size: 12px;
+          white-space: nowrap;
+        }
+
+        .chart-wrap {
+          position: relative;
+          height: 250px;
+          margin-top: 12px;
+          border-radius: 18px;
+          background:
+            linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+          background-size: 100% 20%, 16.6% 100%;
+          border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .chart-svg {
+          width: 100%;
+          height: 100%;
+          overflow: visible;
+        }
+
+        .chart-score-badge {
+          position: absolute;
+          top: 8px;
+          right: 0;
+          color: #D4B06A;
+          font-size: 25px;
+          font-weight: 1000;
+          text-shadow: 0 0 18px rgba(212,176,106,0.45);
+        }
+
+        .chart-score-badge small {
+          font-size: 12px;
+        }
+
+        .structure-box {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-top: 14px;
+          padding: 13px;
+          border-radius: 18px;
+          background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .tv-badge {
+          width: 45px;
+          height: 45px;
+          border-radius: 12px;
+          border: 1px solid rgba(212,176,106,0.24);
+          display: grid;
+          place-items: center;
+          color: #fff;
+          font-weight: 1000;
+          background: rgba(0,0,0,0.35);
+          flex-shrink: 0;
+        }
+
+        .structure-label {
+          margin: 0 0 4px;
+          color: #D4B06A;
+          font-size: 11px;
+          letter-spacing: 2.4px;
+          font-weight: 950;
+          text-transform: uppercase;
+        }
+
+        .structure-title {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 950;
+        }
+
+        .structure-title span {
+          color: #7DFFA1;
+        }
+
+        .structure-copy {
+          margin: 5px 0 0;
+          color: rgba(255,255,255,0.62);
+          font-size: 13px;
+          line-height: 1.35;
         }
 
         .card {
-          border-radius: 34px;
-          padding: 24px;
-          margin-bottom: 18px;
-          animation: fadeUp .9s ease both;
+          border-radius: 28px;
+          padding: 20px;
+          margin-bottom: 16px;
         }
 
         .card-title {
           margin: 0;
-          font-size: 28px;
+          font-size: 26px;
           line-height: 1.08;
-          font-weight: 950;
+          font-weight: 1000;
           color: #D4B06A;
-          letter-spacing: -0.9px;
+          letter-spacing: -0.8px;
         }
 
         .text {
-          margin: 15px 0 0;
-          color: rgba(255,255,255,0.72);
-          font-size: 15.5px;
-          line-height: 1.65;
+          margin: 14px 0 0;
+          color: rgba(255,255,255,0.68);
+          font-size: 15px;
+          line-height: 1.55;
         }
 
-        .mission-grid {
+        .dashboard-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 12px;
-          margin-top: 20px;
+          margin-bottom: 16px;
         }
 
-        .mission-item {
-          padding: 15px;
-          border-radius: 22px;
-          background: rgba(255,255,255,0.045);
-          border: 1px solid rgba(255,255,255,0.07);
-        }
-
-        .mission-label {
-          margin: 0 0 8px;
-          color: rgba(212,176,106,0.82);
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 1.7px;
-          text-transform: uppercase;
-        }
-
-        .mission-value {
+        .dashboard-grid .card {
           margin: 0;
-          font-size: 16px;
-          font-weight: 900;
+          min-height: 185px;
+        }
+
+        .small-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 10px;
+          margin-bottom: 16px;
+        }
+
+        .mini-card {
+          min-height: 104px;
+          padding: 16px;
+          border-radius: 22px;
+        }
+
+        .mini-label {
+          margin-top: 12px;
+          color: rgba(212,176,106,0.86);
+          font-size: 10px;
+          font-weight: 950;
+          letter-spacing: 2px;
+          text-transform: uppercase;
           line-height: 1.25;
         }
 
-        .timeline { display: grid; gap: 13px; margin-top: 18px; }
-
-        .timeline-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: rgba(255,255,255,0.76);
-          font-size: 15px;
-          font-weight: 700;
-        }
-
-        .timeline-dot {
-          width: 22px;
-          height: 22px;
-          border-radius: 999px;
-          display: grid;
-          place-items: center;
-          background: rgba(212,176,106,0.14);
-          color: #D4B06A;
-          border: 1px solid rgba(212,176,106,0.25);
-          font-size: 12px;
-          flex-shrink: 0;
+        .mini-value {
+          margin-top: 7px;
+          font-size: 23px;
+          font-weight: 1000;
+          line-height: 1.05;
+          letter-spacing: -0.5px;
         }
 
         .progress-track {
-          margin-top: 20px;
-          height: 12px;
+          margin-top: 18px;
+          height: 10px;
           width: 100%;
           border-radius: 999px;
           background: rgba(255,255,255,0.08);
@@ -490,73 +718,17 @@ export default function HomePage() {
           transition: width .8s ease;
         }
 
-        .grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 14px;
-          margin-bottom: 18px;
-        }
-
-        .mini-card { padding: 20px; border-radius: 28px; }
-
-        .mini-label {
-          margin-top: 14px;
-          color: rgba(212,176,106,0.82);
-          font-size: 11px;
-          font-weight: 900;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-        }
-
-        .mini-value {
-          margin-top: 8px;
-          font-size: 24px;
-          font-weight: 950;
-          line-height: 1.05;
-          letter-spacing: -0.5px;
-        }
-
-        .week-dots {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 8px;
-          margin-top: 20px;
-        }
-
-        .week-dot {
-          min-height: 58px;
-          border-radius: 18px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 5px;
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .week-label {
-          font-size: 11px;
-          color: rgba(255,255,255,0.70);
-          font-weight: 800;
-        }
-
-        .week-pnl {
-          font-size: 11px;
-          color: rgba(255,255,255,0.82);
-          font-weight: 900;
-        }
-
         .actions-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 14px;
+          gap: 12px;
           margin-bottom: 18px;
         }
 
         .action-card {
-          min-height: 122px;
-          padding: 18px;
-          border-radius: 28px;
+          min-height: 120px;
+          padding: 17px;
+          border-radius: 24px;
           color: white;
           text-decoration: none;
           display: flex;
@@ -575,19 +747,23 @@ export default function HomePage() {
 
         .action-label {
           color: rgba(212,176,106,0.82);
-          font-size: 11px;
+          font-size: 10px;
           letter-spacing: 2px;
           text-transform: uppercase;
           margin: 0 0 8px;
-          font-weight: 900;
+          font-weight: 950;
         }
 
         .action-title {
           margin: 0;
-          font-size: 19px;
+          font-size: 18px;
           line-height: 1.15;
           font-weight: 950;
         }
+
+        .green { color: #7DFFA1; }
+        .red { color: #ff6868; }
+        .gold { color: #D4B06A; }
 
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
@@ -599,78 +775,95 @@ export default function HomePage() {
           50% { opacity: 1; transform: scale(1.25); }
         }
 
-        @keyframes slowGlow {
-          from { transform: rotate(0deg) scale(1); opacity: .55; }
-          to { transform: rotate(14deg) scale(1.08); opacity: 1; }
-        }
-
         @media(max-width: 390px) {
-          .title { font-size: 39px; }
-          .score-top { flex-direction: column; }
-          .score-ring {
-            width: 142px;
-            height: 142px;
-            align-self: center;
-          }
-          .score-ring-inner {
-            width: 116px;
-            height: 116px;
-          }
-          .grid,
-          .mission-grid,
-          .actions-grid { grid-template-columns: 1fr; }
-          .week-dots { gap: 6px; }
-          .week-dot { min-height: 52px; border-radius: 15px; }
+          .prime-home { padding-left: 14px; padding-right: 14px; }
+          .title { font-size: 38px; max-width: 245px; }
+          .subtitle { max-width: 270px; font-size: 16px; }
+          .panther { width: 260px; height: 260px; right: -78px; top: 58px; opacity: .84; }
+          .hero-shell { min-height: 350px; }
+          .prime-says { max-width: 300px; }
+          .score-grid { grid-template-columns: 1fr; }
+          .score-ring { justify-self: center; }
+          .dashboard-grid { grid-template-columns: 1fr; }
+          .small-grid { grid-template-columns: 1fr; }
+          .actions-grid { grid-template-columns: 1fr 1fr; }
+          .chart-wrap { height: 232px; }
         }
       `}</style>
 
       <div className="page">
-        <section className="hero">
-          <div className="brand-row">
-            <div className="brand">PRIME</div>
-            <div className="live-pill">
-              <span className="pulse" />
-              Analyse live
-            </div>
-          </div>
+        <section className="hero-shell">
+          <div className="panther" aria-hidden="true" />
 
-          <h1 className="title">Bonjour {displayName}</h1>
+          <div className="hero">
+            <div className="brand-row">
+              <div className="brand">PRIME</div>
 
-          <p className="subtitle">
-            Ton cockpit est prêt. PRIME analyse ton état, ton risque et ton objectif du jour.
-          </p>
-        </section>
-
-        <section className="prime-says">
-          <div className="prime-says-label">
-            <Brain size={17} />
-            PRIME parle
-          </div>
-          <p className="prime-says-text">{primeMessage}</p>
-        </section>
-
-        <section className="score-card">
-          <div className="score-content">
-            <div className="score-top">
-              <div>
-                <p className="label">Discipline Score</p>
-                <h2 className="score-status">{getScoreStatus(averageScore)}</h2>
-              </div>
-
-              <div className="score-ring">
-                <div className="score-ring-inner">
-                  <div className="score-number">{averageScore}</div>
-                  <div className="score-word">/100</div>
+              <div className="hero-actions">
+                <div className="live-pill">
+                  <span className="pulse" />
+                  Analyse live
                 </div>
+                <Bell size={23} className="bell" />
               </div>
             </div>
 
-            <p className="score-copy">
-              Ce score mesure ton exécution, pas ton PnL. Une perte propre vaut mieux
-              qu'un gain obtenu hors plan.
+            <h1 className="title">Bonjour {displayName}</h1>
+
+            <p className="subtitle">
+              Ton cockpit est prêt. PRIME analyse ton état, ton risque et ton objectif du jour.
             </p>
+
+            <section className="prime-says">
+              <div className="prime-says-label">
+                <Brain size={17} />
+                PRIME parle
+              </div>
+              <p className="prime-says-text">{primeMessage}</p>
+            </section>
           </div>
         </section>
+
+        <section className="score-panel">
+          <div className="score-grid">
+            <div>
+              <p className="label">Discipline Score</p>
+
+              <div className="score-line">
+                <div className="score-big">{averageScore}</div>
+                <div className="score-outof">/100</div>
+              </div>
+
+              <div className="trend-pill">
+                <span className={scoreTrend.value >= 0 ? "trend-up" : "trend-down"}>
+                  {scoreTrend.value >= 0 ? "↗" : "↘"} {scoreTrend.value >= 0 ? "+" : ""}
+                  {scoreTrend.value} pts
+                </span>
+                <span>{scoreTrend.label}</span>
+              </div>
+            </div>
+
+            <div className="score-ring">
+              <div className="score-ring-inner">
+                <TrendingUp size={32} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <a
+          className="workspace-card"
+          href="https://www.tradingview.com/chart/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div>
+            <p className="workspace-title">Workspace</p>
+            <p className="workspace-main">Ouvrir TradingView</p>
+            <p className="workspace-sub">Préparer le marché après validation mentale.</p>
+          </div>
+          <ExternalLink size={25} color="#D4B06A" />
+        </a>
 
         <Link href="/session" className="cta-card">
           <div>
@@ -680,93 +873,113 @@ export default function HomePage() {
           <PlayCircle size={34} />
         </Link>
 
-        <section className="card">
-          <p className="label">Mission du jour</p>
-          <h2 className="card-title">{focus}</h2>
-
-          <div className="mission-grid">
-            <MissionItem label="Objectif" value="Respect du setup" />
-            <MissionItem label="Risque" value={risk.label} />
-            <MissionItem
-              label="Prescription"
-              value={activePrescription ? `Jour ${prescriptionProgress}/${prescriptionDuration}` : "Aucune"}
-            />
-            <MissionItem label="Profil" value={profile} />
-          </div>
-        </section>
-
-        <section className="card">
-          <p className="label">Aujourd'hui</p>
-          <h2 className="card-title">Timeline PRIME</h2>
-
-          <div className="timeline">
-            <TimelineRow done={true} text="Identité analysée" />
-            <TimelineRow done={true} text="Focus généré" />
-            <TimelineRow done={!!activePrescription} text="Prescription vérifiée" />
-            <TimelineRow done={false} text="Session non commencée" />
-            <TimelineRow done={false} text="Débrief à compléter" />
-          </div>
-        </section>
-
-        <section className="card">
-          <p className="label">Risque actuel</p>
-          <h2 className="card-title">{getRiskIcon(risk.level)} {risk.label}</h2>
-          <p className="text">{risk.message}</p>
-        </section>
-
-        <section className="card">
-          <p className="label">Prescription active</p>
-
-          <h2 className="card-title">
-            {activePrescription ? activePrescription.title : "Aucune prescription"}
-          </h2>
-
-          <p className="text">
-            {activePrescription
-              ? activePrescription.rule
-              : "PRIME activera une prescription lorsqu’un vrai pattern comportemental sera détecté."}
-          </p>
-
-          {activePrescription && (
-            <>
-              <div className="progress-track">
-                <div
-                  className="progress-bar"
-                  style={{ width: `${prescriptionPercent}%` }}
-                />
+        <section className="chart-card">
+          <div className="chart-header">
+            <div>
+              <p className="chart-title">Évolution discipline</p>
+              <div className="chart-legend">
+                <span><i className="legend-dot" />Score discipline</span>
+                <span><i className="legend-line" />Moyenne</span>
               </div>
+            </div>
 
-              <p className="text">
-                Progression : {prescriptionProgress} / {prescriptionDuration} jours
-              </p>
-            </>
-          )}
-        </section>
-
-        <section className="card">
-          <p className="label">Identité PRIME</p>
-          <h2 className="card-title">{profile}</h2>
-
-          <p className="text">
-            Niveau : <strong>{getPrimeLevel(averageScore, sessionsCount)}</strong>
-            <br />
-            Sessions analysées : <strong>{sessionsCount}</strong>
-            <br />
-            Force dominante : <strong>{getProfileStrength(profile)}</strong>
-            <br />
-            À surveiller : <strong>{getProfileWeakness(profile)}</strong>
-          </p>
-        </section>
-
-        <section className="grid">
-          <div className="mini-card">
-            <ShieldAlert size={26} color="#D4B06A" />
-            <div className="mini-label">Risque</div>
-            <div className="mini-value">{risk.label}</div>
+            <div className="range-pill">7 dernières sessions</div>
           </div>
 
+          <DisciplineTradingChart data={chartData} score={averageScore} />
+
+          <div className="structure-box">
+            <div className="tv-badge">TV</div>
+            <div>
+              <p className="structure-label">Structure comportementale</p>
+              <p className="structure-title">
+                <span>{structure.title}</span> {structure.icon}
+              </p>
+              <p className="structure-copy">{structure.message}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="dashboard-grid">
+          <section className="card">
+            <p className="label">Risque actuel</p>
+            <h2 className="card-title">{getRiskIcon(risk.level)} {risk.label}</h2>
+            <p className="text">{risk.message}</p>
+          </section>
+
+          <section className="card">
+            <p className="label">Dernière session</p>
+            <h2 className="card-title">
+              Discipline : {lastSession?.discipline_score ?? 0}%
+            </h2>
+
+            <p className="text">
+              Mental : <strong className="green">{lastSession?.mental_state || "Non renseigné"}</strong>
+              <br />
+              Erreur dominante : <strong className="green">{lastSession?.dominant_error || "Aucune"}</strong>
+            </p>
+
+            <p
+              className={
+                lastSession?.plan_respected === false ? "text red" : "text green"
+              }
+              style={{ fontWeight: 950 }}
+            >
+              {lastSession?.plan_respected === true
+                ? "✓ Plan respecté"
+                : lastSession?.plan_respected === false
+                ? "✗ Hors plan"
+                : "Plan non renseigné"}
+            </p>
+          </section>
+
+          <section className="card">
+            <p className="label">Prescription active</p>
+            <h2 className="card-title">
+              {activePrescription ? activePrescription.title : "Aucune prescription"}
+            </h2>
+
+            <p className="text">
+              {activePrescription
+                ? activePrescription.rule
+                : "PRIME activera une prescription lorsqu’un vrai pattern comportemental sera détecté."}
+            </p>
+
+            {activePrescription && (
+              <>
+                <div className="progress-track">
+                  <div
+                    className="progress-bar"
+                    style={{ width: `${prescriptionPercent}%` }}
+                  />
+                </div>
+
+                <p className="text">
+                  Progression : <strong className="gold">{prescriptionProgress} / {prescriptionDuration}</strong> jours
+                </p>
+              </>
+            )}
+          </section>
+
+          <section className="card">
+            <p className="label">Identité PRIME</p>
+            <h2 className="card-title">{profile}</h2>
+
+            <p className="text">
+              Niveau : <strong className="gold">{getPrimeLevel(averageScore, sessionsCount)}</strong>
+              <br />
+              Sessions analysées : <strong className="gold">{sessionsCount}</strong>
+              <br />
+              Force dominante : <strong className="gold">{getProfileStrength(profile)}</strong>
+              <br />
+              À surveiller : <strong className="gold">{getProfileWeakness(profile)}</strong>
+            </p>
+          </section>
+        </section>
+
+        <section className="small-grid">
           <div className="mini-card">
-            <TrendingUp size={26} color="#D4B06A" />
+            <TrendingUp size={25} color="#D4B06A" />
             <div className="mini-label">PnL semaine</div>
             <div
               className="mini-value"
@@ -779,82 +992,48 @@ export default function HomePage() {
               {weekPnl}€
             </div>
           </div>
-        </section>
 
-        {lastSession && (
-          <section className="card">
-            <p className="label">Dernière session</p>
-            <h2 className="card-title">
-              Discipline : {lastSession.discipline_score ?? 0}%
-            </h2>
-
-            <p className="text">
-              Mental : <strong>{lastSession.mental_state || "Non renseigné"}</strong>
-              <br />
-              Erreur dominante : <strong>{lastSession.dominant_error || "Aucune"}</strong>
-            </p>
-
-            <p
-              className="text"
-              style={{
-                color:
-                  lastSession.plan_respected === true
-                    ? "#7DFFA1"
-                    : lastSession.plan_respected === false
-                    ? "#FF7D7D"
-                    : "rgba(255,255,255,0.72)",
-                fontWeight: 900,
-              }}
-            >
-              {lastSession.plan_respected === true
-                ? "✓ Plan respecté"
-                : lastSession.plan_respected === false
-                ? "✗ Hors plan"
-                : "Plan non renseigné"}
-            </p>
-          </section>
-        )}
-
-        <section className="card">
-          <p className="label">Évolution</p>
-          <h2 className="card-title">Ta semaine</h2>
-
-          <div className="week-dots">
-            {weekDays.map((day) => (
-              <div key={day.label} className="week-dot" style={getWeekDayStyle(day)}>
-                <div className="week-label">{day.label}</div>
-                <div className="week-pnl">
-                  {day.pnl > 0 ? "+" : ""}
-                  {day.pnl}€
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p className="text">
-            Respect du plan cette semaine : <strong>{weekPlanRate}%</strong>
-          </p>
-        </section>
-
-        <section className="grid">
           <div className="mini-card">
-            <CheckCircle size={26} color="#D4B06A" />
+            <CheckCircle size={25} color="#D4B06A" />
             <div className="mini-label">Plans respectés</div>
             <div className="mini-value">{weekPlanRate}%</div>
           </div>
 
           <div className="mini-card">
-            <Sparkles size={26} color="#D4B06A" />
+            <Sparkles size={25} color="#D4B06A" />
             <div className="mini-label">Sessions lues</div>
             <div className="mini-value">{sessionsCount}</div>
           </div>
         </section>
 
         <section className="actions-grid">
-          <ActionButton href="/coach" icon={<Brain size={24} />} label="Analyse" title="Lire mon coach" />
-          <ActionButton href="/journal" icon={<BookOpen size={24} />} label="Historique" title="Voir mon évolution" />
-          <ActionButton href="/onboarding" icon={<Crown size={24} />} label="Identité" title="Mon profil PRIME" />
-          <ActionButton href="/profile" icon={<User size={24} />} label="Compte" title="Mon espace" />
+          <ActionButton
+            href="/coach"
+            icon={<Brain size={24} />}
+            label="Analyse"
+            title="Lire mon coach"
+          />
+
+          <ActionButton
+            href="/journal"
+            icon={<BookOpen size={24} />}
+            label="Historique"
+            title="Voir mon évolution"
+          />
+
+          <ActionButton
+            href="/onboarding"
+            icon={<Crown size={24} />}
+            label="Identité"
+            title="Mon profil PRIME"
+          />
+
+          <ActionButton
+            href="/profile"
+            icon={<User size={24} />}
+            label="Compte"
+            title="Mon espace"
+          />
         </section>
       </div>
 
@@ -879,20 +1058,118 @@ function ActionButton({ href, icon, label, title }) {
   );
 }
 
-function MissionItem({ label, value }) {
-  return (
-    <div className="mission-item">
-      <p className="mission-label">{label}</p>
-      <p className="mission-value">{value}</p>
-    </div>
-  );
-}
+function DisciplineTradingChart({ data, score }) {
+  const width = 360;
+  const height = 210;
+  const padding = 26;
+  const minY = 35;
+  const maxY = 100;
 
-function TimelineRow({ done, text }) {
+  const xStep = (width - padding * 2) / Math.max(data.length - 1, 1);
+
+  const y = (value) => {
+    const clamped = Math.max(minY, Math.min(maxY, value));
+    return padding + ((maxY - clamped) / (maxY - minY)) * (height - padding * 2);
+  };
+
+  const x = (index) => padding + index * xStep;
+
+  const maPoints = data
+    .map((item, index) => `${x(index)},${y(item.ma)}`)
+    .join(" ");
+
   return (
-    <div className="timeline-row">
-      <div className="timeline-dot">{done ? "✓" : "□"}</div>
-      <span>{text}</span>
+    <div className="chart-wrap">
+      <div className="chart-score-badge">
+        {score}<small>/100</small>
+      </div>
+
+      <svg className="chart-svg" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        {[40, 50, 60, 70, 80, 90, 100].map((level) => (
+          <g key={level}>
+            <text x="0" y={y(level) + 4} fill="rgba(255,255,255,0.55)" fontSize="9">
+              {level}
+            </text>
+            {level === 70 && (
+              <line
+                x1={padding}
+                x2={width - padding}
+                y1={y(level)}
+                y2={y(level)}
+                stroke="rgba(212,176,106,0.72)"
+                strokeDasharray="2 5"
+                strokeWidth="1"
+                vectorEffect="non-scaling-stroke"
+              />
+            )}
+          </g>
+        ))}
+
+        <polyline
+          points={maPoints}
+          fill="none"
+          stroke="rgba(255,255,255,0.55)"
+          strokeWidth="1.5"
+          vectorEffect="non-scaling-stroke"
+        />
+
+        {data.map((item, index) => {
+          const cx = x(index);
+          const candleWidth = 8;
+          const openY = y(item.open);
+          const closeY = y(item.close);
+          const highY = y(item.high);
+          const lowY = y(item.low);
+          const bullish = item.close >= item.open;
+          const bodyTop = Math.min(openY, closeY);
+          const bodyHeight = Math.max(Math.abs(closeY - openY), 4);
+
+          return (
+            <g key={item.label}>
+              <line
+                x1={cx}
+                x2={cx}
+                y1={highY}
+                y2={lowY}
+                stroke={bullish ? "#D4B06A" : "rgba(212,176,106,0.62)"}
+                strokeWidth="1.4"
+                vectorEffect="non-scaling-stroke"
+              />
+              <rect
+                x={cx - candleWidth / 2}
+                y={bodyTop}
+                width={candleWidth}
+                height={bodyHeight}
+                fill={bullish ? "#D4B06A" : "rgba(212,176,106,0.22)"}
+                stroke="#D4B06A"
+                strokeWidth="1"
+                vectorEffect="non-scaling-stroke"
+              />
+              <text
+                x={cx}
+                y={height - 5}
+                fill="rgba(255,255,255,0.62)"
+                fontSize="9"
+                textAnchor="middle"
+              >
+                {item.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {data.length > 0 && (
+          <circle
+            cx={x(data.length - 1)}
+            cy={y(data[data.length - 1].close)}
+            r="5"
+            fill="#fff2b8"
+            stroke="#D4B06A"
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+      </svg>
     </div>
   );
 }
@@ -938,14 +1215,6 @@ function getPrimeMessage({ score, risk, activePrescription, sessionsCount }) {
   return "Ton objectif du jour est simple : ralentir, suivre ton setup et éviter les décisions prises sous émotion.";
 }
 
-function getScoreStatus(score) {
-  if (score >= 85) return "Discipline élevée";
-  if (score >= 70) return "Cadre solide";
-  if (score >= 55) return "À stabiliser";
-  if (score > 0) return "Vigilance requise";
-  return "En observation";
-}
-
 function getPrimeLevel(score, count) {
   if (count < 5) return "En construction";
   if (score >= 85) return "Consistant";
@@ -982,7 +1251,7 @@ function getRiskIcon(level) {
 function getRiskFromSessions(sessions) {
   const closedSessions = sessions
     .filter((s) => s.status === "closed")
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
 
   const lastThree = closedSessions.slice(0, 3);
   const lastFive = closedSessions.slice(0, 5);
@@ -1050,6 +1319,95 @@ function getRiskFromSessions(sessions) {
   };
 }
 
+function getDisciplineChartData(sessions, averageScore) {
+  const recent = sessions
+    .slice(0, 7)
+    .reverse()
+    .map((session) => Number(session.discipline_score || 0))
+    .filter((score) => !Number.isNaN(score) && score > 0);
+
+  const scores = recent.length > 0 ? recent : [52, 57, 63, 61, 70, 76, averageScore || 69];
+
+  return scores.map((score, index) => {
+    const previous = index === 0 ? Math.max(score - 5, 40) : scores[index - 1];
+    const open = previous;
+    const close = score;
+    const high = Math.min(Math.max(open, close) + 5 + (index % 3), 100);
+    const low = Math.max(Math.min(open, close) - 5 - (index % 2), 35);
+    const slice = scores.slice(Math.max(0, index - 2), index + 1);
+    const ma = Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
+
+    return {
+      label: `S${index + 1}`,
+      open,
+      close,
+      high,
+      low,
+      ma,
+    };
+  });
+}
+
+function getScoreTrend(data) {
+  if (!data || data.length < 2) {
+    return { value: 0, label: "depuis la dernière session" };
+  }
+
+  const last = data[data.length - 1].close;
+  const previous = data[0].close;
+
+  return {
+    value: last - previous,
+    label: "sur les 7 dernières sessions",
+  };
+}
+
+function getBehaviorStructure(data) {
+  if (!data || data.length < 4) {
+    return {
+      title: "En observation",
+      icon: "◎",
+      message: "PRIME collecte encore assez de sessions pour lire ta structure comportementale.",
+    };
+  }
+
+  const closes = data.map((item) => item.close);
+  const last = closes[closes.length - 1];
+  const previous = closes[closes.length - 2];
+  const before = closes[closes.length - 3];
+  const start = closes[0];
+
+  if (last > previous && previous >= before && last > start) {
+    return {
+      title: "Higher High",
+      icon: "↗",
+      message: "Tes dernières sessions montrent une amélioration de ton exécution.",
+    };
+  }
+
+  if (last < previous && previous <= before) {
+    return {
+      title: "Lower Low",
+      icon: "↘",
+      message: "La qualité de ton exécution se dégrade. Reviens au setup et réduis les décisions impulsives.",
+    };
+  }
+
+  if (Math.abs(last - previous) <= 4) {
+    return {
+      title: "Range",
+      icon: "→",
+      message: "Ta discipline est stable. Le prochain objectif est de sortir du range par le haut.",
+    };
+  }
+
+  return {
+    title: "Pullback sain",
+    icon: "↗",
+    message: "La structure reste constructive. Continue à protéger tes règles principales.",
+  };
+}
+
 function getCurrentWeekData(sessions) {
   const today = new Date();
   const monday = new Date(today);
@@ -1092,34 +1450,6 @@ function getCurrentWeekData(sessions) {
       planNotRespected: hasSession && notRespectedCount > 0,
     };
   });
-}
-
-function getWeekDayStyle(day) {
-  if (!day.hasSession) {
-    return {
-      background: "rgba(255,255,255,0.035)",
-      border: "1px solid rgba(255,255,255,0.07)",
-    };
-  }
-
-  if (day.planRespected) {
-    return {
-      background: "rgba(125,255,161,0.12)",
-      border: "1px solid rgba(125,255,161,0.30)",
-    };
-  }
-
-  if (day.planNotRespected && day.pnl < 0) {
-    return {
-      background: "rgba(255,80,80,0.13)",
-      border: "1px solid rgba(255,80,80,0.32)",
-    };
-  }
-
-  return {
-    background: "rgba(255,255,255,0.07)",
-    border: "1px solid rgba(255,255,255,0.14)",
-  };
 }
 
 function getWeekPlanRate(days) {
