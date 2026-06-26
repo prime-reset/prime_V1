@@ -4,19 +4,20 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Target,
   Brain,
-  Flame,
   ChevronRight,
   Sparkles,
   Crown,
   ShieldAlert,
   BookOpen,
   User,
-  CalendarDays,
   TrendingUp,
   CheckCircle,
   PlayCircle,
+  Activity,
+  Target,
+  Flame,
+  Eye,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -30,9 +31,13 @@ export default function HomePage() {
   const [profile, setProfile] = useState("Trader en construction");
   const [averageScore, setAverageScore] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
-  const [sessions, setSessions] = useState([]);
-  const [activePrescription, setActivePrescription] = useState(null);
-  const [riskState, setRiskState] = useState("Sous observation");
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activePrescription, setActivePrescription] = useState<any>(null);
+  const [risk, setRisk] = useState<any>({
+    level: "observation",
+    label: "Sous observation",
+    message: "PRIME collecte encore assez de données pour lire ton comportement.",
+  });
   const [focus, setFocus] = useState("Respecter le process avant le résultat.");
 
   useEffect(() => {
@@ -92,7 +97,7 @@ export default function HomePage() {
         setAverageScore(avg);
       }
 
-      setRiskState(getRiskFromSessions(sessionsData));
+      setRisk(getRiskFromSessions(sessionsData));
     }
 
     const { data: prescriptionData } = await supabase
@@ -137,163 +142,353 @@ export default function HomePage() {
   const weekDays = getCurrentWeekData(sessions);
   const weekPnl = weekDays.reduce((sum, day) => sum + day.pnl, 0);
   const weekPlanRate = getWeekPlanRate(weekDays);
+
   const prescriptionProgress = activePrescription
     ? (activePrescription.compliance_days || 0) +
       (activePrescription.missed_days || 0)
     : 0;
+
   const prescriptionDuration = activePrescription?.duration_days || 7;
+
   const prescriptionPercent = activePrescription
     ? Math.min(Math.round((prescriptionProgress / prescriptionDuration) * 100), 100)
     : 0;
+
+  const primeMessage = getPrimeMessage({
+    score: averageScore,
+    risk,
+    profile,
+    activePrescription,
+    sessionsCount,
+  });
 
   return (
     <main className="prime-home">
       <style>{`
         * { box-sizing: border-box; }
-
         body { margin: 0; background: #000; }
 
         .prime-home {
           min-height: 100vh;
-          padding: 32px 18px 140px;
+          padding: 28px 18px 140px;
           color: white;
           font-family: Inter, Arial, sans-serif;
           background:
-            radial-gradient(circle at top right, rgba(212,176,106,0.18), transparent 34%),
-            linear-gradient(180deg, #050505 0%, #000 100%);
+            radial-gradient(circle at 80% 0%, rgba(212,176,106,0.26), transparent 30%),
+            radial-gradient(circle at 10% 20%, rgba(255,255,255,0.06), transparent 24%),
+            linear-gradient(180deg, #080808 0%, #000 100%);
         }
 
-        .page { max-width: 460px; margin: 0 auto; }
-        .hero { margin-bottom: 24px; }
+        .page {
+          max-width: 460px;
+          margin: 0 auto;
+        }
+
+        .hero {
+          margin-bottom: 20px;
+          animation: fadeUp .55s ease both;
+        }
+
+        .brand-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 22px;
+        }
 
         .brand {
           color: #D4B06A;
           letter-spacing: 7px;
-          font-size: 13px;
+          font-size: 12px;
+          font-weight: 900;
           text-transform: uppercase;
-          margin-bottom: 18px;
+        }
+
+        .live-pill {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 12px;
+          border-radius: 999px;
+          background: rgba(212,176,106,0.10);
+          border: 1px solid rgba(212,176,106,0.22);
+          color: #D4B06A;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        }
+
+        .pulse {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: #D4B06A;
+          box-shadow: 0 0 18px rgba(212,176,106,0.9);
+          animation: pulse 1.8s infinite;
         }
 
         .title {
           margin: 0;
-          font-size: 52px;
+          font-size: 44px;
           line-height: 0.95;
-          font-weight: 900;
-          letter-spacing: -3px;
+          font-weight: 950;
+          letter-spacing: -2.6px;
         }
 
         .subtitle {
-          margin-top: 20px;
-          font-size: 18px;
-          line-height: 1.65;
-          color: rgba(255,255,255,0.68);
+          margin-top: 16px;
+          font-size: 17px;
+          line-height: 1.55;
+          color: rgba(255,255,255,0.66);
         }
 
-        .card,
-        .live-card,
-        .cta-card,
-        .action-card {
-          border-radius: 34px;
+        .prime-says {
+          margin: 22px 0;
+          padding: 22px;
+          border-radius: 32px;
           background:
-            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-            rgba(5,5,5,0.78);
-          border: 1px solid rgba(255,255,255,0.08);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+            linear-gradient(145deg, rgba(212,176,106,0.18), rgba(255,255,255,0.035)),
+            rgba(5,5,5,0.85);
+          border: 1px solid rgba(212,176,106,0.22);
+          box-shadow: 0 22px 60px rgba(0,0,0,0.58);
+          animation: fadeUp .65s ease both;
         }
 
+        .prime-says-label {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          color: #D4B06A;
+          font-size: 12px;
+          font-weight: 950;
+          letter-spacing: 2.5px;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+        }
+
+        .prime-says-text {
+          margin: 0;
+          font-size: 21px;
+          line-height: 1.35;
+          font-weight: 850;
+          letter-spacing: -0.5px;
+        }
+
+        .score-card,
         .card,
-        .live-card { padding: 26px; margin-bottom: 18px; }
+        .mini-card,
+        .action-card {
+          background:
+            linear-gradient(145deg, rgba(255,255,255,0.085), rgba(255,255,255,0.025)),
+            rgba(5,5,5,0.82);
+          border: 1px solid rgba(255,255,255,0.09);
+          box-shadow: 0 22px 70px rgba(0,0,0,0.58);
+          backdrop-filter: blur(18px);
+        }
+
+        .score-card {
+          position: relative;
+          overflow: hidden;
+          border-radius: 38px;
+          padding: 28px;
+          margin-bottom: 18px;
+          animation: fadeUp .75s ease both;
+        }
+
+        .score-card::before {
+          content: "";
+          position: absolute;
+          inset: -40%;
+          background: radial-gradient(circle, rgba(212,176,106,0.19), transparent 45%);
+          animation: slowGlow 5s ease-in-out infinite alternate;
+        }
+
+        .score-content {
+          position: relative;
+          z-index: 1;
+        }
+
+        .score-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          margin-bottom: 24px;
+        }
+
+        .label {
+          color: rgba(212,176,106,0.88);
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          margin: 0 0 10px;
+        }
+
+        .score-status {
+          margin: 0;
+          font-size: 25px;
+          line-height: 1.05;
+          font-weight: 950;
+          letter-spacing: -0.8px;
+        }
+
+        .score-ring {
+          width: 152px;
+          height: 152px;
+          border-radius: 50%;
+          display: grid;
+          place-items: center;
+          background:
+            conic-gradient(#D4B06A ${averageScore * 3.6}deg, rgba(255,255,255,0.07) 0deg);
+          box-shadow: 0 0 42px rgba(212,176,106,0.14);
+          flex-shrink: 0;
+        }
+
+        .score-ring-inner {
+          width: 124px;
+          height: 124px;
+          border-radius: 50%;
+          background: #050505;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .score-number {
+          font-size: 48px;
+          font-weight: 1000;
+          letter-spacing: -2px;
+          line-height: 1;
+        }
+
+        .score-word {
+          margin-top: 5px;
+          color: #D4B06A;
+          font-size: 11px;
+          font-weight: 950;
+          letter-spacing: 2px;
+        }
+
+        .score-copy {
+          color: rgba(255,255,255,0.72);
+          font-size: 15.5px;
+          line-height: 1.65;
+          margin: 0;
+        }
 
         .cta-card {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 16px;
-          padding: 22px;
+          padding: 23px;
+          border-radius: 30px;
           margin-bottom: 18px;
           text-decoration: none;
           color: #000;
           background: linear-gradient(90deg, #9d742f, #d6b25f, #fff2b8);
           border: none;
+          box-shadow: 0 18px 48px rgba(212,176,106,0.22);
+          animation: fadeUp .85s ease both;
         }
 
         .cta-title {
           margin: 0;
-          font-size: 20px;
-          font-weight: 950;
-          letter-spacing: -0.5px;
+          font-size: 21px;
+          font-weight: 1000;
+          letter-spacing: -0.6px;
         }
 
         .cta-subtitle {
           margin: 6px 0 0;
-          color: rgba(0,0,0,0.64);
+          color: rgba(0,0,0,0.62);
           font-size: 14px;
           font-weight: 800;
         }
 
-        .label {
-          color: rgba(212,176,106,0.86);
-          font-size: 12px;
-          letter-spacing: 3px;
-          text-transform: uppercase;
-          margin-bottom: 12px;
+        .card {
+          border-radius: 34px;
+          padding: 24px;
+          margin-bottom: 18px;
+          animation: fadeUp .9s ease both;
         }
 
         .card-title {
           margin: 0;
-          font-size: 30px;
-          line-height: 1.1;
-          font-weight: 900;
+          font-size: 28px;
+          line-height: 1.08;
+          font-weight: 950;
           color: #D4B06A;
+          letter-spacing: -0.9px;
         }
 
         .text {
-          margin-top: 18px;
+          margin: 15px 0 0;
           color: rgba(255,255,255,0.72);
-          font-size: 16px;
-          line-height: 1.7;
-        }
-
-        .score-explain {
-          margin-top: 16px;
-          padding: 16px;
-          border-radius: 22px;
-          background: rgba(212,176,106,0.08);
-          border: 1px solid rgba(212,176,106,0.16);
-          color: rgba(255,255,255,0.76);
-          font-size: 15px;
+          font-size: 15.5px;
           line-height: 1.65;
         }
 
-        .grid {
+        .mission-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 14px;
-          margin-bottom: 18px;
+          gap: 12px;
+          margin-top: 20px;
         }
 
-        .mini-card {
-          padding: 20px;
-          border-radius: 28px;
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
-            rgba(5,5,5,0.76);
-          border: 1px solid rgba(255,255,255,0.08);
+        .mission-item {
+          padding: 15px;
+          border-radius: 22px;
+          background: rgba(255,255,255,0.045);
+          border: 1px solid rgba(255,255,255,0.07);
         }
 
-        .mini-label {
-          margin-top: 14px;
+        .mission-label {
+          margin: 0 0 8px;
           color: rgba(212,176,106,0.82);
-          font-size: 12px;
-          letter-spacing: 2px;
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 1.7px;
           text-transform: uppercase;
         }
 
-        .mini-value {
-          margin-top: 8px;
-          font-size: 27px;
+        .mission-value {
+          margin: 0;
+          font-size: 16px;
           font-weight: 900;
-          line-height: 1.05;
+          line-height: 1.25;
+        }
+
+        .timeline {
+          display: grid;
+          gap: 13px;
+          margin-top: 18px;
+        }
+
+        .timeline-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: rgba(255,255,255,0.76);
+          font-size: 15px;
+          font-weight: 700;
+        }
+
+        .timeline-dot {
+          width: 22px;
+          height: 22px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          background: rgba(212,176,106,0.14);
+          color: #D4B06A;
+          border: 1px solid rgba(212,176,106,0.25);
+          font-size: 12px;
+          flex-shrink: 0;
         }
 
         .progress-track {
@@ -309,6 +504,36 @@ export default function HomePage() {
           height: 100%;
           border-radius: 999px;
           background: linear-gradient(90deg, #9d742f, #D4B06A, #fff2b8);
+          transition: width .8s ease;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 18px;
+        }
+
+        .mini-card {
+          padding: 20px;
+          border-radius: 28px;
+        }
+
+        .mini-label {
+          margin-top: 14px;
+          color: rgba(212,176,106,0.82);
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+        }
+
+        .mini-value {
+          margin-top: 8px;
+          font-size: 24px;
+          font-weight: 950;
+          line-height: 1.05;
+          letter-spacing: -0.5px;
         }
 
         .week-dots {
@@ -319,7 +544,7 @@ export default function HomePage() {
         }
 
         .week-dot {
-          min-height: 56px;
+          min-height: 58px;
           border-radius: 18px;
           display: flex;
           flex-direction: column;
@@ -349,8 +574,9 @@ export default function HomePage() {
         }
 
         .action-card {
-          min-height: 112px;
+          min-height: 122px;
           padding: 18px;
+          border-radius: 28px;
           color: white;
           text-decoration: none;
           display: flex;
@@ -373,18 +599,50 @@ export default function HomePage() {
           letter-spacing: 2px;
           text-transform: uppercase;
           margin: 0 0 8px;
+          font-weight: 900;
         }
 
         .action-title {
           margin: 0;
-          font-size: 21px;
-          font-weight: 900;
+          font-size: 19px;
+          line-height: 1.15;
+          font-weight: 950;
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: .5; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.25); }
+        }
+
+        @keyframes slowGlow {
+          from { transform: rotate(0deg) scale(1); opacity: .55; }
+          to { transform: rotate(14deg) scale(1.08); opacity: 1; }
         }
 
         @media(max-width: 390px) {
+          .title { font-size: 39px; }
+          .score-top {
+            flex-direction: column;
+          }
+          .score-ring {
+            width: 142px;
+            height: 142px;
+            align-self: center;
+          }
+          .score-ring-inner {
+            width: 116px;
+            height: 116px;
+          }
           .grid,
-          .actions-grid { grid-template-columns: 1fr; }
-          .title { font-size: 44px; }
+          .mission-grid,
+          .actions-grid {
+            grid-template-columns: 1fr;
+          }
           .week-dots { gap: 6px; }
           .week-dot { min-height: 52px; border-radius: 15px; }
         }
@@ -392,13 +650,50 @@ export default function HomePage() {
 
       <div className="page">
         <section className="hero">
-          <p className="brand">PRIME DASHBOARD</p>
+          <div className="brand-row">
+            <div className="brand">PRIME</div>
+            <div className="live-pill">
+              <span className="pulse" />
+              Analyse live
+            </div>
+          </div>
 
-          <h1 className="title">Bonjour {displayName} 👋</h1>
+          <h1 className="title">Bonjour {displayName}</h1>
 
           <p className="subtitle">
-            Voici ton cockpit PRIME pour aujourd'hui.
+            Ton cockpit est prêt. PRIME analyse ton état, ton risque et ton objectif du jour.
           </p>
+        </section>
+
+        <section className="prime-says">
+          <div className="prime-says-label">
+            <Brain size={17} />
+            PRIME parle
+          </div>
+          <p className="prime-says-text">{primeMessage}</p>
+        </section>
+
+        <section className="score-card">
+          <div className="score-content">
+            <div className="score-top">
+              <div>
+                <p className="label">Discipline Score</p>
+                <h2 className="score-status">{getScoreStatus(averageScore)}</h2>
+              </div>
+
+              <div className="score-ring">
+                <div className="score-ring-inner">
+                  <div className="score-number">{averageScore}</div>
+                  <div className="score-word">/100</div>
+                </div>
+              </div>
+            </div>
+
+            <p className="score-copy">
+              Ce score mesure ton exécution, pas ton PnL. Une perte propre vaut mieux
+              qu'un gain obtenu hors plan.
+            </p>
+          </div>
         </section>
 
         <Link href="/session" className="cta-card">
@@ -409,40 +704,42 @@ export default function HomePage() {
           <PlayCircle size={34} />
         </Link>
 
-        <section className="live-card">
-          <p className="label">IDENTITÉ PRIME</p>
-          <h2 className="card-title">{profile}</h2>
-
-          <p className="text">
-            Niveau : <strong>{getPrimeLevel(averageScore, sessionsCount)}</strong>
-            <br />
-            Sessions analysées : <strong>{sessionsCount}</strong>
-            <br />
-            Score moyen : <strong>{averageScore}%</strong>
-          </p>
-        </section>
-
         <section className="card">
-          <p className="label">SCORE PRIME</p>
-          <h2 className="card-title">{averageScore}%</h2>
+          <p className="label">Mission du jour</p>
+          <h2 className="card-title">{focus}</h2>
 
-          <div className="score-explain">
-            Le Score PRIME mesure la qualité de ton exécution : checklist respectée,
-            plan suivi et erreurs comportementales évitées. Il ne juge pas ton PnL.
-            Une perte avec un plan respecté peut être une bonne session.
+          <div className="mission-grid">
+            <MissionItem label="Objectif" value="Respect du setup" />
+            <MissionItem label="Risque" value={risk.label} />
+            <MissionItem
+              label="Prescription"
+              value={activePrescription ? `Jour ${prescriptionProgress}/${prescriptionDuration}` : "Aucune"}
+            />
+            <MissionItem label="Profil" value={profile} />
           </div>
         </section>
 
         <section className="card">
-          <p className="label">FOCUS DU JOUR</p>
-          <h2 className="card-title">{focus}</h2>
-          <p className="text">
-            Le PnL dit ce que le marché t’a donné. Le Score PRIME dit ce que tu as maîtrisé.
-          </p>
+          <p className="label">Aujourd'hui</p>
+          <h2 className="card-title">Timeline PRIME</h2>
+
+          <div className="timeline">
+            <TimelineRow done text="Identité analysée" />
+            <TimelineRow done text="Focus généré" />
+            <TimelineRow done={!!activePrescription} text="Prescription vérifiée" />
+            <TimelineRow done={false} text="Session non commencée" />
+            <TimelineRow done={false} text="Débrief à compléter" />
+          </div>
         </section>
 
         <section className="card">
-          <p className="label">PRESCRIPTION ACTIVE</p>
+          <p className="label">Risque actuel</p>
+          <h2 className="card-title">{getRiskIcon(risk.level)} {risk.label}</h2>
+          <p className="text">{risk.message}</p>
+        </section>
+
+        <section className="card">
+          <p className="label">Prescription active</p>
 
           <h2 className="card-title">
             {activePrescription ? activePrescription.title : "Aucune prescription"}
@@ -470,11 +767,26 @@ export default function HomePage() {
           )}
         </section>
 
+        <section className="card">
+          <p className="label">Identité PRIME</p>
+          <h2 className="card-title">{profile}</h2>
+
+          <p className="text">
+            Niveau : <strong>{getPrimeLevel(averageScore, sessionsCount)}</strong>
+            <br />
+            Sessions analysées : <strong>{sessionsCount}</strong>
+            <br />
+            Force dominante : <strong>{getProfileStrength(profile)}</strong>
+            <br />
+            À surveiller : <strong>{getProfileWeakness(profile)}</strong>
+          </p>
+        </section>
+
         <section className="grid">
           <div className="mini-card">
             <ShieldAlert size={26} color="#D4B06A" />
-            <div className="mini-label">Risque principal</div>
-            <div className="mini-value">{riskState}</div>
+            <div className="mini-label">Risque</div>
+            <div className="mini-value">{risk.label}</div>
           </div>
 
           <div className="mini-card">
@@ -495,25 +807,15 @@ export default function HomePage() {
 
         {lastSession && (
           <section className="card">
-            <p className="label">DERNIÈRE SESSION</p>
+            <p className="label">Dernière session</p>
             <h2 className="card-title">
               Discipline : {lastSession.discipline_score ?? 0}%
             </h2>
 
-            <p
-              className="text"
-              style={{
-                color:
-                  Number(lastSession.session_pnl || 0) > 0
-                    ? "#7DFFA1"
-                    : Number(lastSession.session_pnl || 0) < 0
-                    ? "#FF7D7D"
-                    : "rgba(255,255,255,0.72)",
-                fontWeight: 900,
-              }}
-            >
-              PnL : {Number(lastSession.session_pnl || 0) > 0 ? "+" : ""}
-              {Number(lastSession.session_pnl || 0)}€
+            <p className="text">
+              Mental : <strong>{lastSession.mental_state || "Non renseigné"}</strong>
+              <br />
+              Erreur dominante : <strong>{lastSession.dominant_error || "Aucune"}</strong>
             </p>
 
             <p
@@ -538,7 +840,7 @@ export default function HomePage() {
         )}
 
         <section className="card">
-          <p className="label">CALENDRIER PRIME</p>
+          <p className="label">Évolution</p>
           <h2 className="card-title">Ta semaine</h2>
 
           <div className="week-dots">
@@ -573,10 +875,33 @@ export default function HomePage() {
         </section>
 
         <section className="actions-grid">
-          <ActionButton href="/onboarding" icon={<Crown size={24} />} label="PRIME" title="Identity" />
-          <ActionButton href="/profile" icon={<User size={24} />} label="Compte" title="Profil" />
-          <ActionButton href="/coach" icon={<Brain size={24} />} label="Analyse" title="Coach" />
-          <ActionButton href="/journal" icon={<BookOpen size={24} />} label="Historique" title="Journal" />
+          <ActionButton
+            href="/coach"
+            icon={<Brain size={24} />}
+            label="Analyse"
+            title="Lire mon coach"
+          />
+
+          <ActionButton
+            href="/journal"
+            icon={<BookOpen size={24} />}
+            label="Historique"
+            title="Voir mon évolution"
+          />
+
+          <ActionButton
+            href="/onboarding"
+            icon={<Crown size={24} />}
+            label="Identité"
+            title="Mon profil PRIME"
+          />
+
+          <ActionButton
+            href="/profile"
+            icon={<User size={24} />}
+            label="Compte"
+            title="Mon espace"
+          />
         </section>
       </div>
 
@@ -585,7 +910,7 @@ export default function HomePage() {
   );
 }
 
-function ActionButton({ href, icon, label, title }) {
+function ActionButton({ href, icon, label, title }: any) {
   return (
     <Link href={href} className="action-card">
       <div className="action-top">
@@ -601,12 +926,30 @@ function ActionButton({ href, icon, label, title }) {
   );
 }
 
-function getFocusByProfile(profile) {
+function MissionItem({ label, value }: any) {
+  return (
+    <div className="mission-item">
+      <p className="mission-label">{label}</p>
+      <p className="mission-value">{value}</p>
+    </div>
+  );
+}
+
+function TimelineRow({ done, text }: any) {
+  return (
+    <div className="timeline-row">
+      <div className="timeline-dot">{done ? "✓" : "□"}</div>
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function getFocusByProfile(profile?: string) {
   switch (profile) {
     case "Trader Impulsif":
       return "Ralentir avant d’agir.";
     case "Trader FOMO":
-      return "Accepter de laisser partir une opportunité.";
+      return "Laisser passer ce qui n’est pas parfait.";
     case "Trader Désorganisé":
       return "Structurer ton plan avant l’exécution.";
     case "Trader Patient":
@@ -618,7 +961,39 @@ function getFocusByProfile(profile) {
   }
 }
 
-function getPrimeLevel(score, count) {
+function getPrimeMessage({ score, risk, profile, activePrescription, sessionsCount }: any) {
+  if (sessionsCount === 0) {
+    return "Aujourd’hui, PRIME commence à construire ton identité de trader. La première donnée importante sera ton respect du process.";
+  }
+
+  if (risk.level === "high") {
+    return "Aujourd’hui je vais être exigeant avec toi. Une dérive comportementale est détectée : ton objectif n’est pas de gagner plus, mais de reprendre le contrôle.";
+  }
+
+  if (activePrescription) {
+    return "Ta priorité est claire : suivre ta prescription jusqu’au bout. Pas d’improvisation, pas de négociation avec ton plan.";
+  }
+
+  if (score >= 85) {
+    return "Tu construis un comportement stable. Continue à privilégier la qualité d’exécution plutôt que la quantité d’opportunités.";
+  }
+
+  if (score >= 70) {
+    return "Ta base est solide, mais PRIME voit encore une marge de progression. Aujourd’hui, cherche une exécution propre.";
+  }
+
+  return "Ton objectif du jour est simple : ralentir, suivre ton setup et éviter les décisions prises sous émotion.";
+}
+
+function getScoreStatus(score: number) {
+  if (score >= 85) return "Discipline élevée";
+  if (score >= 70) return "Cadre solide";
+  if (score >= 55) return "À stabiliser";
+  if (score > 0) return "Vigilance requise";
+  return "En observation";
+}
+
+function getPrimeLevel(score: number, count: number) {
   if (count < 5) return "En construction";
   if (score >= 85) return "Consistant";
   if (score >= 70) return "Confirmé";
@@ -626,10 +1001,35 @@ function getPrimeLevel(score, count) {
   return "À stabiliser";
 }
 
-function getRiskFromSessions(sessions) {
+function getProfileStrength(profile: string) {
+  if (profile.includes("Patient")) return "Attente";
+  if (profile.includes("Impulsif")) return "Énergie";
+  if (profile.includes("FOMO")) return "Réactivité";
+  if (profile.includes("Agressif")) return "Décision";
+  if (profile.includes("Désorganisé")) return "Adaptabilité";
+  return "Construction";
+}
+
+function getProfileWeakness(profile: string) {
+  if (profile.includes("Patient")) return "Excès de confiance";
+  if (profile.includes("Impulsif")) return "Entrées trop rapides";
+  if (profile.includes("FOMO")) return "Peur de rater";
+  if (profile.includes("Agressif")) return "Risque excessif";
+  if (profile.includes("Désorganisé")) return "Manque de structure";
+  return "Manque de données";
+}
+
+function getRiskIcon(level: string) {
+  if (level === "low") return "🟢";
+  if (level === "medium") return "🟠";
+  if (level === "high") return "🔴";
+  return "⚪";
+}
+
+function getRiskFromSessions(sessions: any[]) {
   const closedSessions = sessions
     .filter((s) => s.status === "closed")
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
 
   const lastThree = closedSessions.slice(0, 3);
   const lastFive = closedSessions.slice(0, 5);
@@ -638,30 +1038,66 @@ function getRiskFromSessions(sessions) {
     lastThree.length === 3 &&
     lastThree.every((s) => Number(s.discipline_score) < 65);
 
-  if (lowDiscipline) return "Discipline en baisse";
+  if (lowDiscipline) {
+    return {
+      level: "high",
+      label: "Risque élevé",
+      message: "Tes trois dernières sessions montrent une discipline en baisse. PRIME recommande de réduire la taille et de viser une exécution parfaite.",
+    };
+  }
 
   const revengeCount = lastFive.filter(
     (s) => s.dominant_error === "Revenge trade"
   ).length;
 
-  if (revengeCount >= 2) return "Revenge Trading détecté";
+  if (revengeCount >= 2) {
+    return {
+      level: "high",
+      label: "Revenge détecté",
+      message: "Deux signaux de revenge trading ont été détectés récemment. Après une perte, ton objectif est de t’arrêter avant de vouloir récupérer.",
+    };
+  }
 
   const overtradingCount = lastFive.filter(
     (s) => s.dominant_error === "Overtrading"
   ).length;
 
-  if (overtradingCount >= 2) return "Overtrading détecté";
+  if (overtradingCount >= 2) {
+    return {
+      level: "medium",
+      label: "Overtrading",
+      message: "PRIME détecte une tendance à multiplier les décisions. Aujourd’hui, limite-toi aux opportunités les plus propres.",
+    };
+  }
 
   const fomoCount = lastFive.filter(
     (s) => s.dominant_error === "Entrée FOMO"
   ).length;
 
-  if (fomoCount >= 2) return "FOMO à surveiller";
+  if (fomoCount >= 2) {
+    return {
+      level: "medium",
+      label: "FOMO à surveiller",
+      message: "Tu as récemment poursuivi des opportunités au lieu d’attendre ton setup. Ton edge est dans l’attente.",
+    };
+  }
 
-  return "Stable";
+  if (closedSessions.length >= 3) {
+    return {
+      level: "low",
+      label: "Risque faible",
+      message: "Aucune dérive majeure détectée sur tes dernières sessions. Continue à protéger ton cadre.",
+    };
+  }
+
+  return {
+    level: "observation",
+    label: "Sous observation",
+    message: "PRIME collecte encore assez de données pour établir ton risque comportemental.",
+  };
 }
 
-function getCurrentWeekData(sessions) {
+function getCurrentWeekData(sessions: any[]) {
   const today = new Date();
   const monday = new Date(today);
   const day = monday.getDay();
@@ -686,27 +1122,26 @@ function getCurrentWeekData(sessions) {
     );
 
     const hasSession = daySessions.length > 0;
+
     const respectedCount = daySessions.filter(
       (session) => session.plan_respected === true
     ).length;
+
     const notRespectedCount = daySessions.filter(
       (session) => session.plan_respected === false
     ).length;
-
-    const planRespected = hasSession && notRespectedCount === 0 && respectedCount > 0;
-    const planNotRespected = hasSession && notRespectedCount > 0;
 
     return {
       label,
       pnl,
       hasSession,
-      planRespected,
-      planNotRespected,
+      planRespected: hasSession && notRespectedCount === 0 && respectedCount > 0,
+      planNotRespected: hasSession && notRespectedCount > 0,
     };
   });
 }
 
-function getWeekDayStyle(day) {
+function getWeekDayStyle(day: any) {
   if (!day.hasSession) {
     return {
       background: "rgba(255,255,255,0.035)",
@@ -721,13 +1156,6 @@ function getWeekDayStyle(day) {
     };
   }
 
-  if (day.planNotRespected && day.pnl > 0) {
-    return {
-      background: "rgba(255,255,255,0.07)",
-      border: "1px solid rgba(255,255,255,0.14)",
-    };
-  }
-
   if (day.planNotRespected && day.pnl < 0) {
     return {
       background: "rgba(255,80,80,0.13)",
@@ -736,16 +1164,15 @@ function getWeekDayStyle(day) {
   }
 
   return {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(255,255,255,0.07)",
+    border: "1px solid rgba(255,255,255,0.14)",
   };
 }
 
-function getWeekPlanRate(days) {
+function getWeekPlanRate(days: any[]) {
   const tradedDays = days.filter((day) => day.hasSession);
   if (tradedDays.length === 0) return 0;
 
   const respectedDays = tradedDays.filter((day) => day.planRespected).length;
   return Math.round((respectedDays / tradedDays.length) * 100);
 }
-
