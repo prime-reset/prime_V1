@@ -13,8 +13,7 @@ import {
   TrendingUp,
   CheckCircle,
   PlayCircle,
-  Bell,
-  ExternalLink,
+  BarChart3,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -181,60 +180,38 @@ export default function HomePage() {
         }
 
         .page {
-          max-width: 480px;
+          max-width: 1024px;
           margin: 0 auto;
         }
 
         .hero-shell {
           position: relative;
+          min-height: 560px;
+          margin: -6px 0 22px;
+          padding: 18px 10px 0;
           overflow: hidden;
-          min-height: 430px;
-          margin: -6px -4px 18px;
-          padding: 25px 4px 0;
           isolation: isolate;
         }
 
         .panther {
           position: absolute;
-          top: 18px;
-          right: -145px;
-          width: 520px;
-          height: 520px;
-          background: url("/prime-panther.png") no-repeat center;
-          background-size: contain;
-          opacity: 0.55;
-          filter: brightness(0.62) contrast(1.55) saturate(0.9);
+          top: 38px;
+          right: -38px;
+          width: 570px;
+          height: auto;
+          opacity: 0.42;
+          filter: brightness(0.55) contrast(1.65) saturate(0.9);
+          mix-blend-mode: screen;
           pointer-events: none;
           z-index: 0;
-          mix-blend-mode: screen;
+          transform: translateZ(0);
+
           -webkit-mask-image:
-            radial-gradient(circle at 54% 43%, #000 0%, #000 30%, rgba(0,0,0,0.74) 45%, rgba(0,0,0,0.28) 62%, transparent 82%),
-            linear-gradient(90deg, transparent 0%, #000 30%, #000 78%, transparent 100%);
+            radial-gradient(circle at 48% 43%, #000 0%, #000 32%, rgba(0,0,0,0.74) 48%, rgba(0,0,0,0.18) 68%, transparent 84%),
+            linear-gradient(90deg, transparent 0%, #000 20%, #000 76%, transparent 100%);
           mask-image:
-            radial-gradient(circle at 54% 43%, #000 0%, #000 30%, rgba(0,0,0,0.74) 45%, rgba(0,0,0,0.28) 62%, transparent 82%),
-            linear-gradient(90deg, transparent 0%, #000 30%, #000 78%, transparent 100%);
-        }
-
-        .panther::before {
-          content: "";
-          position: absolute;
-          inset: -12%;
-          background:
-            radial-gradient(circle at 46% 38%, rgba(212,176,106,0.18), transparent 13%),
-            radial-gradient(circle at 42% 44%, rgba(212,176,106,0.12), transparent 22%),
-            linear-gradient(90deg, #000 0%, rgba(0,0,0,0.86) 20%, rgba(0,0,0,0.42) 48%, transparent 78%),
-            linear-gradient(180deg, transparent 0%, transparent 42%, rgba(0,0,0,0.78) 78%, #000 100%);
-          pointer-events: none;
-        }
-
-        .panther::after {
-          content: "";
-          position: absolute;
-          inset: -18%;
-          background:
-            radial-gradient(circle at 46% 39%, transparent 0%, rgba(0,0,0,0.10) 20%, rgba(0,0,0,0.52) 58%, #000 92%),
-            linear-gradient(90deg, #000 0%, rgba(0,0,0,0.92) 22%, rgba(0,0,0,0.48) 54%, transparent 82%);
-          pointer-events: none;
+            radial-gradient(circle at 48% 43%, #000 0%, #000 32%, rgba(0,0,0,0.74) 48%, rgba(0,0,0,0.18) 68%, transparent 84%),
+            linear-gradient(90deg, transparent 0%, #000 20%, #000 76%, transparent 100%);
         }
 
         .hero {
@@ -298,16 +275,16 @@ export default function HomePage() {
 
         .title {
           margin: 0;
-          max-width: 290px;
-          font-size: 43px;
+          max-width: 390px;
+          font-size: 58px;
           line-height: 0.96;
           font-weight: 1000;
           letter-spacing: -2.8px;
         }
 
         .subtitle {
-          max-width: 330px;
-          margin-top: 16px;
+          max-width: 390px;
+          margin-top: 20px;
           font-size: 17px;
           line-height: 1.55;
           color: rgba(255,255,255,0.68);
@@ -318,7 +295,7 @@ export default function HomePage() {
           z-index: 1;
           margin-top: 20px;
           padding: 20px;
-          max-width: 360px;
+          max-width: 410px;
           border-radius: 26px;
           background:
             linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
@@ -361,6 +338,31 @@ export default function HomePage() {
           backdrop-filter: blur(18px);
         }
 
+
+        .top-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 18px;
+          margin-bottom: 18px;
+        }
+
+        .top-grid .score-panel,
+        .top-grid .workspace-card {
+          text-decoration: none;
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 22px;
+          border-radius: 30px;
+          background:
+            linear-gradient(145deg, rgba(212,176,106,0.12), rgba(255,255,255,0.02)),
+            rgba(8,8,8,0.92);
+          border: 1px solid rgba(212,176,106,0.30);
+          box-shadow: 0 18px 50px rgba(0,0,0,0.58);
+          cursor: pointer;
+        }
         .score-panel {
           border-radius: 30px;
           padding: 21px;
@@ -484,11 +486,45 @@ export default function HomePage() {
           border-radius: 26px;
           margin-bottom: 16px;
           background:
-            linear-gradient(145deg, rgba(212,176,106,0.12), rgba(255,255,255,0.02)),
+            linear-gradient(145deg, rgba(212,176,106,0.10), rgba(255,255,255,0.02)),
             rgba(8,8,8,0.92);
-          border: 1px solid rgba(212,176,106,0.34);
+          border: 1px solid rgba(212,176,106,0.24);
           box-shadow: 0 18px 50px rgba(0,0,0,0.58);
-          cursor: pointer;
+        }
+
+        .workspace-checks {
+          display: grid;
+          gap: 8px;
+          margin-top: 14px;
+          color: rgba(255,255,255,0.78);
+          font-size: 13px;
+          font-weight: 750;
+        }
+
+        .workspace-checks span {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .workspace-checks b {
+          color: #D4B06A;
+          font-size: 14px;
+        }
+
+        .workspace-button {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 14px 16px;
+          border-radius: 15px;
+          background: linear-gradient(95deg, #9d742f, #d6b25f 50%, #fff2b8);
+          color: #000;
+          font-size: 16px;
+          font-weight: 1000;
+          letter-spacing: -0.2px;
         }
 
         .workspace-title {
@@ -794,13 +830,15 @@ export default function HomePage() {
           50% { opacity: 1; transform: scale(1.25); }
         }
 
-        @media(max-width: 390px) {
+        @media(max-width: 760px) {
           .prime-home { padding-left: 14px; padding-right: 14px; }
-          .title { font-size: 38px; max-width: 245px; }
-          .subtitle { max-width: 270px; font-size: 16px; }
-          .panther { width: 390px; height: 390px; right: -145px; top: 35px; opacity: .48; }
+          .page { max-width: 480px; }
+          .title { font-size: 40px; max-width: 250px; }
+          .subtitle { max-width: 285px; font-size: 16px; }
+          .panther { width: 350px; right: -125px; top: 64px; opacity: .36; }
           .hero-shell { min-height: 390px; }
           .prime-says { max-width: 300px; }
+          .top-grid { grid-template-columns: 1fr; }
           .score-grid { grid-template-columns: 1fr; }
           .score-ring { justify-self: center; }
           .dashboard-grid { grid-template-columns: 1fr; }
@@ -812,7 +850,7 @@ export default function HomePage() {
 
       <div className="page">
         <section className="hero-shell">
-          <div className="panther" aria-hidden="true" />
+          <img className="panther" src="/prime-panther.png" alt="" aria-hidden="true" />
 
           <div className="hero">
             <div className="brand-row">
@@ -823,7 +861,6 @@ export default function HomePage() {
                   <span className="pulse" />
                   Analyse live
                 </div>
-                <Bell size={23} className="bell" />
               </div>
             </div>
 
@@ -843,46 +880,55 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="score-panel">
-          <div className="score-grid">
+        <section className="top-grid">
+          <section className="score-panel">
+            <div className="score-grid">
+              <div>
+                <p className="label">Discipline Score</p>
+
+                <div className="score-line">
+                  <div className="score-big">{averageScore}</div>
+                  <div className="score-outof">/100</div>
+                </div>
+
+                <div className="trend-pill">
+                  <span className={scoreTrend.value >= 0 ? "trend-up" : "trend-down"}>
+                    {scoreTrend.value >= 0 ? "↗" : "↘"} {scoreTrend.value >= 0 ? "+" : ""}
+                    {scoreTrend.value} pts
+                  </span>
+                  <span>{scoreTrend.label}</span>
+                </div>
+              </div>
+
+              <div className="score-ring">
+                <div className="score-ring-inner">
+                  <TrendingUp size={32} />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <a
+            className="workspace-card"
+            href="https://www.tradingview.com/chart/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <div>
-              <p className="label">Discipline Score</p>
-
-              <div className="score-line">
-                <div className="score-big">{averageScore}</div>
-                <div className="score-outof">/100</div>
-              </div>
-
-              <div className="trend-pill">
-                <span className={scoreTrend.value >= 0 ? "trend-up" : "trend-down"}>
-                  {scoreTrend.value >= 0 ? "↗" : "↘"} {scoreTrend.value >= 0 ? "+" : ""}
-                  {scoreTrend.value} pts
-                </span>
-                <span>{scoreTrend.label}</span>
+              <p className="workspace-title">Workspace</p>
+              <p className="workspace-main">TradingView</p>
+              <div className="workspace-checks">
+                <span><b>✓</b> Checklist validée</span>
+                <span><b>✓</b> Mental renseigné</span>
+                <span><b>✓</b> Plan validé</span>
               </div>
             </div>
-
-            <div className="score-ring">
-              <div className="score-ring-inner">
-                <TrendingUp size={32} />
-              </div>
+            <div className="workspace-button">
+              <BarChart3 size={21} />
+              Ouvrir TradingView
             </div>
-          </div>
+          </a>
         </section>
-
-        <a
-          className="workspace-card"
-          href="https://www.tradingview.com/chart/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <div>
-            <p className="workspace-title">Workspace</p>
-            <p className="workspace-main">Ouvrir TradingView</p>
-            <p className="workspace-sub">Préparer le marché après validation mentale.</p>
-          </div>
-          <ExternalLink size={25} color="#D4B06A" />
-        </a>
 
         <Link href="/session" className="cta-card">
           <div>
@@ -908,7 +954,7 @@ export default function HomePage() {
           <DisciplineTradingChart data={chartData} score={averageScore} />
 
           <div className="structure-box">
-            <div className="tv-badge">TV</div>
+            <div className="tv-badge"><TrendingUp size={22} /></div>
             <div>
               <p className="structure-label">Structure comportementale</p>
               <p className="structure-title">
