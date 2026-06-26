@@ -835,7 +835,7 @@ export default function HomePage() {
         <section className="hero-shell">
           <img
             className="panther"
-            src="/prime-panther.png"
+           src="/prime-panther-v2.png"
             alt=""
             aria-hidden="true"
           />
