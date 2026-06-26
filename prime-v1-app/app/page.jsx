@@ -15,7 +15,6 @@ import {
   PlayCircle,
   ExternalLink,
   BarChart3,
-  Target,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -153,6 +152,7 @@ export default function HomePage() {
   const chartData = getDisciplineChartData(sessions, averageScore);
   const structure = getBehaviorStructure(chartData);
   const scoreTrend = getScoreTrend(chartData);
+
   const primeMessage = getPrimeMessage({
     score: averageScore,
     risk,
@@ -163,68 +163,34 @@ export default function HomePage() {
   return (
     <main className="prime-home">
       <style>{`
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #000; }
+        * {
+          box-sizing: border-box;
+        }
+
+        html,
+        body {
+          margin: 0;
+          background: #000;
+        }
 
         .prime-home {
           min-height: 100vh;
-          padding: 28px 16px 124px;
+          padding: 28px 16px 132px;
           color: white;
           font-family: Inter, Arial, sans-serif;
-          background:
-            radial-gradient(circle at 86% 4%, rgba(212,176,106,0.105), transparent 28%),
-            linear-gradient(180deg, #020202 0%, #000 48%, #000 100%);
+          background: #000;
           overflow-x: hidden;
         }
 
         .page {
-          max-width: 480px;
+          width: 100%;
+          max-width: 430px;
           margin: 0 auto;
         }
 
-        .hero-shell {
-          position: relative;
-          min-height: 405px;
-          margin: -6px -4px 18px;
-          padding: 18px 4px 0;
-          overflow: hidden;
-          isolation: isolate;
-        }
-
-        .hero-shell::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          pointer-events: none;
-          background:
-            linear-gradient(90deg, #000 0%, rgba(0,0,0,0.95) 28%, rgba(0,0,0,0.58) 55%, rgba(0,0,0,0.08) 78%, transparent 100%),
-            linear-gradient(180deg, transparent 0%, transparent 58%, rgba(0,0,0,0.88) 88%, #000 100%);
-        }
-
-        .panther {
-          position: absolute;
-          top: 44px;
-          right: -82px;
-          width: 340px;
-          height: auto;
-          max-width: none;
-          opacity: 0.82;
-          filter: brightness(0.62) contrast(1.55) saturate(0.92);
-          mix-blend-mode: screen;
-          pointer-events: none;
-          z-index: 0;
-
-          -webkit-mask-image:
-            radial-gradient(circle at 48% 42%, #000 0%, #000 34%, rgba(0,0,0,0.68) 53%, transparent 83%);
-          mask-image:
-            radial-gradient(circle at 48% 42%, #000 0%, #000 34%, rgba(0,0,0,0.68) 53%, transparent 83%);
-        }
-
         .hero {
-          position: relative;
-          z-index: 2;
-          animation: fadeUp .55s ease both;
+          padding: 8px 2px 22px;
+          animation: fadeUp .5s ease both;
         }
 
         .brand-row {
@@ -271,34 +237,31 @@ export default function HomePage() {
 
         .title {
           margin: 0;
-          max-width: 260px;
-          font-size: 43px;
-          line-height: 0.96;
+          max-width: 310px;
+          font-size: 48px;
+          line-height: 0.94;
           font-weight: 1000;
-          letter-spacing: -2.8px;
+          letter-spacing: -3px;
         }
 
         .subtitle {
-          max-width: 300px;
-          margin-top: 17px;
+          max-width: 355px;
+          margin: 18px 0 0;
           font-size: 16px;
           line-height: 1.58;
           color: rgba(255,255,255,0.66);
         }
 
         .prime-says {
-          position: relative;
-          z-index: 2;
-          margin-top: 22px;
+          margin-top: 24px;
           padding: 20px;
-          max-width: 330px;
           border-radius: 26px;
           background:
             linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.015)),
-            rgba(5,5,5,0.84);
-          border: 1px solid rgba(212,176,106,0.24);
-          box-shadow: 0 20px 55px rgba(0,0,0,0.62);
-          backdrop-filter: blur(14px);
+            rgba(10,10,10,0.92);
+          border: 1px solid rgba(212,176,106,0.22);
+          box-shadow: 0 20px 55px rgba(0,0,0,0.68);
+          backdrop-filter: blur(16px);
         }
 
         .prime-says-label {
@@ -329,7 +292,7 @@ export default function HomePage() {
         .action-card {
           background:
             linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.018)),
-            rgba(8,8,8,0.9);
+            rgba(12,12,12,0.94);
           border: 1px solid rgba(255,255,255,0.095);
           box-shadow: 0 22px 70px rgba(0,0,0,0.62);
           backdrop-filter: blur(18px);
@@ -337,41 +300,35 @@ export default function HomePage() {
 
         .top-grid {
           display: grid;
-          grid-template-columns: 1fr;
-          gap: 14px;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
           margin-bottom: 16px;
         }
 
         .score-panel {
-          border-radius: 30px;
-          padding: 21px;
-          animation: fadeUp .7s ease both;
-        }
-
-        .score-grid {
-          display: grid;
-          grid-template-columns: 1fr 122px;
-          gap: 18px;
-          align-items: center;
+          border-radius: 28px;
+          padding: 18px;
+          min-height: 230px;
+          animation: fadeUp .65s ease both;
         }
 
         .label {
           color: rgba(212,176,106,0.92);
-          font-size: 11px;
+          font-size: 10.5px;
           font-weight: 950;
-          letter-spacing: 3.4px;
+          letter-spacing: 3.2px;
           text-transform: uppercase;
-          margin: 0 0 12px;
+          margin: 0 0 13px;
         }
 
         .score-line {
           display: flex;
           align-items: flex-end;
-          gap: 8px;
+          gap: 7px;
         }
 
         .score-big {
-          font-size: 55px;
+          font-size: 54px;
           font-weight: 1000;
           line-height: .92;
           letter-spacing: -2.8px;
@@ -380,7 +337,7 @@ export default function HomePage() {
         .score-outof {
           padding-bottom: 7px;
           color: #D4B06A;
-          font-size: 20px;
+          font-size: 19px;
           font-weight: 950;
         }
 
@@ -388,12 +345,13 @@ export default function HomePage() {
           display: inline-flex;
           align-items: center;
           gap: 7px;
-          margin-top: 14px;
-          padding: 7px 10px;
-          border-radius: 10px;
+          margin-top: 16px;
+          padding: 8px 10px;
+          border-radius: 12px;
           background: rgba(255,255,255,0.045);
           border: 1px solid rgba(255,255,255,0.08);
-          font-size: 12px;
+          font-size: 11.5px;
+          line-height: 1.2;
           color: rgba(255,255,255,0.72);
         }
 
@@ -401,22 +359,23 @@ export default function HomePage() {
         .trend-down { color: #ff6b6b; }
 
         .score-ring {
-          width: 120px;
-          height: 120px;
+          width: 118px;
+          height: 118px;
           border-radius: 50%;
           display: grid;
           place-items: center;
+          margin: 20px auto 0;
           background:
             conic-gradient(#D4B06A ${averageScore * 3.6}deg, rgba(255,255,255,0.075) 0deg);
-          box-shadow: 0 0 42px rgba(212,176,106,0.15);
+          box-shadow: 0 0 42px rgba(212,176,106,0.14);
         }
 
         .score-ring-inner {
-          width: 94px;
-          height: 94px;
+          width: 92px;
+          height: 92px;
           border-radius: 50%;
           background:
-            radial-gradient(circle at 50% 35%, rgba(212,176,106,0.12), transparent 45%),
+            radial-gradient(circle at 50% 35%, rgba(212,176,106,0.10), transparent 45%),
             #030303;
           display: flex;
           align-items: center;
@@ -428,43 +387,46 @@ export default function HomePage() {
         .workspace-card {
           text-decoration: none;
           color: white;
-          display: block;
-          padding: 20px;
-          border-radius: 30px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 18px;
+          border-radius: 28px;
+          min-height: 230px;
           cursor: pointer;
         }
 
         .workspace-head {
           display: flex;
           justify-content: space-between;
-          gap: 14px;
+          gap: 12px;
           align-items: flex-start;
         }
 
         .workspace-title {
           margin: 0;
           color: #D4B06A;
-          font-size: 11px;
-          letter-spacing: 3.4px;
+          font-size: 10.5px;
+          letter-spacing: 3.2px;
           font-weight: 950;
           text-transform: uppercase;
         }
 
         .workspace-main {
           margin: 8px 0 0;
-          font-size: 21px;
-          line-height: 1.1;
+          font-size: 24px;
+          line-height: 1.05;
           font-weight: 1000;
-          letter-spacing: -0.5px;
+          letter-spacing: -0.7px;
         }
 
         .workspace-checks {
-          margin: 15px 0 17px;
+          margin: 14px 0 16px;
           display: grid;
-          gap: 9px;
+          gap: 8px;
           color: rgba(255,255,255,0.86);
-          font-size: 14px;
-          font-weight: 760;
+          font-size: 13.5px;
+          font-weight: 780;
         }
 
         .workspace-checks span {
@@ -474,22 +436,22 @@ export default function HomePage() {
 
         .tv-button {
           width: 100%;
-          min-height: 52px;
+          min-height: 50px;
           border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 11px;
+          gap: 10px;
           background: linear-gradient(95deg, #9d742f, #d6b25f 52%, #fff2b8);
           color: #000;
-          font-size: 16px;
+          font-size: 15.5px;
           font-weight: 1000;
           letter-spacing: -0.2px;
         }
 
         .tv-icon {
-          width: 32px;
-          height: 32px;
+          width: 31px;
+          height: 31px;
           border-radius: 9px;
           border: 2px solid rgba(0,0,0,0.82);
           display: grid;
@@ -498,6 +460,7 @@ export default function HomePage() {
           font-weight: 1000;
           font-size: 13px;
           letter-spacing: -1px;
+          flex-shrink: 0;
         }
 
         .cta-card {
@@ -512,12 +475,12 @@ export default function HomePage() {
           color: #000;
           background: linear-gradient(95deg, #9d742f, #d6b25f 50%, #fff2b8);
           border: none;
-          box-shadow: 0 20px 50px rgba(212,176,106,0.18);
+          box-shadow: 0 20px 50px rgba(212,176,106,0.16);
         }
 
         .cta-title {
           margin: 0;
-          font-size: 19px;
+          font-size: 18.5px;
           font-weight: 1000;
           letter-spacing: -0.4px;
         }
@@ -531,7 +494,7 @@ export default function HomePage() {
 
         .chart-card {
           border-radius: 30px;
-          padding: 20px;
+          padding: 18px;
           margin-bottom: 16px;
           overflow: hidden;
         }
@@ -540,15 +503,15 @@ export default function HomePage() {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
-          gap: 14px;
-          margin-bottom: 12px;
+          gap: 12px;
+          margin-bottom: 10px;
         }
 
         .chart-title {
           margin: 0;
           color: #D4B06A;
-          font-size: 11px;
-          letter-spacing: 3.4px;
+          font-size: 10.5px;
+          letter-spacing: 3.2px;
           font-weight: 950;
           text-transform: uppercase;
         }
@@ -556,15 +519,15 @@ export default function HomePage() {
         .chart-legend {
           display: flex;
           align-items: center;
-          gap: 15px;
-          margin-top: 10px;
-          color: rgba(255,255,255,0.58);
-          font-size: 12px;
+          gap: 13px;
+          margin-top: 9px;
+          color: rgba(255,255,255,0.56);
+          font-size: 11.5px;
         }
 
         .legend-dot {
-          width: 8px;
-          height: 8px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
           background: #D4B06A;
           display: inline-block;
@@ -573,7 +536,7 @@ export default function HomePage() {
 
         .legend-line {
           display: inline-block;
-          width: 15px;
+          width: 14px;
           height: 1px;
           background: rgba(255,255,255,0.55);
           margin-right: 6px;
@@ -581,25 +544,26 @@ export default function HomePage() {
         }
 
         .range-pill {
-          padding: 8px 11px;
+          padding: 8px 10px;
           border-radius: 11px;
           color: rgba(255,255,255,0.7);
           border: 1px solid rgba(212,176,106,0.18);
           background: rgba(0,0,0,0.24);
-          font-size: 12px;
+          font-size: 11.5px;
           white-space: nowrap;
         }
 
         .chart-wrap {
           position: relative;
-          height: 250px;
-          margin-top: 12px;
+          height: 245px;
+          margin-top: 10px;
           border-radius: 18px;
           background:
-            linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
-          background-size: 100% 20%, 16.6% 100%;
-          border-bottom: 1px solid rgba(255,255,255,0.12);
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 100% 20%, 20% 100%;
+          border-bottom: 1px solid rgba(255,255,255,0.10);
+          overflow: hidden;
         }
 
         .chart-svg {
@@ -610,22 +574,23 @@ export default function HomePage() {
 
         .chart-score-badge {
           position: absolute;
-          top: 8px;
-          right: 0;
+          top: 9px;
+          right: 8px;
           color: #D4B06A;
-          font-size: 25px;
+          font-size: 22px;
           font-weight: 1000;
-          text-shadow: 0 0 18px rgba(212,176,106,0.45);
+          text-shadow: 0 0 14px rgba(212,176,106,0.36);
+          line-height: 1;
         }
 
         .chart-score-badge small {
-          font-size: 12px;
+          font-size: 10px;
         }
 
         .structure-box {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 13px;
           margin-top: 14px;
           padding: 13px;
           border-radius: 18px;
@@ -634,8 +599,8 @@ export default function HomePage() {
         }
 
         .structure-icon {
-          width: 45px;
-          height: 45px;
+          width: 44px;
+          height: 44px;
           border-radius: 12px;
           border: 1px solid rgba(212,176,106,0.24);
           display: grid;
@@ -648,8 +613,8 @@ export default function HomePage() {
         .structure-label {
           margin: 0 0 4px;
           color: #D4B06A;
-          font-size: 11px;
-          letter-spacing: 2.4px;
+          font-size: 10.5px;
+          letter-spacing: 2.3px;
           font-weight: 950;
           text-transform: uppercase;
         }
@@ -672,14 +637,14 @@ export default function HomePage() {
         }
 
         .card {
-          border-radius: 28px;
-          padding: 20px;
+          border-radius: 26px;
+          padding: 18px;
           margin-bottom: 16px;
         }
 
         .card-title {
           margin: 0;
-          font-size: 25px;
+          font-size: 23px;
           line-height: 1.08;
           font-weight: 1000;
           color: #D4B06A;
@@ -687,10 +652,10 @@ export default function HomePage() {
         }
 
         .text {
-          margin: 14px 0 0;
+          margin: 13px 0 0;
           color: rgba(255,255,255,0.68);
-          font-size: 15px;
-          line-height: 1.55;
+          font-size: 14.5px;
+          line-height: 1.52;
         }
 
         .dashboard-grid {
@@ -702,7 +667,7 @@ export default function HomePage() {
 
         .dashboard-grid .card {
           margin: 0;
-          min-height: 185px;
+          min-height: 176px;
         }
 
         .small-grid {
@@ -760,7 +725,7 @@ export default function HomePage() {
         }
 
         .action-card {
-          min-height: 120px;
+          min-height: 116px;
           padding: 17px;
           border-radius: 24px;
           color: white;
@@ -790,7 +755,7 @@ export default function HomePage() {
 
         .action-title {
           margin: 0;
-          font-size: 18px;
+          font-size: 17.5px;
           line-height: 1.15;
           font-weight: 950;
         }
@@ -809,87 +774,99 @@ export default function HomePage() {
           50% { opacity: 1; transform: scale(1.25); }
         }
 
-        @media(min-width: 440px) {
-          .top-grid { grid-template-columns: 1fr 1fr; }
-          .score-panel,
-          .workspace-card { min-height: 210px; }
-        }
-
         @media(max-width: 390px) {
-          .prime-home { padding-left: 14px; padding-right: 14px; }
-          .title { font-size: 38px; max-width: 245px; }
-          .subtitle { max-width: 270px; font-size: 16px; }
-          .panther { width: 310px; right: -96px; top: 58px; opacity: .76; }
-          .hero-shell { min-height: 382px; }
-          .prime-says { max-width: 300px; }
-          .score-grid { grid-template-columns: 1fr; }
-          .score-ring { justify-self: center; }
-          .dashboard-grid { grid-template-columns: 1fr; }
-          .small-grid { grid-template-columns: 1fr; }
-          .actions-grid { grid-template-columns: 1fr 1fr; }
-          .chart-wrap { height: 232px; }
+          .prime-home {
+            padding-left: 14px;
+            padding-right: 14px;
+          }
+
+          .title {
+            font-size: 42px;
+            max-width: 270px;
+          }
+
+          .subtitle {
+            max-width: 300px;
+            font-size: 15.5px;
+          }
+
+          .top-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .score-panel,
+          .workspace-card {
+            min-height: auto;
+          }
+
+          .score-ring {
+            margin-top: 18px;
+          }
+
+          .dashboard-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .small-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .actions-grid {
+            grid-template-columns: 1fr 1fr;
+          }
+
+          .chart-wrap {
+            height: 232px;
+          }
         }
       `}</style>
 
       <div className="page">
-        <section className="hero-shell">
-          <img
-            className="panther"
-          src="/public/prime-panther-v2.png"
-            alt=""
-            aria-hidden="true"
-          />
+        <section className="hero">
+          <div className="brand-row">
+            <div className="brand">PRIME</div>
 
-          <div className="hero">
-            <div className="brand-row">
-              <div className="brand">PRIME</div>
-
-              <div className="live-pill">
-                <span className="pulse" />
-                Analyse live
-              </div>
+            <div className="live-pill">
+              <span className="pulse" />
+              Analyse live
             </div>
-
-            <h1 className="title">Bonjour {displayName}</h1>
-
-            <p className="subtitle">
-              Ton cockpit est prêt. PRIME analyse ton état, ton risque et ton objectif du jour.
-            </p>
-
-            <section className="prime-says">
-              <div className="prime-says-label">
-                <Brain size={17} />
-                PRIME parle
-              </div>
-              <p className="prime-says-text">{primeMessage}</p>
-            </section>
           </div>
+
+          <h1 className="title">Bonjour {displayName}</h1>
+
+          <p className="subtitle">
+            Ton cockpit est prêt. PRIME analyse ton état, ton risque et ton objectif du jour.
+          </p>
+
+          <section className="prime-says">
+            <div className="prime-says-label">
+              <Brain size={17} />
+              PRIME parle
+            </div>
+            <p className="prime-says-text">{primeMessage}</p>
+          </section>
         </section>
 
         <section className="top-grid">
           <section className="score-panel">
-            <div className="score-grid">
-              <div>
-                <p className="label">Discipline Score</p>
+            <p className="label">Discipline Score</p>
 
-                <div className="score-line">
-                  <div className="score-big">{averageScore}</div>
-                  <div className="score-outof">/100</div>
-                </div>
+            <div className="score-line">
+              <div className="score-big">{averageScore}</div>
+              <div className="score-outof">/100</div>
+            </div>
 
-                <div className="trend-pill">
-                  <span className={scoreTrend.value >= 0 ? "trend-up" : "trend-down"}>
-                    {scoreTrend.value >= 0 ? "↗" : "↘"} {scoreTrend.value >= 0 ? "+" : ""}
-                    {scoreTrend.value} pts
-                  </span>
-                  <span>{scoreTrend.label}</span>
-                </div>
-              </div>
+            <div className="trend-pill">
+              <span className={scoreTrend.value >= 0 ? "trend-up" : "trend-down"}>
+                {scoreTrend.value >= 0 ? "↗" : "↘"} {scoreTrend.value >= 0 ? "+" : ""}
+                {scoreTrend.value} pts
+              </span>
+              <span>{scoreTrend.label}</span>
+            </div>
 
-              <div className="score-ring">
-                <div className="score-ring-inner">
-                  <TrendingUp size={32} />
-                </div>
+            <div className="score-ring">
+              <div className="score-ring-inner">
+                <TrendingUp size={31} />
               </div>
             </div>
           </section>
@@ -900,18 +877,20 @@ export default function HomePage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <div className="workspace-head">
-              <div>
-                <p className="workspace-title">Workspace</p>
-                <p className="workspace-main">TradingView</p>
+            <div>
+              <div className="workspace-head">
+                <div>
+                  <p className="workspace-title">Workspace</p>
+                  <p className="workspace-main">TradingView</p>
+                </div>
+                <ExternalLink size={25} color="#D4B06A" />
               </div>
-              <ExternalLink size={25} color="#D4B06A" />
-            </div>
 
-            <div className="workspace-checks">
-              <div><span>✓</span>Checklist validée</div>
-              <div><span>✓</span>Mental renseigné</div>
-              <div><span>✓</span>Plan validé</div>
+              <div className="workspace-checks">
+                <div><span>✓</span>Checklist validée</div>
+                <div><span>✓</span>Mental renseigné</div>
+                <div><span>✓</span>Plan validé</div>
+              </div>
             </div>
 
             <div className="tv-button">
@@ -1119,18 +1098,23 @@ function ActionButton({ href, icon, label, title }) {
 function DisciplineTradingChart({ data, score }) {
   const width = 360;
   const height = 210;
-  const padding = 26;
-  const minY = 35;
+  const paddingLeft = 30;
+  const paddingRight = 18;
+  const paddingTop = 20;
+  const paddingBottom = 26;
+  const minY = 40;
   const maxY = 100;
 
-  const xStep = (width - padding * 2) / Math.max(data.length - 1, 1);
+  const plotWidth = width - paddingLeft - paddingRight;
+  const plotHeight = height - paddingTop - paddingBottom;
+  const xStep = plotWidth / Math.max(data.length - 1, 1);
 
   const y = (value) => {
     const clamped = Math.max(minY, Math.min(maxY, value));
-    return padding + ((maxY - clamped) / (maxY - minY)) * (height - padding * 2);
+    return paddingTop + ((maxY - clamped) / (maxY - minY)) * plotHeight;
   };
 
-  const x = (index) => padding + index * xStep;
+  const x = (index) => paddingLeft + index * xStep;
 
   const maPoints = data
     .map((item, index) => `${x(index)},${y(item.ma)}`)
@@ -1143,20 +1127,26 @@ function DisciplineTradingChart({ data, score }) {
       </div>
 
       <svg className="chart-svg" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-        {[40, 50, 60, 70, 80, 90, 100].map((level) => (
+        {[50, 60, 70, 80, 90, 100].map((level) => (
           <g key={level}>
-            <text x="0" y={y(level) + 4} fill="rgba(255,255,255,0.55)" fontSize="9">
+            <text
+              x="4"
+              y={y(level) + 4}
+              fill="rgba(255,255,255,0.48)"
+              fontSize="8.5"
+            >
               {level}
             </text>
+
             {level === 70 && (
               <line
-                x1={padding}
-                x2={width - padding}
+                x1={paddingLeft}
+                x2={width - paddingRight}
                 y1={y(level)}
                 y2={y(level)}
-                stroke="rgba(212,176,106,0.72)"
-                strokeDasharray="2 5"
-                strokeWidth="1"
+                stroke="rgba(212,176,106,0.58)"
+                strokeDasharray="2 6"
+                strokeWidth="0.85"
                 vectorEffect="non-scaling-stroke"
               />
             )}
@@ -1166,21 +1156,21 @@ function DisciplineTradingChart({ data, score }) {
         <polyline
           points={maPoints}
           fill="none"
-          stroke="rgba(255,255,255,0.55)"
-          strokeWidth="1.5"
+          stroke="rgba(255,255,255,0.50)"
+          strokeWidth="1.15"
           vectorEffect="non-scaling-stroke"
         />
 
         {data.map((item, index) => {
           const cx = x(index);
-          const candleWidth = 8;
+          const candleWidth = 5;
           const openY = y(item.open);
           const closeY = y(item.close);
           const highY = y(item.high);
           const lowY = y(item.low);
           const bullish = item.close >= item.open;
           const bodyTop = Math.min(openY, closeY);
-          const bodyHeight = Math.max(Math.abs(closeY - openY), 4);
+          const bodyHeight = Math.max(Math.abs(closeY - openY), 3);
 
           return (
             <g key={item.label}>
@@ -1189,25 +1179,28 @@ function DisciplineTradingChart({ data, score }) {
                 x2={cx}
                 y1={highY}
                 y2={lowY}
-                stroke={bullish ? "#D4B06A" : "rgba(212,176,106,0.62)"}
-                strokeWidth="1.4"
+                stroke={bullish ? "#D4B06A" : "rgba(212,176,106,0.58)"}
+                strokeWidth="0.85"
                 vectorEffect="non-scaling-stroke"
               />
+
               <rect
                 x={cx - candleWidth / 2}
                 y={bodyTop}
                 width={candleWidth}
                 height={bodyHeight}
-                fill={bullish ? "#D4B06A" : "rgba(212,176,106,0.22)"}
+                rx="0.8"
+                fill={bullish ? "#D4B06A" : "rgba(212,176,106,0.12)"}
                 stroke="#D4B06A"
-                strokeWidth="1"
+                strokeWidth="0.85"
                 vectorEffect="non-scaling-stroke"
               />
+
               <text
                 x={cx}
-                y={height - 5}
-                fill="rgba(255,255,255,0.62)"
-                fontSize="9"
+                y={height - 7}
+                fill="rgba(255,255,255,0.58)"
+                fontSize="8.5"
                 textAnchor="middle"
               >
                 {item.label}
@@ -1220,10 +1213,10 @@ function DisciplineTradingChart({ data, score }) {
           <circle
             cx={x(data.length - 1)}
             cy={y(data[data.length - 1].close)}
-            r="5"
+            r="3.8"
             fill="#fff2b8"
             stroke="#D4B06A"
-            strokeWidth="2"
+            strokeWidth="1.4"
             vectorEffect="non-scaling-stroke"
           />
         )}
@@ -1367,14 +1360,16 @@ function getDisciplineChartData(sessions, averageScore) {
     .map((session) => Number(session.discipline_score || 0))
     .filter((score) => !Number.isNaN(score) && score > 0);
 
-  const scores = recent.length > 0 ? recent : [52, 57, 63, 61, 70, 76, averageScore || 69];
+  const scores = recent.length > 0
+    ? recent
+    : [52, 57, 63, 61, 70, 76, averageScore || 69];
 
   return scores.map((score, index) => {
-    const previous = index === 0 ? Math.max(score - 5, 40) : scores[index - 1];
+    const previous = index === 0 ? Math.max(score - 3, 40) : scores[index - 1];
     const open = previous;
     const close = score;
-    const high = Math.min(Math.max(open, close) + 5 + (index % 3), 100);
-    const low = Math.max(Math.min(open, close) - 5 - (index % 2), 35);
+    const high = Math.min(Math.max(open, close) + 4 + (index % 2), 100);
+    const low = Math.max(Math.min(open, close) - 4 - (index % 2), 40);
     const slice = scores.slice(Math.max(0, index - 2), index + 1);
     const ma = Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
 
