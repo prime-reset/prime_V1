@@ -186,38 +186,77 @@ export default function HomePage() {
         }
 
         .hero-shell {
-          position: relative;
-          min-height: 354px;
-          margin: -6px -4px 18px;
-          padding: 10px 4px 0;
-          overflow: hidden;
-        }
+    position: relative;
 
-        .panther {
-          position: absolute;
-          top: 46px;
-          right: -72px;
-          width: 315px;
-          height: 315px;
-          background-image:
-            linear-gradient(90deg, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.34) 42%, rgba(0,0,0,0) 100%),
-            url("/prime-panther.png");
-          background-size: cover;
-          background-position: center;
-          opacity: 0.88;
-          filter: contrast(1.1) saturate(0.92);
-          pointer-events: none;
-          z-index: 0;
-        }
+    overflow: hidden;
 
-        .panther::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background:
-            radial-gradient(circle at 52% 42%, rgba(212,176,106,0.18), transparent 12%),
-            linear-gradient(180deg, rgba(0,0,0,0) 30%, #000 96%);
-        }
+    min-height: 430px;
+
+    margin: -6px -4px 18px;
+
+    padding: 25px 4px 0;
+}
+
+        .panther{
+    position:absolute;
+
+    top:-40px;
+    right:-150px;
+
+    width:560px;
+    height:560px;
+
+    background:url("/prime-panther.png") no-repeat center;
+    background-size:contain;
+
+    opacity:.16;
+
+    filter:
+        grayscale(100%)
+        brightness(.45)
+        contrast(1.35);
+
+    pointer-events:none;
+    z-index:0;
+}
+.panther::before{
+
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    background:
+
+    radial-gradient(
+        circle at 65% 35%,
+        transparent 0%,
+        rgba(0,0,0,.15) 40%,
+        rgba(0,0,0,.55) 65%,
+        #000 100%
+    );
+
+}
+
+       .panther::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:-20%;
+
+    background:
+
+    linear-gradient(
+        90deg,
+        #000 0%,
+        rgba(0,0,0,.94) 28%,
+        rgba(0,0,0,.55) 55%,
+        transparent 82%
+    );
+
+}
 
         .hero {
           position: relative;
@@ -780,7 +819,9 @@ export default function HomePage() {
           .title { font-size: 38px; max-width: 245px; }
           .subtitle { max-width: 270px; font-size: 16px; }
           .panther { width: 260px; height: 260px; right: -78px; top: 58px; opacity: .84; }
-          .hero-shell { min-height: 350px; }
+          .hero-shell {
+    min-height: 390px;
+}
           .prime-says { max-width: 300px; }
           .score-grid { grid-template-columns: 1fr; }
           .score-ring { justify-self: center; }
