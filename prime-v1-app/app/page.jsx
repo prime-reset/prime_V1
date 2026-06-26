@@ -186,77 +186,56 @@ export default function HomePage() {
         }
 
         .hero-shell {
-    position: relative;
+          position: relative;
+          overflow: hidden;
+          min-height: 430px;
+          margin: -6px -4px 18px;
+          padding: 25px 4px 0;
+          isolation: isolate;
+        }
 
-    overflow: hidden;
+        .panther {
+          position: absolute;
+          top: 18px;
+          right: -145px;
+          width: 520px;
+          height: 520px;
+          background: url("/prime-panther.png") no-repeat center;
+          background-size: contain;
+          opacity: 0.55;
+          filter: brightness(0.62) contrast(1.55) saturate(0.9);
+          pointer-events: none;
+          z-index: 0;
+          mix-blend-mode: screen;
+          -webkit-mask-image:
+            radial-gradient(circle at 54% 43%, #000 0%, #000 30%, rgba(0,0,0,0.74) 45%, rgba(0,0,0,0.28) 62%, transparent 82%),
+            linear-gradient(90deg, transparent 0%, #000 30%, #000 78%, transparent 100%);
+          mask-image:
+            radial-gradient(circle at 54% 43%, #000 0%, #000 30%, rgba(0,0,0,0.74) 45%, rgba(0,0,0,0.28) 62%, transparent 82%),
+            linear-gradient(90deg, transparent 0%, #000 30%, #000 78%, transparent 100%);
+        }
 
-    min-height: 430px;
+        .panther::before {
+          content: "";
+          position: absolute;
+          inset: -12%;
+          background:
+            radial-gradient(circle at 46% 38%, rgba(212,176,106,0.18), transparent 13%),
+            radial-gradient(circle at 42% 44%, rgba(212,176,106,0.12), transparent 22%),
+            linear-gradient(90deg, #000 0%, rgba(0,0,0,0.86) 20%, rgba(0,0,0,0.42) 48%, transparent 78%),
+            linear-gradient(180deg, transparent 0%, transparent 42%, rgba(0,0,0,0.78) 78%, #000 100%);
+          pointer-events: none;
+        }
 
-    margin: -6px -4px 18px;
-
-    padding: 25px 4px 0;
-}
-
-        .panther{
-    position:absolute;
-
-    top:-40px;
-    right:-150px;
-
-    width:560px;
-    height:560px;
-
-    background:url("/prime-panther.png") no-repeat center;
-    background-size:contain;
-
-    opacity:.16;
-
-    filter:
-        grayscale(100%)
-        brightness(.45)
-        contrast(1.35);
-
-    pointer-events:none;
-    z-index:0;
-}
-.panther::before{
-
-    content:"";
-
-    position:absolute;
-    inset:0;
-
-    background:
-
-    radial-gradient(
-        circle at 65% 35%,
-        transparent 0%,
-        rgba(0,0,0,.15) 40%,
-        rgba(0,0,0,.55) 65%,
-        #000 100%
-    );
-
-}
-
-       .panther::after{
-
-    content:"";
-
-    position:absolute;
-
-    inset:-20%;
-
-    background:
-
-    linear-gradient(
-        90deg,
-        #000 0%,
-        rgba(0,0,0,.94) 28%,
-        rgba(0,0,0,.55) 55%,
-        transparent 82%
-    );
-
-}
+        .panther::after {
+          content: "";
+          position: absolute;
+          inset: -18%;
+          background:
+            radial-gradient(circle at 46% 39%, transparent 0%, rgba(0,0,0,0.10) 20%, rgba(0,0,0,0.52) 58%, #000 92%),
+            linear-gradient(90deg, #000 0%, rgba(0,0,0,0.92) 22%, rgba(0,0,0,0.48) 54%, transparent 82%);
+          pointer-events: none;
+        }
 
         .hero {
           position: relative;
@@ -505,10 +484,11 @@ export default function HomePage() {
           border-radius: 26px;
           margin-bottom: 16px;
           background:
-            linear-gradient(145deg, rgba(212,176,106,0.10), rgba(255,255,255,0.02)),
+            linear-gradient(145deg, rgba(212,176,106,0.12), rgba(255,255,255,0.02)),
             rgba(8,8,8,0.92);
-          border: 1px solid rgba(212,176,106,0.24);
+          border: 1px solid rgba(212,176,106,0.34);
           box-shadow: 0 18px 50px rgba(0,0,0,0.58);
+          cursor: pointer;
         }
 
         .workspace-title {
@@ -818,10 +798,8 @@ export default function HomePage() {
           .prime-home { padding-left: 14px; padding-right: 14px; }
           .title { font-size: 38px; max-width: 245px; }
           .subtitle { max-width: 270px; font-size: 16px; }
-          .panther { width: 260px; height: 260px; right: -78px; top: 58px; opacity: .84; }
-          .hero-shell {
-    min-height: 390px;
-}
+          .panther { width: 390px; height: 390px; right: -145px; top: 35px; opacity: .48; }
+          .hero-shell { min-height: 390px; }
           .prime-says { max-width: 300px; }
           .score-grid { grid-template-columns: 1fr; }
           .score-ring { justify-self: center; }
