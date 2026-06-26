@@ -14,10 +14,6 @@ import {
   TrendingUp,
   CheckCircle,
   PlayCircle,
-  Activity,
-  Target,
-  Flame,
-  Eye,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -31,9 +27,9 @@ export default function HomePage() {
   const [profile, setProfile] = useState("Trader en construction");
   const [averageScore, setAverageScore] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [activePrescription, setActivePrescription] = useState<any>(null);
-  const [risk, setRisk] = useState<any>({
+  const [sessions, setSessions] = useState([]);
+  const [activePrescription, setActivePrescription] = useState(null);
+  const [risk, setRisk] = useState({
     level: "observation",
     label: "Sous observation",
     message: "PRIME collecte encore assez de données pour lire ton comportement.",
@@ -179,15 +175,9 @@ export default function HomePage() {
             linear-gradient(180deg, #080808 0%, #000 100%);
         }
 
-        .page {
-          max-width: 460px;
-          margin: 0 auto;
-        }
+        .page { max-width: 460px; margin: 0 auto; }
 
-        .hero {
-          margin-bottom: 20px;
-          animation: fadeUp .55s ease both;
-        }
+        .hero { margin-bottom: 20px; animation: fadeUp .55s ease both; }
 
         .brand-row {
           display: flex;
@@ -304,10 +294,7 @@ export default function HomePage() {
           animation: slowGlow 5s ease-in-out infinite alternate;
         }
 
-        .score-content {
-          position: relative;
-          z-index: 1;
-        }
+        .score-content { position: relative; z-index: 1; }
 
         .score-top {
           display: flex;
@@ -463,11 +450,7 @@ export default function HomePage() {
           line-height: 1.25;
         }
 
-        .timeline {
-          display: grid;
-          gap: 13px;
-          margin-top: 18px;
-        }
+        .timeline { display: grid; gap: 13px; margin-top: 18px; }
 
         .timeline-row {
           display: flex;
@@ -514,10 +497,7 @@ export default function HomePage() {
           margin-bottom: 18px;
         }
 
-        .mini-card {
-          padding: 20px;
-          border-radius: 28px;
-        }
+        .mini-card { padding: 20px; border-radius: 28px; }
 
         .mini-label {
           margin-top: 14px;
@@ -626,9 +606,7 @@ export default function HomePage() {
 
         @media(max-width: 390px) {
           .title { font-size: 39px; }
-          .score-top {
-            flex-direction: column;
-          }
+          .score-top { flex-direction: column; }
           .score-ring {
             width: 142px;
             height: 142px;
@@ -640,9 +618,7 @@ export default function HomePage() {
           }
           .grid,
           .mission-grid,
-          .actions-grid {
-            grid-template-columns: 1fr;
-          }
+          .actions-grid { grid-template-columns: 1fr; }
           .week-dots { gap: 6px; }
           .week-dot { min-height: 52px; border-radius: 15px; }
         }
@@ -724,8 +700,8 @@ export default function HomePage() {
           <h2 className="card-title">Timeline PRIME</h2>
 
           <div className="timeline">
-            <TimelineRow done text="Identité analysée" />
-            <TimelineRow done text="Focus généré" />
+            <TimelineRow done={true} text="Identité analysée" />
+            <TimelineRow done={true} text="Focus généré" />
             <TimelineRow done={!!activePrescription} text="Prescription vérifiée" />
             <TimelineRow done={false} text="Session non commencée" />
             <TimelineRow done={false} text="Débrief à compléter" />
@@ -875,33 +851,10 @@ export default function HomePage() {
         </section>
 
         <section className="actions-grid">
-          <ActionButton
-            href="/coach"
-            icon={<Brain size={24} />}
-            label="Analyse"
-            title="Lire mon coach"
-          />
-
-          <ActionButton
-            href="/journal"
-            icon={<BookOpen size={24} />}
-            label="Historique"
-            title="Voir mon évolution"
-          />
-
-          <ActionButton
-            href="/onboarding"
-            icon={<Crown size={24} />}
-            label="Identité"
-            title="Mon profil PRIME"
-          />
-
-          <ActionButton
-            href="/profile"
-            icon={<User size={24} />}
-            label="Compte"
-            title="Mon espace"
-          />
+          <ActionButton href="/coach" icon={<Brain size={24} />} label="Analyse" title="Lire mon coach" />
+          <ActionButton href="/journal" icon={<BookOpen size={24} />} label="Historique" title="Voir mon évolution" />
+          <ActionButton href="/onboarding" icon={<Crown size={24} />} label="Identité" title="Mon profil PRIME" />
+          <ActionButton href="/profile" icon={<User size={24} />} label="Compte" title="Mon espace" />
         </section>
       </div>
 
@@ -910,7 +863,7 @@ export default function HomePage() {
   );
 }
 
-function ActionButton({ href, icon, label, title }: any) {
+function ActionButton({ href, icon, label, title }) {
   return (
     <Link href={href} className="action-card">
       <div className="action-top">
@@ -926,7 +879,7 @@ function ActionButton({ href, icon, label, title }: any) {
   );
 }
 
-function MissionItem({ label, value }: any) {
+function MissionItem({ label, value }) {
   return (
     <div className="mission-item">
       <p className="mission-label">{label}</p>
@@ -935,7 +888,7 @@ function MissionItem({ label, value }: any) {
   );
 }
 
-function TimelineRow({ done, text }: any) {
+function TimelineRow({ done, text }) {
   return (
     <div className="timeline-row">
       <div className="timeline-dot">{done ? "✓" : "□"}</div>
@@ -944,7 +897,7 @@ function TimelineRow({ done, text }: any) {
   );
 }
 
-function getFocusByProfile(profile?: string) {
+function getFocusByProfile(profile) {
   switch (profile) {
     case "Trader Impulsif":
       return "Ralentir avant d’agir.";
@@ -961,7 +914,7 @@ function getFocusByProfile(profile?: string) {
   }
 }
 
-function getPrimeMessage({ score, risk, profile, activePrescription, sessionsCount }: any) {
+function getPrimeMessage({ score, risk, activePrescription, sessionsCount }) {
   if (sessionsCount === 0) {
     return "Aujourd’hui, PRIME commence à construire ton identité de trader. La première donnée importante sera ton respect du process.";
   }
@@ -985,7 +938,7 @@ function getPrimeMessage({ score, risk, profile, activePrescription, sessionsCou
   return "Ton objectif du jour est simple : ralentir, suivre ton setup et éviter les décisions prises sous émotion.";
 }
 
-function getScoreStatus(score: number) {
+function getScoreStatus(score) {
   if (score >= 85) return "Discipline élevée";
   if (score >= 70) return "Cadre solide";
   if (score >= 55) return "À stabiliser";
@@ -993,7 +946,7 @@ function getScoreStatus(score: number) {
   return "En observation";
 }
 
-function getPrimeLevel(score: number, count: number) {
+function getPrimeLevel(score, count) {
   if (count < 5) return "En construction";
   if (score >= 85) return "Consistant";
   if (score >= 70) return "Confirmé";
@@ -1001,7 +954,7 @@ function getPrimeLevel(score: number, count: number) {
   return "À stabiliser";
 }
 
-function getProfileStrength(profile: string) {
+function getProfileStrength(profile) {
   if (profile.includes("Patient")) return "Attente";
   if (profile.includes("Impulsif")) return "Énergie";
   if (profile.includes("FOMO")) return "Réactivité";
@@ -1010,7 +963,7 @@ function getProfileStrength(profile: string) {
   return "Construction";
 }
 
-function getProfileWeakness(profile: string) {
+function getProfileWeakness(profile) {
   if (profile.includes("Patient")) return "Excès de confiance";
   if (profile.includes("Impulsif")) return "Entrées trop rapides";
   if (profile.includes("FOMO")) return "Peur de rater";
@@ -1019,17 +972,17 @@ function getProfileWeakness(profile: string) {
   return "Manque de données";
 }
 
-function getRiskIcon(level: string) {
+function getRiskIcon(level) {
   if (level === "low") return "🟢";
   if (level === "medium") return "🟠";
   if (level === "high") return "🔴";
   return "⚪";
 }
 
-function getRiskFromSessions(sessions: any[]) {
+function getRiskFromSessions(sessions) {
   const closedSessions = sessions
     .filter((s) => s.status === "closed")
-    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
   const lastThree = closedSessions.slice(0, 3);
   const lastFive = closedSessions.slice(0, 5);
@@ -1097,7 +1050,7 @@ function getRiskFromSessions(sessions: any[]) {
   };
 }
 
-function getCurrentWeekData(sessions: any[]) {
+function getCurrentWeekData(sessions) {
   const today = new Date();
   const monday = new Date(today);
   const day = monday.getDay();
@@ -1141,7 +1094,7 @@ function getCurrentWeekData(sessions: any[]) {
   });
 }
 
-function getWeekDayStyle(day: any) {
+function getWeekDayStyle(day) {
   if (!day.hasSession) {
     return {
       background: "rgba(255,255,255,0.035)",
@@ -1169,10 +1122,11 @@ function getWeekDayStyle(day: any) {
   };
 }
 
-function getWeekPlanRate(days: any[]) {
+function getWeekPlanRate(days) {
   const tradedDays = days.filter((day) => day.hasSession);
   if (tradedDays.length === 0) return 0;
 
   const respectedDays = tradedDays.filter((day) => day.planRespected).length;
   return Math.round((respectedDays / tradedDays.length) * 100);
 }
+
