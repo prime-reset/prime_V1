@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-  const siteUrl = "https://theprimeapp.com";
+  const siteUrl = "https://prime-v1-six.vercel.app";
 
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
   redirectTo: `${siteUrl}/reset-password`,
