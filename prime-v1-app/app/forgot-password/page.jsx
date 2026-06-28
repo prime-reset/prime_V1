@@ -24,8 +24,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+  const siteUrl = "https://theprimeapp.com";
 
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
   redirectTo: `${siteUrl}/reset-password`,
