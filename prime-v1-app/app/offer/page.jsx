@@ -596,7 +596,9 @@ export default function OfferPage() {
         <section className="pricing-grid">
           <article className="price-card founder">
             <div className="price-content">
-              <div className="plan-badge">20 places seulement</div>
+          <div className="plan-badge">
+  20 Founder uniquement
+</div>
 
               <h2 className="plan-name">Founder</h2>
 
@@ -609,10 +611,33 @@ export default function OfferPage() {
                 <span>/ mois</span>
               </div>
 
-              <div className="trial gold">
-                Tarif bloqué à vie. Pas d’essai gratuit sur l’offre Founder.
-              </div>
-
+             <div className="trial gold">
+  <strong>Tarif bloqué à vie.</strong><br />
+  Pas d’essai gratuit sur l’offre Founder.
+</div>
+<div
+  style={{
+    marginTop: "18px",
+    padding: "16px",
+    borderRadius: "18px",
+    background: "rgba(212,176,106,0.08)",
+    border: "1px solid rgba(212,176,106,0.18)",
+    color: "rgba(255,255,255,.82)",
+    fontSize: "14px",
+    lineHeight: "1.6",
+    fontWeight: "600",
+  }}
+>
+  <strong style={{ color: "#D4B06A" }}>
+    Les Founder construisent PRIME.
+  </strong>
+  <br /><br />
+  En tant que Founder, tu fais partie des premiers traders qui
+  construiront l'évolution de PRIME.
+  <br /><br />
+  Tes retours auront un impact direct sur les prochaines
+  fonctionnalités.
+</div>
               <div className="features">
                 <Feature text="Toutes les fonctionnalités PRIME." />
                 <Feature text="Prix Founder conservé à vie." />
@@ -625,32 +650,64 @@ export default function OfferPage() {
                 className="plan-button gold"
                 onClick={() => handleSelectOffer("founder")}
               >
-                Je réserve ma place
+                Rejoindre les Founder
                 <ArrowRight size={18} />
               </button>
             </div>
           </article>
 
-          <article className="price-card standard">
-            <div className="price-content">
-              <div className="plan-badge">Offre standard</div>
+         <article className="price-card founder">
+  <div className="price-content">
 
-              <h2 className="plan-name">Standard</h2>
+    <div className="plan-badge">
+      20 Founder uniquement
+    </div>
 
-              <p className="plan-copy">
-                Pour tester PRIME gratuitement avant de décider si tu veux continuer.
-              </p>
+    <h2 className="plan-name">
+      Founder
+    </h2>
 
-              <div className="price">
-                <strong>24,99€</strong>
-                <span>/ mois</span>
-              </div>
+    <p className="plan-copy">
+      Pour les premiers traders qui souhaitent rejoindre PRIME avant son lancement officiel.
+    </p>
 
-              <div className="trial">
-                7 jours gratuits, puis 24,99€/mois. Annulation possible avant la fin de l’essai.
-              </div>
+    <div className="price">
+      <strong>9,99€</strong>
+      <span>/ mois</span>
+    </div>
 
-              <div className="features">
+    <div className="trial gold">
+      <strong>Tarif bloqué à vie.</strong><br />
+      Aucun essai gratuit sur l'offre Founder.
+    </div>
+
+    <div
+      style={{
+        marginTop: "18px",
+        padding: "16px",
+        borderRadius: "18px",
+        background: "rgba(212,176,106,.08)",
+        border: "1px solid rgba(212,176,106,.18)",
+        color: "rgba(255,255,255,.82)",
+        fontSize: "14px",
+        lineHeight: "1.6",
+        fontWeight: "600",
+      }}
+    >
+      <strong style={{ color: "#D4B06A" }}>
+        Les Founder construisent PRIME.
+      </strong>
+
+      <br /><br />
+
+      En tant que Founder, tu fais partie des premiers traders qui construiront l'évolution de PRIME.
+
+      <br /><br />
+
+      Tes retours auront un impact direct sur les prochaines fonctionnalités.
+    </div>
+
+    <div className="features">
                 <Feature text="Cockpit PRIME complet." />
                 <Feature text="Coach comportemental." />
                 <Feature text="Discipline Score et graphique d’évolution." />
