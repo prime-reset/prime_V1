@@ -394,6 +394,7 @@ export default function HomePage() {
           border-radius: 28px;
           min-height: 230px;
           cursor: pointer;
+          overflow: hidden;
         }
 
         .workspace-head {
@@ -414,10 +415,11 @@ export default function HomePage() {
 
         .workspace-main {
           margin: 8px 0 0;
-          font-size: 24px;
+          font-size: 22px;
           line-height: 1.05;
           font-weight: 1000;
           letter-spacing: -0.7px;
+          word-break: normal;
         }
 
         .workspace-checks {
@@ -425,7 +427,7 @@ export default function HomePage() {
           display: grid;
           gap: 8px;
           color: rgba(255,255,255,0.86);
-          font-size: 13.5px;
+          font-size: 13px;
           font-weight: 780;
         }
 
@@ -436,17 +438,19 @@ export default function HomePage() {
 
         .tv-button {
           width: 100%;
-          min-height: 50px;
-          border-radius: 16px;
+          min-height: 48px;
+          border-radius: 15px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 10px;
+          gap: 9px;
           background: linear-gradient(95deg, #9d742f, #d6b25f 52%, #fff2b8);
           color: #000;
-          font-size: 15.5px;
+          font-size: 14.5px;
           font-weight: 1000;
           letter-spacing: -0.2px;
+          line-height: 1.05;
+          text-align: center;
         }
 
         .tv-icon {
@@ -555,13 +559,13 @@ export default function HomePage() {
 
         .chart-wrap {
           position: relative;
-          height: 245px;
+          height: 260px;
           margin-top: 10px;
           border-radius: 18px;
           background:
-            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-          background-size: 100% 20%, 20% 100%;
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+          background-size: 100% 16.66%, 14.28% 100%;
           border-bottom: 1px solid rgba(255,255,255,0.10);
           overflow: hidden;
         }
@@ -574,13 +578,19 @@ export default function HomePage() {
 
         .chart-score-badge {
           position: absolute;
-          top: 9px;
-          right: 8px;
+          top: 10px;
+          right: 10px;
           color: #D4B06A;
-          font-size: 22px;
+          font-size: 20px;
           font-weight: 1000;
           text-shadow: 0 0 14px rgba(212,176,106,0.36);
           line-height: 1;
+          z-index: 4;
+          padding: 5px 8px;
+          border-radius: 11px;
+          background: rgba(0,0,0,0.72);
+          border: 1px solid rgba(212,176,106,0.18);
+          backdrop-filter: blur(8px);
         }
 
         .chart-score-badge small {
@@ -791,24 +801,78 @@ export default function HomePage() {
           }
 
           .top-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
           }
 
           .score-panel,
           .workspace-card {
-            min-height: auto;
+            min-height: 220px;
+          }
+
+          .score-big {
+            font-size: 48px;
           }
 
           .score-ring {
-            margin-top: 18px;
+            width: 102px;
+            height: 102px;
+            margin-top: 16px;
+          }
+
+          .score-ring-inner {
+            width: 78px;
+            height: 78px;
+          }
+
+          .workspace-main {
+            font-size: 21px;
+          }
+
+          .workspace-checks {
+            font-size: 12.5px;
+          }
+
+          .tv-button {
+            min-height: 46px;
+            font-size: 13.5px;
           }
 
           .dashboard-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+
+          .dashboard-grid .card {
+            min-height: 174px;
+            padding: 15px;
+          }
+
+          .card-title {
+            font-size: 21px;
+          }
+
+          .text {
+            font-size: 13px;
           }
 
           .small-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+          }
+
+          .mini-card {
+            min-height: 96px;
+            padding: 13px;
+          }
+
+          .mini-label {
+            font-size: 9px;
+            letter-spacing: 1.7px;
+          }
+
+          .mini-value {
+            font-size: 20px;
           }
 
           .actions-grid {
@@ -816,7 +880,7 @@ export default function HomePage() {
           }
 
           .chart-wrap {
-            height: 232px;
+            height: 245px;
           }
         }
       `}</style>
@@ -1097,17 +1161,18 @@ function ActionButton({ href, icon, label, title }) {
 
 function DisciplineTradingChart({ data, score }) {
   const width = 360;
-  const height = 210;
+  const height = 220;
   const paddingLeft = 30;
-  const paddingRight = 18;
-  const paddingTop = 20;
-  const paddingBottom = 26;
+  const paddingRight = 26;
+  const paddingTop = 28;
+  const paddingBottom = 30;
   const minY = 40;
   const maxY = 100;
 
+  const expanded = expandChartData(data, score);
   const plotWidth = width - paddingLeft - paddingRight;
   const plotHeight = height - paddingTop - paddingBottom;
-  const xStep = plotWidth / Math.max(data.length - 1, 1);
+  const xStep = plotWidth / Math.max(expanded.length - 1, 1);
 
   const y = (value) => {
     const clamped = Math.max(minY, Math.min(maxY, value));
@@ -1116,9 +1181,12 @@ function DisciplineTradingChart({ data, score }) {
 
   const x = (index) => paddingLeft + index * xStep;
 
-  const maPoints = data
+  const maPoints = expanded
     .map((item, index) => `${x(index)},${y(item.ma)}`)
     .join(" ");
+
+  const sectionLabels = ["S1", "S2", "S3", "S4", "S5", "S6", "S7"];
+  const labelStep = plotWidth / 6;
 
   return (
     <div className="chart-wrap">
@@ -1132,8 +1200,8 @@ function DisciplineTradingChart({ data, score }) {
             <text
               x="4"
               y={y(level) + 4}
-              fill="rgba(255,255,255,0.48)"
-              fontSize="8.5"
+              fill="rgba(255,255,255,0.46)"
+              fontSize="8"
             >
               {level}
             </text>
@@ -1141,46 +1209,59 @@ function DisciplineTradingChart({ data, score }) {
             {level === 70 && (
               <line
                 x1={paddingLeft}
-                x2={width - paddingRight}
+                x2={width - paddingRight - 22}
                 y1={y(level)}
                 y2={y(level)}
-                stroke="rgba(212,176,106,0.58)"
+                stroke="rgba(212,176,106,0.52)"
                 strokeDasharray="2 6"
-                strokeWidth="0.85"
+                strokeWidth="0.7"
                 vectorEffect="non-scaling-stroke"
               />
             )}
           </g>
         ))}
 
+        {sectionLabels.map((label, index) => (
+          <text
+            key={label}
+            x={paddingLeft + index * labelStep}
+            y={height - 8}
+            fill="rgba(255,255,255,0.58)"
+            fontSize="8.5"
+            textAnchor="middle"
+          >
+            {label}
+          </text>
+        ))}
+
         <polyline
           points={maPoints}
           fill="none"
-          stroke="rgba(255,255,255,0.50)"
-          strokeWidth="1.15"
+          stroke="rgba(255,255,255,0.48)"
+          strokeWidth="1"
           vectorEffect="non-scaling-stroke"
         />
 
-        {data.map((item, index) => {
+        {expanded.map((item, index) => {
           const cx = x(index);
-          const candleWidth = 5;
+          const candleWidth = 2.8;
           const openY = y(item.open);
           const closeY = y(item.close);
           const highY = y(item.high);
           const lowY = y(item.low);
           const bullish = item.close >= item.open;
           const bodyTop = Math.min(openY, closeY);
-          const bodyHeight = Math.max(Math.abs(closeY - openY), 3);
+          const bodyHeight = Math.max(Math.abs(closeY - openY), 2);
 
           return (
-            <g key={item.label}>
+            <g key={`${item.label}-${index}`}>
               <line
                 x1={cx}
                 x2={cx}
                 y1={highY}
                 y2={lowY}
-                stroke={bullish ? "#D4B06A" : "rgba(212,176,106,0.58)"}
-                strokeWidth="0.85"
+                stroke={bullish ? "#D4B06A" : "rgba(212,176,106,0.55)"}
+                strokeWidth="0.5"
                 vectorEffect="non-scaling-stroke"
               />
 
@@ -1189,40 +1270,76 @@ function DisciplineTradingChart({ data, score }) {
                 y={bodyTop}
                 width={candleWidth}
                 height={bodyHeight}
-                rx="0.8"
-                fill={bullish ? "#D4B06A" : "rgba(212,176,106,0.12)"}
+                rx="0.35"
+                fill={bullish ? "#D4B06A" : "rgba(212,176,106,0.10)"}
                 stroke="#D4B06A"
-                strokeWidth="0.85"
+                strokeWidth="0.45"
                 vectorEffect="non-scaling-stroke"
               />
-
-              <text
-                x={cx}
-                y={height - 7}
-                fill="rgba(255,255,255,0.58)"
-                fontSize="8.5"
-                textAnchor="middle"
-              >
-                {item.label}
-              </text>
             </g>
           );
         })}
 
-        {data.length > 0 && (
+        {expanded.length > 0 && (
           <circle
-            cx={x(data.length - 1)}
-            cy={y(data[data.length - 1].close)}
-            r="3.8"
+            cx={x(expanded.length - 1)}
+            cy={y(expanded[expanded.length - 1].close)}
+            r="3.4"
             fill="#fff2b8"
             stroke="#D4B06A"
-            strokeWidth="1.4"
+            strokeWidth="1.15"
             vectorEffect="non-scaling-stroke"
           />
         )}
       </svg>
     </div>
   );
+}
+
+function expandChartData(data, currentScore) {
+  const base = data && data.length > 0 ? data : [];
+  const closes = base
+    .map((item) => Number(item.close || 0))
+    .filter((value) => !Number.isNaN(value) && value > 0);
+
+  const anchors = closes.length > 0
+    ? closes
+    : [52, 55, 58, 63, 60, 66, currentScore || 69];
+
+  const target = 42;
+  const expandedScores = [];
+
+  for (let i = 0; i < target; i++) {
+    const position = (i / Math.max(target - 1, 1)) * Math.max(anchors.length - 1, 1);
+    const left = Math.floor(position);
+    const right = Math.min(Math.ceil(position), anchors.length - 1);
+    const ratio = position - left;
+    const interpolated = anchors[left] + (anchors[right] - anchors[left]) * ratio;
+
+    const wave =
+      Math.sin(i * 0.88) * 3.2 +
+      Math.sin(i * 0.29) * 1.9;
+
+    expandedScores.push(Math.max(40, Math.min(100, Math.round(interpolated + wave))));
+  }
+
+  return expandedScores.map((close, index) => {
+    const previous = index === 0 ? Math.max(close - 2, 40) : expandedScores[index - 1];
+    const open = Math.max(40, Math.min(100, previous + Math.sin(index * 0.6) * 1.2));
+    const high = Math.min(Math.max(open, close) + 2.2 + (index % 3) * 0.25, 100);
+    const low = Math.max(Math.min(open, close) - 2.2 - (index % 2) * 0.25, 40);
+    const slice = expandedScores.slice(Math.max(0, index - 8), index + 1);
+    const ma = Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
+
+    return {
+      label: `C${index + 1}`,
+      open,
+      close,
+      high,
+      low,
+      ma,
+    };
+  });
 }
 
 function getPrimeMessage({ score, risk, activePrescription, sessionsCount }) {
@@ -1368,8 +1485,8 @@ function getDisciplineChartData(sessions, averageScore) {
     const previous = index === 0 ? Math.max(score - 3, 40) : scores[index - 1];
     const open = previous;
     const close = score;
-    const high = Math.min(Math.max(open, close) + 4 + (index % 2), 100);
-    const low = Math.max(Math.min(open, close) - 4 - (index % 2), 40);
+    const high = Math.min(Math.max(open, close) + 3, 100);
+    const low = Math.max(Math.min(open, close) - 3, 40);
     const slice = scores.slice(Math.max(0, index - 2), index + 1);
     const ma = Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
 
