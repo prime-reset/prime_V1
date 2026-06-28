@@ -5,10 +5,13 @@ import {
   ArrowRight,
   Brain,
   Check,
+  Crown,
   ShieldCheck,
+  Sparkles,
   Target,
   TrendingUp,
   X,
+  Zap,
 } from "lucide-react";
 
 export default function OfferPage() {
@@ -22,18 +25,25 @@ export default function OfferPage() {
   return (
     <main className="offer-page">
       <style>{`
-        * { box-sizing: border-box; }
-        html, body { margin: 0; background: #000; }
+        * {
+          box-sizing: border-box;
+        }
+
+        html,
+        body {
+          margin: 0;
+          background: #000;
+        }
 
         .offer-page {
           min-height: 100vh;
-          padding: 34px 16px 80px;
+          padding: 34px 16px 86px;
           color: white;
           font-family: Inter, Arial, sans-serif;
           background:
-            radial-gradient(circle at 82% 4%, rgba(214,178,95,0.13), transparent 26%),
-            radial-gradient(circle at 8% 18%, rgba(255,255,255,0.035), transparent 20%),
-            linear-gradient(180deg, #030303 0%, #000 52%, #000 100%);
+            radial-gradient(circle at 82% 3%, rgba(214,178,95,0.14), transparent 26%),
+            radial-gradient(circle at 8% 16%, rgba(255,255,255,0.035), transparent 20%),
+            linear-gradient(180deg, #030303 0%, #000 54%, #000 100%);
           overflow-x: hidden;
         }
 
@@ -44,7 +54,7 @@ export default function OfferPage() {
         }
 
         .hero {
-          max-width: 820px;
+          max-width: 850px;
           margin: 0 auto 38px;
           text-align: center;
           animation: fadeUp .55s ease both;
@@ -89,7 +99,7 @@ export default function OfferPage() {
         }
 
         .subtitle {
-          max-width: 680px;
+          max-width: 700px;
           margin: 24px auto 0;
           color: rgba(255,255,255,0.68);
           font-size: 18px;
@@ -141,7 +151,9 @@ export default function OfferPage() {
           letter-spacing: -0.7px;
         }
 
-        .truth-card span { color: #D4B06A; }
+        .truth-card span {
+          color: #D4B06A;
+        }
 
         .comparison {
           display: grid;
@@ -162,7 +174,9 @@ export default function OfferPage() {
           box-shadow: 0 18px 60px rgba(0,0,0,0.52);
         }
 
-        .compare-card.positive { border-color: rgba(212,176,106,0.24); }
+        .compare-card.positive {
+          border-color: rgba(212,176,106,0.24);
+        }
 
         .compare-title {
           display: flex;
@@ -173,7 +187,9 @@ export default function OfferPage() {
           font-weight: 950;
         }
 
-        .compare-title.good { color: #D4B06A; }
+        .compare-title.good {
+          color: #D4B06A;
+        }
 
         .compare-list {
           display: grid;
@@ -219,9 +235,9 @@ export default function OfferPage() {
 
         .pricing-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1.05fr .95fr;
           gap: 18px;
-          max-width: 920px;
+          max-width: 960px;
           margin: 0 auto;
           align-items: stretch;
         }
@@ -238,24 +254,28 @@ export default function OfferPage() {
           box-shadow: 0 26px 80px rgba(0,0,0,0.64);
           display: flex;
           flex-direction: column;
-          min-height: 560px;
+          min-height: 650px;
           animation: fadeUp .78s ease both;
         }
 
         .price-card.founder {
-          border-color: rgba(212,176,106,0.38);
+          border-color: rgba(212,176,106,0.42);
           box-shadow:
             0 26px 80px rgba(0,0,0,0.66),
-            0 0 70px rgba(212,176,106,0.12);
+            0 0 80px rgba(212,176,106,0.13);
         }
 
         .price-card.founder::before {
           content: "";
           position: absolute;
-          inset: -40%;
-          background: radial-gradient(circle, rgba(212,176,106,0.14), transparent 42%);
+          inset: -45%;
+          background: radial-gradient(circle, rgba(212,176,106,0.15), transparent 42%);
           animation: slowGlow 5s ease-in-out infinite alternate;
           pointer-events: none;
+        }
+
+        .price-card.standard {
+          border-color: rgba(255,255,255,0.09);
         }
 
         .price-content {
@@ -280,66 +300,97 @@ export default function OfferPage() {
         }
 
         .standard .plan-badge {
-          color: rgba(255,255,255,0.76);
-          background: rgba(255,255,255,0.045);
-          border-color: rgba(255,255,255,0.10);
+          color: #7DFFA1;
+          background: rgba(125,255,161,0.08);
+          border-color: rgba(125,255,161,0.22);
         }
 
         .plan-name {
           margin: 22px 0 0;
-          font-size: 36px;
+          font-size: 40px;
           line-height: 1;
           font-weight: 1000;
-          letter-spacing: -1.7px;
+          letter-spacing: -1.9px;
         }
 
         .plan-copy {
-          margin: 12px 0 0;
+          margin: 13px 0 0;
           color: rgba(255,255,255,0.65);
-          font-size: 15px;
+          font-size: 15.5px;
           line-height: 1.55;
         }
 
         .price {
-          margin: 24px 0 0;
+          margin: 25px 0 0;
           display: flex;
           align-items: flex-end;
           gap: 8px;
         }
 
         .price strong {
-          font-size: 56px;
+          font-size: 60px;
           line-height: .9;
           font-weight: 1000;
-          letter-spacing: -3px;
+          letter-spacing: -3.4px;
           color: #D4B06A;
         }
 
-        .standard .price strong { color: white; }
+        .standard .price strong {
+          color: white;
+        }
 
         .price span {
           color: rgba(255,255,255,0.54);
           font-size: 15px;
-          font-weight: 800;
+          font-weight: 850;
           padding-bottom: 7px;
         }
 
         .trial {
-          margin-top: 12px;
-          padding: 12px;
+          margin-top: 14px;
+          padding: 14px;
           border-radius: 18px;
           background: rgba(255,255,255,0.045);
           border: 1px solid rgba(255,255,255,0.08);
           color: rgba(255,255,255,0.80);
           font-size: 14px;
-          line-height: 1.4;
-          font-weight: 750;
+          line-height: 1.45;
+          font-weight: 760;
         }
 
         .trial.gold {
           background: rgba(212,176,106,0.10);
           border-color: rgba(212,176,106,0.22);
           color: #D4B06A;
+        }
+
+        .trial.green {
+          background: rgba(125,255,161,0.07);
+          border-color: rgba(125,255,161,0.18);
+          color: rgba(255,255,255,0.84);
+        }
+
+        .trial strong {
+          color: inherit;
+        }
+
+        .founder-note {
+          margin-top: 18px;
+          padding: 16px;
+          border-radius: 18px;
+          background: rgba(212,176,106,.08);
+          border: 1px solid rgba(212,176,106,.18);
+          color: rgba(255,255,255,.82);
+          font-size: 14px;
+          line-height: 1.6;
+          font-weight: 650;
+        }
+
+        .founder-note strong {
+          display: block;
+          color: #D4B06A;
+          font-size: 15px;
+          margin-bottom: 10px;
         }
 
         .features {
@@ -361,6 +412,10 @@ export default function OfferPage() {
           color: #D4B06A;
           flex-shrink: 0;
           margin-top: 2px;
+        }
+
+        .standard .feature svg {
+          color: #7DFFA1;
         }
 
         .plan-button {
@@ -480,17 +535,33 @@ export default function OfferPage() {
         }
 
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         @keyframes slowGlow {
-          from { transform: rotate(0deg) scale(1); opacity: .55; }
-          to { transform: rotate(14deg) scale(1.08); opacity: 1; }
+          from {
+            transform: rotate(0deg) scale(1);
+            opacity: .55;
+          }
+
+          to {
+            transform: rotate(14deg) scale(1.08);
+            opacity: 1;
+          }
         }
 
         @media(max-width: 820px) {
-          .offer-page { padding: 28px 15px 70px; }
+          .offer-page {
+            padding: 28px 15px 70px;
+          }
 
           .hero-points,
           .comparison,
@@ -499,13 +570,30 @@ export default function OfferPage() {
             grid-template-columns: 1fr;
           }
 
-          .hero { margin-bottom: 30px; }
-          .title { letter-spacing: -2.6px; }
+          .pricing-grid {
+            gap: 16px;
+          }
+
+          .hero {
+            margin-bottom: 30px;
+          }
+
+          .title {
+            letter-spacing: -2.6px;
+          }
 
           .price-card {
             min-height: auto;
             border-radius: 30px;
             padding: 23px;
+          }
+
+          .price-card.founder {
+            order: 1;
+          }
+
+          .price-card.standard {
+            order: 2;
           }
         }
 
@@ -515,14 +603,22 @@ export default function OfferPage() {
             letter-spacing: 8px;
           }
 
-          .subtitle { font-size: 16px; }
+          .subtitle {
+            font-size: 16px;
+          }
 
           .truth-card p,
           .quote p {
             font-size: 21px;
           }
 
-          .price strong { font-size: 50px; }
+          .price strong {
+            font-size: 52px;
+          }
+
+          .plan-name {
+            font-size: 36px;
+          }
         }
       `}</style>
 
@@ -530,7 +626,9 @@ export default function OfferPage() {
         <section className="hero">
           <p className="brand">PRIME.</p>
 
-          <div className="badge">Application de discipline pour traders</div>
+          <div className="badge">
+            Application de discipline pour traders
+          </div>
 
           <h1 className="title">
             Le marché ne détruit pas les traders.
@@ -596,14 +694,16 @@ export default function OfferPage() {
         <section className="pricing-grid">
           <article className="price-card founder">
             <div className="price-content">
-          <div className="plan-badge">
-  20 Founder uniquement
-</div>
+              <div className="plan-badge">
+                Accès Founder limité à 20 traders
+              </div>
 
-              <h2 className="plan-name">Founder</h2>
+              <h2 className="plan-name">
+                Founder
+              </h2>
 
               <p className="plan-copy">
-                Pour les premiers traders qui veulent entrer dans PRIME avant le lancement public.
+                Pour les premiers traders qui souhaitent rejoindre PRIME avant son lancement officiel.
               </p>
 
               <div className="price">
@@ -611,39 +711,27 @@ export default function OfferPage() {
                 <span>/ mois</span>
               </div>
 
-             <div className="trial gold">
-  <strong>Tarif bloqué à vie.</strong><br />
-  Pas d’essai gratuit sur l’offre Founder.
-</div>
-<div
-  style={{
-    marginTop: "18px",
-    padding: "16px",
-    borderRadius: "18px",
-    background: "rgba(212,176,106,0.08)",
-    border: "1px solid rgba(212,176,106,0.18)",
-    color: "rgba(255,255,255,.82)",
-    fontSize: "14px",
-    lineHeight: "1.6",
-    fontWeight: "600",
-  }}
->
-  <strong style={{ color: "#D4B06A" }}>
-    Les Founder construisent PRIME.
-  </strong>
-  <br /><br />
-  En tant que Founder, tu fais partie des premiers traders qui
-  construiront l'évolution de PRIME.
-  <br /><br />
-  Tes retours auront un impact direct sur les prochaines
-  fonctionnalités.
-</div>
+              <div className="trial gold">
+                <strong>Tarif bloqué à vie.</strong>
+                <br />
+                Aucun essai gratuit sur l’offre Founder.
+              </div>
+
+              <div className="founder-note">
+                <strong>Les Founder construisent PRIME.</strong>
+                En tant que Founder, tu fais partie des premiers traders qui construiront l’évolution de PRIME.
+                <br />
+                <br />
+                Tes retours auront un impact direct sur les prochaines fonctionnalités.
+              </div>
+
               <div className="features">
                 <Feature text="Toutes les fonctionnalités PRIME." />
                 <Feature text="Prix Founder conservé à vie." />
                 <Feature text="Badge Founder dans ton profil." />
-                <Feature text="Accès aux futures mises à jour." />
-                <Feature text="Priorité sur les retours et améliorations." />
+                <Feature text="Accès anticipé aux futures évolutions." />
+                <Feature text="Tes retours influencent directement la roadmap." />
+                <Feature text="Priorité sur les échanges et améliorations." />
               </div>
 
               <button
@@ -656,70 +744,46 @@ export default function OfferPage() {
             </div>
           </article>
 
-         <article className="price-card founder">
-  <div className="price-content">
+          <article className="price-card standard">
+            <div className="price-content">
+              <div className="plan-badge">
+                Essai gratuit 7 jours
+              </div>
 
-    <div className="plan-badge">
-      20 Founder uniquement
-    </div>
+              <h2 className="plan-name">
+                Standard
+              </h2>
 
-    <h2 className="plan-name">
-      Founder
-    </h2>
+              <p className="plan-copy">
+                Pour les traders qui veulent transformer durablement leur discipline avec PRIME.
+              </p>
 
-    <p className="plan-copy">
-      Pour les premiers traders qui souhaitent rejoindre PRIME avant son lancement officiel.
-    </p>
+              <div className="price">
+                <strong>24,99€</strong>
+                <span>/ mois</span>
+              </div>
 
-    <div className="price">
-      <strong>9,99€</strong>
-      <span>/ mois</span>
-    </div>
+              <div className="trial green">
+                <strong>7 jours gratuits.</strong>
+                <br />
+                Puis 24,99€/mois. Annulation possible avant la fin de l’essai.
+              </div>
 
-    <div className="trial gold">
-      <strong>Tarif bloqué à vie.</strong><br />
-      Aucun essai gratuit sur l'offre Founder.
-    </div>
-
-    <div
-      style={{
-        marginTop: "18px",
-        padding: "16px",
-        borderRadius: "18px",
-        background: "rgba(212,176,106,.08)",
-        border: "1px solid rgba(212,176,106,.18)",
-        color: "rgba(255,255,255,.82)",
-        fontSize: "14px",
-        lineHeight: "1.6",
-        fontWeight: "600",
-      }}
-    >
-      <strong style={{ color: "#D4B06A" }}>
-        Les Founder construisent PRIME.
-      </strong>
-
-      <br /><br />
-
-      En tant que Founder, tu fais partie des premiers traders qui construiront l'évolution de PRIME.
-
-      <br /><br />
-
-      Tes retours auront un impact direct sur les prochaines fonctionnalités.
-    </div>
-
-    <div className="features">
+              <div className="features">
                 <Feature text="Cockpit PRIME complet." />
-                <Feature text="Coach comportemental." />
+                <Feature text="Coach comportemental intelligent." />
                 <Feature text="Discipline Score et graphique d’évolution." />
                 <Feature text="Prescriptions intelligentes." />
-                <Feature text="Journal et historique de sessions." />
+                <Feature text="Journal d’exécution et historique." />
+                <Feature text="Identity Evolution." />
+                <Feature text="Toutes les futures mises à jour." />
               </div>
 
               <button
                 className="plan-button dark"
                 onClick={() => handleSelectOffer("standard")}
               >
-                Essayer gratuitement
+                Commencer mon essai gratuit
                 <ArrowRight size={18} />
               </button>
             </div>
