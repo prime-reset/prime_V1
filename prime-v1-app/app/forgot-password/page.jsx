@@ -24,8 +24,7 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-     const siteUrl =
+    const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -36,12 +35,14 @@ const { error } = await supabase.auth.resetPasswordForEmail(email, {
 
     if (error) {
       setErrorMessage("Impossible d’envoyer le lien pour le moment. Réessaie dans quelques instants.");
+       setLoading(false);
       return;
     }
 
     setMessage(
       "Si cette adresse est associée à un compte PRIME, un lien sécurisé vient d’être envoyé."
     );
+    setLoading(false);
   }
 
   return (
