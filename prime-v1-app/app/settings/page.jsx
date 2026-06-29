@@ -33,10 +33,14 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("Trader");
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState(null);
   const [role, setRole] = useState("user");
   const [plan, setPlan] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [message, setMessage] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [seasonLoading, setSeasonLoading] = useState(false);
+  const [showSeasonConfirm, setShowSeasonConfirm] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -75,6 +79,7 @@ export default function SettingsPage() {
       return;
     }
 
+    setUserId(user.id);
     setEmail(user.email || "");
 
     const { data: profileData } = await supabase
@@ -116,6 +121,139 @@ export default function SettingsPage() {
     }
 
     setMessage("Un lien de changement de mot de passe vient d’être envoyé.");
+  }
+
+
+  async function handleExportData() {
+    if (!userId || !email) return;
+
+    setExporting(true);
+    setMessage("");
+
+    try {
+      const [profileResult, identityResult, sessionsResult, prescriptionsResult, seasonsResult] =
+        await Promise.all([
+          supabase.from("profiles").select("*").eq("email", email).maybeSingle(),
+          supabase
+            .from("prime_identity_history")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("sessions")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("prescriptions")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("prime_seasons")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+        ]);
+
+      const sessions = sessionsResult.data || [];
+      const scores = sessions
+        .map((session) => Number(session.discipline_score || 0))
+        .filter((score) => !Number.isNaN(score) && score > 0);
+
+      const exportPayload = {
+        application: "PRIME",
+        export_type: "user_data_rgpd",
+        generated_at: new Date().toISOString(),
+        user: {
+          id: userId,
+          email,
+          display_name: displayName,
+          role,
+          plan,
+          subscription_status: subscriptionStatus,
+        },
+        profile: profileResult.data || null,
+        identity_history: identityResult.data || [],
+        sessions,
+        prescriptions: prescriptionsResult.data || [],
+        seasons: seasonsResult.data || [],
+        statistics: {
+          sessions_count: sessions.length,
+          average_discipline:
+            scores.length > 0
+              ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+              : 0,
+          best_discipline: scores.length > 0 ? Math.max(...scores) : 0,
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+        type: "application/json",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const date = new Date().toISOString().slice(0, 10);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `prime-export-${date}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setMessage("Export terminé. Ton fichier PRIME vient d’être téléchargé.");
+    } catch (error) {
+      setMessage("Impossible d’exporter tes données pour le moment.");
+    }
+
+    setExporting(false);
+  }
+
+  async function handleStartNewSeason() {
+    if (!userId) return;
+
+    setSeasonLoading(true);
+    setMessage("");
+
+    const { data: seasonsData } = await supabase
+      .from("prime_seasons")
+      .select("season_number")
+      .eq("user_id", userId)
+      .order("season_number", { ascending: false })
+      .limit(1);
+
+    const nextSeasonNumber =
+      seasonsData && seasonsData.length > 0
+        ? Number(seasonsData[0].season_number || 1) + 1
+        : 1;
+
+    const { error } = await supabase.from("prime_seasons").insert({
+      user_id: userId,
+      season_number: nextSeasonNumber,
+      title: `Saison ${nextSeasonNumber}`,
+      status: "active",
+      started_at: new Date().toISOString(),
+      note: "Nouvelle progression PRIME démarrée depuis les paramètres.",
+    });
+
+    if (error) {
+      setMessage("Impossible de créer une nouvelle saison pour le moment.");
+      setSeasonLoading(false);
+      return;
+    }
+
+    await supabase
+      .from("prescriptions")
+      .update({ status: "archived" })
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    setShowSeasonConfirm(false);
+    setSeasonLoading(false);
+    setMessage(
+      `Nouvelle Saison ${nextSeasonNumber} créée. Ton historique est conservé, ta progression repart d’une nouvelle base.`
+    );
   }
 
   function handleComingSoon(label) {
@@ -497,6 +635,84 @@ export default function SettingsPage() {
           font-weight: 950;
         }
 
+
+
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.76);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 18px;
+          z-index: 100;
+        }
+
+        .modal-card {
+          width: 100%;
+          max-width: 430px;
+          border-radius: 30px;
+          padding: 22px;
+          border-color: rgba(212,176,106,0.24);
+        }
+
+        .modal-title {
+          margin: 0;
+          font-size: 28px;
+          line-height: 1;
+          font-weight: 1000;
+          letter-spacing: -1.2px;
+        }
+
+        .modal-title span { color: #D4B06A; }
+
+        .modal-text {
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.58;
+          margin: 14px 0 0;
+        }
+
+        .modal-list {
+          margin: 16px 0;
+          padding: 15px;
+          border-radius: 18px;
+          background: rgba(212,176,106,0.07);
+          border: 1px solid rgba(212,176,106,0.16);
+          display: grid;
+          gap: 8px;
+          color: rgba(255,255,255,0.80);
+          font-size: 13.5px;
+          line-height: 1.35;
+          font-weight: 700;
+        }
+
+        .modal-list span { color: #D4B06A; margin-right: 6px; }
+
+        .modal-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: 18px;
+        }
+
+        .modal-button {
+          min-height: 50px;
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(255,255,255,0.05);
+          color: white;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .modal-button.gold {
+          border: none;
+          background: linear-gradient(95deg, #9d742f, #d6b25f 52%, #fff2b8);
+          color: #000;
+        }
+
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
@@ -595,10 +811,22 @@ export default function SettingsPage() {
         )}
 
         <section className="section">
-          <SectionHead icon={<Database size={21} />} title="Mes données" subtitle="Contrôle et sécurité de tes données PRIME." />
+          <SectionHead icon={<Database size={21} />} title="Mes données" subtitle="Contrôle, export et nouvelle progression PRIME." />
           <div className="action-list">
-            <SettingAction icon={<Download size={18} />} title="Exporter mes données" subtitle="Bientôt disponible pour l’export RGPD." onClick={() => handleComingSoon("Export des données")} />
-            <SettingAction icon={<RefreshCcw size={18} />} title="Réinitialiser mes statistiques" subtitle="Remettre à zéro sessions, score et historique." onClick={() => handleComingSoon("Réinitialisation des statistiques")} />
+            <SettingAction
+              icon={<Download size={18} />}
+              title={exporting ? "Export en cours..." : "Exporter mes données"}
+              subtitle="Télécharge profil, sessions, identité, prescriptions et saisons au format JSON."
+              onClick={handleExportData}
+            />
+
+            <SettingAction
+              icon={<RefreshCcw size={18} />}
+              title="Nouvelle Saison PRIME"
+              subtitle="Commence une nouvelle progression tout en conservant ton historique."
+              onClick={() => setShowSeasonConfirm(true)}
+            />
+
             <SettingAction icon={<Trash2 size={18} />} title="Supprimer mon compte" subtitle="Suppression définitive. Confirmation obligatoire." danger onClick={() => handleComingSoon("Suppression du compte")} />
           </div>
         </section>
@@ -637,6 +865,51 @@ export default function SettingsPage() {
 
         <p className="footer-brand">PRIME.</p>
       </div>
+
+
+      {showSeasonConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h2 className="modal-title">
+              Nouvelle <span>Saison PRIME ?</span>
+            </h2>
+
+            <p className="modal-text">
+              Ton historique sera conservé. PRIME ouvrira simplement un nouveau chapitre de progression.
+            </p>
+
+            <div className="modal-list">
+              <div><span>✓</span>Les anciennes sessions restent archivées.</div>
+              <div><span>✓</span>Les prescriptions actives seront archivées.</div>
+              <div><span>✓</span>Ta nouvelle saison repart d’une base propre.</div>
+              <div><span>✓</span>Ton évolution restera lisible dans le temps.</div>
+            </div>
+
+            <p className="modal-text">
+              Chaque grand trader repart un jour de zéro. PRIME conserve ton passé, mais t’offre une nouvelle progression.
+            </p>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="modal-button"
+                onClick={() => setShowSeasonConfirm(false)}
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                className="modal-button gold"
+                onClick={handleStartNewSeason}
+                disabled={seasonLoading}
+              >
+                {seasonLoading ? "Création..." : "Recommencer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav active="Profil" />
     </main>
