@@ -61,7 +61,16 @@ if (profileData?.display_name) {
 }
 
 const isSuperAdmin = profileData?.role === "super_admin";
+const hasActiveSubscription =
+  profileData?.subscription_status === "active" ||
+  profileData?.subscription_status === "trialing";
 
+const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
+    // À activer au moment de Stripe :
+// if (!canAccessPrime) {
+//   router.push("/offer");
+//   return;
+// }
 // Plus tard, Stripe vérifiera ici l'abonnement.
 // Pour l'instant : super_admin = accès total, user = accès autorisé pendant audit.
     const { data: identityData } = await supabase
