@@ -51,15 +51,19 @@ export default function HomePage() {
     }
 
     const { data: profileData } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("email", user.email)
-      .maybeSingle();
+  .from("profiles")
+  .select("display_name, role, plan, subscription_status")
+  .eq("email", user.email)
+  .maybeSingle();
 
-    if (profileData?.display_name) {
-      setDisplayName(profileData.display_name);
-    }
+if (profileData?.display_name) {
+  setDisplayName(profileData.display_name);
+}
 
+const isSuperAdmin = profileData?.role === "super_admin";
+
+// Plus tard, Stripe vérifiera ici l'abonnement.
+// Pour l'instant : super_admin = accès total, user = accès autorisé pendant audit.
     const { data: identityData } = await supabase
       .from("prime_identity_history")
       .select("*")
