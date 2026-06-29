@@ -39,8 +39,6 @@ export default function SettingsPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [message, setMessage] = useState("");
   const [exporting, setExporting] = useState(false);
-  const [seasonLoading, setSeasonLoading] = useState(false);
-  const [showSeasonConfirm, setShowSeasonConfirm] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -210,34 +208,7 @@ export default function SettingsPage() {
     setExporting(false);
   }
 
-  async function handleStartNewSeason() {
-    if (!userId) return;
-
-    setSeasonLoading(true);
-    setMessage("");
-
-    const { data: seasonsData } = await supabase
-      .from("prime_seasons")
-      .select("season_number")
-      .eq("user_id", userId)
-      .order("season_number", { ascending: false })
-      .limit(1);
-
-    const nextSeasonNumber =
-      seasonsData && seasonsData.length > 0
-        ? Number(seasonsData[0].season_number || 1) + 1
-        : 1;
-
-    const { error } = await supabase.from("prime_seasons").insert({
-      user_id: userId,
-      season_number: nextSeasonNumber,
-      title: `Saison ${nextSeasonNumber}`,
-      status: "active",
-      started_at: new Date().toISOString(),
-      note: "Nouvelle progression PRIME démarrée depuis les paramètres.",
-    });
-
-    if (error) {
+     if (error) {
       setMessage("Impossible de créer une nouvelle saison pour le moment.");
       setSeasonLoading(false);
       return;
@@ -820,12 +791,16 @@ export default function SettingsPage() {
               onClick={handleExportData}
             />
 
-            <SettingAction
-              icon={<RefreshCcw size={18} />}
-              title="Nouvelle Saison PRIME"
-              subtitle="Commence une nouvelle progression tout en conservant ton historique."
-              onClick={() => setShowSeasonConfirm(true)}
-            />
+           <SettingAction
+  icon={<RefreshCcw size={18} />}
+  title="🚧 Nouvelle Saison PRIME"
+  subtitle="Bientôt disponible après le lancement de PRIME."
+  onClick={() =>
+    setMessage(
+      "🚧 Les Saisons PRIME arriveront dans une prochaine mise à jour. Elles permettront de recommencer une progression tout en conservant l'intégralité de ton historique."
+    )
+  }
+/>
 
             <SettingAction icon={<Trash2 size={18} />} title="Supprimer mon compte" subtitle="Suppression définitive. Confirmation obligatoire." danger onClick={() => handleComingSoon("Suppression du compte")} />
           </div>
@@ -865,52 +840,6 @@ export default function SettingsPage() {
 
         <p className="footer-brand">PRIME.</p>
       </div>
-
-
-      {showSeasonConfirm && (
-        <div className="modal-overlay">
-          <div className="modal-card">
-            <h2 className="modal-title">
-              Nouvelle <span>Saison PRIME ?</span>
-            </h2>
-
-            <p className="modal-text">
-              Ton historique sera conservé. PRIME ouvrira simplement un nouveau chapitre de progression.
-            </p>
-
-            <div className="modal-list">
-              <div><span>✓</span>Les anciennes sessions restent archivées.</div>
-              <div><span>✓</span>Les prescriptions actives seront archivées.</div>
-              <div><span>✓</span>Ta nouvelle saison repart d’une base propre.</div>
-              <div><span>✓</span>Ton évolution restera lisible dans le temps.</div>
-            </div>
-
-            <p className="modal-text">
-              Chaque grand trader repart un jour de zéro. PRIME conserve ton passé, mais t’offre une nouvelle progression.
-            </p>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="modal-button"
-                onClick={() => setShowSeasonConfirm(false)}
-              >
-                Annuler
-              </button>
-
-              <button
-                type="button"
-                className="modal-button gold"
-                onClick={handleStartNewSeason}
-                disabled={seasonLoading}
-              >
-                {seasonLoading ? "Création..." : "Recommencer"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <BottomNav active="Profil" />
     </main>
   );
