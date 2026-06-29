@@ -147,12 +147,7 @@ export default function SettingsPage() {
     <main className="settings-page">
       <style>{`
         * { box-sizing: border-box; }
-
-        html,
-        body {
-          margin: 0;
-          background: #000;
-        }
+        html, body { margin: 0; background: #000; }
 
         .settings-page {
           min-height: 100vh;
@@ -166,11 +161,7 @@ export default function SettingsPage() {
           overflow-x: hidden;
         }
 
-        .page {
-          width: 100%;
-          max-width: 460px;
-          margin: 0 auto;
-        }
+        .page { width: 100%; max-width: 460px; margin: 0 auto; }
 
         .topbar {
           display: flex;
@@ -201,10 +192,7 @@ export default function SettingsPage() {
           text-transform: uppercase;
         }
 
-        .hero {
-          margin-bottom: 20px;
-          animation: fadeUp .45s ease both;
-        }
+        .hero { margin-bottom: 20px; animation: fadeUp .45s ease both; }
 
         .eyebrow {
           width: fit-content;
@@ -409,11 +397,7 @@ export default function SettingsPage() {
           background: rgba(255,104,104,0.07);
         }
 
-        .action-left {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
+        .action-left { display: flex; align-items: center; gap: 12px; }
 
         .action-icon {
           width: 34px;
@@ -530,57 +514,35 @@ export default function SettingsPage() {
 
       <div className="page">
         <div className="topbar">
-          <button
-            className="back-button"
-            type="button"
-            onClick={() => router.push("/profile")}
-            aria-label="Retour au profil"
-          >
+          <button className="back-button" type="button" onClick={() => router.push("/profile")} aria-label="Retour au profil">
             <ArrowLeft size={21} />
           </button>
 
           <p className="brand">PRIME</p>
-
           <div style={{ width: 44 }} />
         </div>
 
         <section className="hero">
           <div className="eyebrow">Paramètres</div>
-
-          <h1 className="title">
-            Ton espace
-            <span>compte.</span>
-          </h1>
-
-          <p className="subtitle">
-            Gère ton accès, ton abonnement, tes données et les informations légales de PRIME.
-          </p>
+          <h1 className="title">Ton espace<span>compte.</span></h1>
+          <p className="subtitle">Gère ton accès, ton abonnement, tes données et les informations légales de PRIME.</p>
         </section>
 
         {message && <p className="message">{message}</p>}
 
         <section className="status-card">
           <div className="status-top">
-            <div className="avatar">
-              {displayName?.charAt(0)?.toUpperCase() || "P"}
-            </div>
-
+            <div className="avatar">{displayName?.charAt(0)?.toUpperCase() || "P"}</div>
             <div style={{ flex: 1 }}>
               <h2 className="account-name">{displayName}</h2>
               <p className="account-email">{email}</p>
             </div>
-
             <div className="pill">{accountLabel}</div>
           </div>
         </section>
 
         <section className="section">
-          <SectionHead
-            icon={<User size={21} />}
-            title="Mon compte"
-            subtitle="Informations principales et sécurité."
-          />
-
+          <SectionHead icon={<User size={21} />} title="Mon compte" subtitle="Informations principales et sécurité." />
           <div className="info-grid">
             <InfoRow label="Nom" value={displayName} />
             <InfoRow label="Email" value={email} />
@@ -588,43 +550,17 @@ export default function SettingsPage() {
           </div>
 
           <div className="action-list" style={{ marginTop: 14 }}>
-            <SettingAction
-              icon={<User size={18} />}
-              title="Modifier mon profil"
-              subtitle="Nom affiché et informations personnelles."
-              onClick={() => router.push("/profile")}
-            />
-
-            <SettingAction
-              icon={<Lock size={18} />}
-              title="Changer mon mot de passe"
-              subtitle="Recevoir un lien sécurisé par email."
-              onClick={handlePasswordReset}
-            />
-
-            <SettingAction
-              icon={<LogOut size={18} />}
-              title="Déconnexion"
-              subtitle="Quitter ton compte PRIME."
-              onClick={handleLogout}
-            />
+            <SettingAction icon={<User size={18} />} title="Modifier mon profil" subtitle="Nom affiché et informations personnelles." onClick={() => router.push("/profile")} />
+            <SettingAction icon={<Lock size={18} />} title="Changer mon mot de passe" subtitle="Recevoir un lien sécurisé par email." onClick={handlePasswordReset} />
+            <SettingAction icon={<LogOut size={18} />} title="Déconnexion" subtitle="Quitter ton compte PRIME." onClick={handleLogout} />
           </div>
         </section>
 
         <section className="section">
-          <SectionHead
-            icon={<Wallet size={21} />}
-            title="Mon abonnement"
-            subtitle="Offre actuelle et statut d’accès."
-          />
-
+          <SectionHead icon={<Wallet size={21} />} title="Mon abonnement" subtitle="Offre actuelle et statut d’accès." />
           <div className="info-grid">
             <InfoRow label="Offre" value={planLabel} highlight />
-            <InfoRow
-              label="Statut"
-              value={statusLabel}
-              success={subscriptionStatus === "active" || role === "super_admin"}
-            />
+            <InfoRow label="Statut" value={statusLabel} success={subscriptionStatus === "active" || role === "super_admin"} />
             <InfoRow
               label="Facturation"
               value={
@@ -640,143 +576,53 @@ export default function SettingsPage() {
           </div>
 
           <div className="action-list" style={{ marginTop: 14 }}>
-            <SettingAction
-              icon={<Wallet size={18} />}
-              title="Gérer mon abonnement"
-              subtitle="Sera relié au portail Stripe après intégration."
-              onClick={() => handleComingSoon("Gestion de l’abonnement")}
-            />
+            <SettingAction icon={<Wallet size={18} />} title="Gérer mon abonnement" subtitle="Sera relié au portail Stripe après intégration." onClick={() => handleComingSoon("Gestion de l’abonnement")} />
           </div>
         </section>
 
         {(plan === "founder" || role === "super_admin") && (
           <section className="section founder-card">
-            <SectionHead
-              icon={<Crown size={21} />}
-              title={role === "super_admin" ? "Accès Super Admin" : "Founder"}
-              subtitle="Accès privilégié PRIME."
-            />
-
+            <SectionHead icon={<Crown size={21} />} title={role === "super_admin" ? "Accès Super Admin" : "Founder"} subtitle="Accès privilégié PRIME." />
             <p className="founder-text">
               <strong>Merci de faire partie des premiers accès PRIME.</strong>
-              <br />
-              <br />
-              Les Founder participent directement à l’évolution du produit.
-              Tes retours auront un impact concret sur les prochaines fonctionnalités.
+              <br /><br />
+              Les Founder participent directement à l’évolution du produit. Tes retours auront un impact concret sur les prochaines fonctionnalités.
             </p>
-
             <div className="action-list" style={{ marginTop: 16 }}>
-              <SettingAction
-                icon={<Mail size={18} />}
-                title="Envoyer un feedback"
-                subtitle="Partager une idée, un bug ou une amélioration."
-                href="mailto:support@theprimeapp.com?subject=Feedback%20Founder%20PRIME"
-              />
+              <SettingAction icon={<Mail size={18} />} title="Envoyer un feedback" subtitle="Partager une idée, un bug ou une amélioration." href="mailto:support@theprimeapp.com?subject=Feedback%20Founder%20PRIME" />
             </div>
           </section>
         )}
 
         <section className="section">
-          <SectionHead
-            icon={<Database size={21} />}
-            title="Mes données"
-            subtitle="Contrôle et sécurité de tes données PRIME."
-          />
-
+          <SectionHead icon={<Database size={21} />} title="Mes données" subtitle="Contrôle et sécurité de tes données PRIME." />
           <div className="action-list">
-            <SettingAction
-              icon={<Download size={18} />}
-              title="Exporter mes données"
-              subtitle="Bientôt disponible pour l’export RGPD."
-              onClick={() => handleComingSoon("Export des données")}
-            />
-
-            <SettingAction
-              icon={<RefreshCcw size={18} />}
-              title="Réinitialiser mes statistiques"
-              subtitle="Remettre à zéro sessions, score et historique."
-              onClick={() => handleComingSoon("Réinitialisation des statistiques")}
-            />
-
-            <SettingAction
-              icon={<Trash2 size={18} />}
-              title="Supprimer mon compte"
-              subtitle="Suppression définitive. Confirmation obligatoire."
-              danger
-              onClick={() => handleComingSoon("Suppression du compte")}
-            />
+            <SettingAction icon={<Download size={18} />} title="Exporter mes données" subtitle="Bientôt disponible pour l’export RGPD." onClick={() => handleComingSoon("Export des données")} />
+            <SettingAction icon={<RefreshCcw size={18} />} title="Réinitialiser mes statistiques" subtitle="Remettre à zéro sessions, score et historique." onClick={() => handleComingSoon("Réinitialisation des statistiques")} />
+            <SettingAction icon={<Trash2 size={18} />} title="Supprimer mon compte" subtitle="Suppression définitive. Confirmation obligatoire." danger onClick={() => handleComingSoon("Suppression du compte")} />
           </div>
         </section>
 
         <section className="section">
-          <SectionHead
-            icon={<FileText size={21} />}
-            title="Légal"
-            subtitle="Documents nécessaires avant le lancement officiel."
-          />
-
+          <SectionHead icon={<FileText size={21} />} title="Légal" subtitle="Documents nécessaires avant le lancement officiel." />
           <div className="action-list">
-            <SettingAction
-              icon={<BookOpen size={18} />}
-              title="Conditions Générales"
-              subtitle="CGU / CGV de PRIME."
-              onClick={() => handleComingSoon("Conditions Générales")}
-            />
-
-            <SettingAction
-              icon={<Shield size={18} />}
-              title="Politique de confidentialité"
-              subtitle="Traitement des données et RGPD."
-              onClick={() => handleComingSoon("Politique de confidentialité")}
-            />
-
-            <SettingAction
-              icon={<FileText size={18} />}
-              title="Mentions légales"
-              subtitle="Informations légales de l’éditeur."
-              onClick={() => handleComingSoon("Mentions légales")}
-            />
+            <SettingAction icon={<BookOpen size={18} />} title="CGU / CGV" subtitle="Conditions d’utilisation et de vente." onClick={() => router.push("/legal/terms")} />
+            <SettingAction icon={<Shield size={18} />} title="Politique de confidentialité" subtitle="Traitement des données et RGPD." onClick={() => router.push("/legal/privacy")} />
+            <SettingAction icon={<FileText size={18} />} title="Mentions légales" subtitle="Informations légales de l’éditeur." onClick={() => router.push("/legal/mentions")} />
           </div>
         </section>
 
         <section className="section">
-          <SectionHead
-            icon={<LifeBuoy size={21} />}
-            title="Support"
-            subtitle="Aide, bugs et contact."
-          />
-
+          <SectionHead icon={<LifeBuoy size={21} />} title="Support" subtitle="Aide, bugs et contact." />
           <div className="action-list">
-            <SettingAction
-              icon={<HelpCircle size={18} />}
-              title="Centre d’aide"
-              subtitle="FAQ et réponses aux questions fréquentes."
-              onClick={() => router.push("/help")}
-            />
-
-            <SettingAction
-              icon={<Bug size={18} />}
-              title="Signaler un bug"
-              subtitle="Préparer un retour clair pour l’équipe PRIME."
-              href="mailto:support@theprimeapp.com?subject=Bug%20PRIME"
-            />
-
-            <SettingAction
-              icon={<Mail size={18} />}
-              title="Contacter PRIME"
-              subtitle="support@theprimeapp.com"
-              href="mailto:support@theprimeapp.com"
-            />
+            <SettingAction icon={<HelpCircle size={18} />} title="Centre d’aide" subtitle="FAQ et réponses aux questions fréquentes." onClick={() => router.push("/help")} />
+            <SettingAction icon={<Bug size={18} />} title="Signaler un bug" subtitle="Préparer un retour clair pour l’équipe PRIME." href="mailto:support@theprimeapp.com?subject=Bug%20PRIME" />
+            <SettingAction icon={<Mail size={18} />} title="Contacter PRIME" subtitle="support@theprimeapp.com" href="mailto:support@theprimeapp.com" />
           </div>
         </section>
 
         <section className="section">
-          <SectionHead
-            icon={<Sparkles size={21} />}
-            title="À propos"
-            subtitle="Version et identité de l’application."
-          />
-
+          <SectionHead icon={<Sparkles size={21} />} title="À propos" subtitle="Version et identité de l’application." />
           <div className="info-grid">
             <InfoRow label="Application" value="PRIME" highlight />
             <InfoRow label="Version" value="v1.0 Founder Edition" />
@@ -785,16 +631,8 @@ export default function SettingsPage() {
         </section>
 
         <section className="quote-card">
-          <h2>
-            La discipline
-            <span>n’est pas un talent.</span>
-          </h2>
-
-          <p>
-            C’est une décision que tu prends chaque jour.
-            <br />
-            PRIME est là pour te la rappeler.
-          </p>
+          <h2>La discipline<span>n’est pas un talent.</span></h2>
+          <p>C’est une décision que tu prends chaque jour.<br />PRIME est là pour te la rappeler.</p>
         </section>
 
         <p className="footer-brand">PRIME.</p>
@@ -809,7 +647,6 @@ function SectionHead({ icon, title, subtitle }) {
   return (
     <div className="section-head">
       <div className="section-icon">{icon}</div>
-
       <div>
         <h2 className="section-title">{title}</h2>
         <p className="section-copy">{subtitle}</p>
@@ -834,38 +671,23 @@ function SettingAction({ icon, title, subtitle, href, onClick, danger }) {
     <>
       <div className="action-left">
         <div className="action-icon">{icon}</div>
-
         <div>
           <p className="action-title">{title}</p>
           <p className="action-subtitle">{subtitle}</p>
         </div>
       </div>
-
-      <ChevronRight
-        size={18}
-        color={danger ? "#ff6868" : "rgba(255,255,255,0.36)"}
-      />
+      <ChevronRight size={18} color={danger ? "#ff6868" : "rgba(255,255,255,0.36)"} />
     </>
   );
 
   if (href) {
-    return (
-      <a
-        className={`setting-action ${danger ? "danger-action" : ""}`}
-        href={href}
-      >
-        {content}
-      </a>
-    );
+    return <a className={`setting-action ${danger ? "danger-action" : ""}`} href={href}>{content}</a>;
   }
 
   return (
-    <button
-      type="button"
-      className={`setting-action ${danger ? "danger-action" : ""}`}
-      onClick={onClick}
-    >
+    <button type="button" className={`setting-action ${danger ? "danger-action" : ""}`} onClick={onClick}>
       {content}
     </button>
   );
 }
+
