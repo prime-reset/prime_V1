@@ -208,25 +208,6 @@ export default function SettingsPage() {
     setExporting(false);
   }
 
-     if (error) {
-      setMessage("Impossible de créer une nouvelle saison pour le moment.");
-      setSeasonLoading(false);
-      return;
-    }
-
-    await supabase
-      .from("prescriptions")
-      .update({ status: "archived" })
-      .eq("user_id", userId)
-      .eq("status", "active");
-
-    setShowSeasonConfirm(false);
-    setSeasonLoading(false);
-    setMessage(
-      `Nouvelle Saison ${nextSeasonNumber} créée. Ton historique est conservé, ta progression repart d’une nouvelle base.`
-    );
-  }
-
   function handleComingSoon(label) {
     setMessage(`${label} sera disponible dans une prochaine mise à jour.`);
   }
@@ -606,84 +587,6 @@ export default function SettingsPage() {
           font-weight: 950;
         }
 
-
-
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.76);
-          backdrop-filter: blur(10px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 18px;
-          z-index: 100;
-        }
-
-        .modal-card {
-          width: 100%;
-          max-width: 430px;
-          border-radius: 30px;
-          padding: 22px;
-          border-color: rgba(212,176,106,0.24);
-        }
-
-        .modal-title {
-          margin: 0;
-          font-size: 28px;
-          line-height: 1;
-          font-weight: 1000;
-          letter-spacing: -1.2px;
-        }
-
-        .modal-title span { color: #D4B06A; }
-
-        .modal-text {
-          color: rgba(255,255,255,0.68);
-          font-size: 14px;
-          line-height: 1.58;
-          margin: 14px 0 0;
-        }
-
-        .modal-list {
-          margin: 16px 0;
-          padding: 15px;
-          border-radius: 18px;
-          background: rgba(212,176,106,0.07);
-          border: 1px solid rgba(212,176,106,0.16);
-          display: grid;
-          gap: 8px;
-          color: rgba(255,255,255,0.80);
-          font-size: 13.5px;
-          line-height: 1.35;
-          font-weight: 700;
-        }
-
-        .modal-list span { color: #D4B06A; margin-right: 6px; }
-
-        .modal-actions {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-top: 18px;
-        }
-
-        .modal-button {
-          min-height: 50px;
-          border-radius: 16px;
-          border: 1px solid rgba(255,255,255,0.10);
-          background: rgba(255,255,255,0.05);
-          color: white;
-          font-weight: 900;
-          cursor: pointer;
-        }
-
-        .modal-button.gold {
-          border: none;
-          background: linear-gradient(95deg, #9d742f, #d6b25f 52%, #fff2b8);
-          color: #000;
-        }
-
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
           to { opacity: 1; transform: translateY(0); }
@@ -791,16 +694,16 @@ export default function SettingsPage() {
               onClick={handleExportData}
             />
 
-           <SettingAction
-  icon={<RefreshCcw size={18} />}
-  title="🚧 Nouvelle Saison PRIME"
-  subtitle="Bientôt disponible après le lancement de PRIME."
-  onClick={() =>
-    setMessage(
-      "🚧 Les Saisons PRIME arriveront dans une prochaine mise à jour. Elles permettront de recommencer une progression tout en conservant l'intégralité de ton historique."
-    )
-  }
-/>
+            <SettingAction
+              icon={<RefreshCcw size={18} />}
+              title="🚧 Nouvelle Saison PRIME"
+              subtitle="Une fonctionnalité majeure actuellement en préparation."
+              onClick={() =>
+                setMessage(
+                  "🚧 Les Saisons PRIME arriveront après le lancement. Elles permettront de recommencer une progression tout en conservant l'intégralité de ton historique, avec des statistiques, un Coach et un Dashboard dédiés à chaque saison."
+                )
+              }
+            />
 
             <SettingAction icon={<Trash2 size={18} />} title="Supprimer mon compte" subtitle="Suppression définitive. Confirmation obligatoire." danger onClick={() => handleComingSoon("Suppression du compte")} />
           </div>
@@ -840,6 +743,8 @@ export default function SettingsPage() {
 
         <p className="footer-brand">PRIME.</p>
       </div>
+
+
       <BottomNav active="Profil" />
     </main>
   );
