@@ -2,42 +2,74 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
-  Award,
-  BarChart3,
+  ArrowLeft,
   BookOpen,
-  Brain,
-  CalendarDays,
+  Bug,
   ChevronRight,
   Crown,
-  Settings,
+  Database,
+  Download,
+  FileText,
+  HelpCircle,
+  LifeBuoy,
+  Lock,
+  LogOut,
+  Mail,
+  RefreshCcw,
+  Shield,
   Sparkles,
-  Target,
+  Trash2,
+  User,
+  Wallet,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
 
-export default function ProfilePage() {
+export default function SettingsPage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("Trader");
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState(null);
   const [role, setRole] = useState("user");
   const [plan, setPlan] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const [identity, setIdentity] = useState(null);
-  const [identityHistory, setIdentityHistory] = useState([]);
-  const [sessions, setSessions] = useState([]);
-  const [prescriptions, setPrescriptions] = useState([]);
+  const [message, setMessage] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [seasonLoading, setSeasonLoading] = useState(false);
+  const [showSeasonConfirm, setShowSeasonConfirm] = useState(false);
 
   useEffect(() => {
-    loadProfile();
+    loadSettings();
   }, []);
 
-  async function loadProfile() {
+  const accountLabel = useMemo(() => {
+    if (role === "super_admin") return "Super Admin";
+    if (plan === "founder") return "Founder";
+    if (plan === "standard") return "Standard";
+    return "Compte PRIME";
+  }, [role, plan]);
+
+  const planLabel = useMemo(() => {
+    if (role === "super_admin") return "Accès Admin";
+    if (plan === "founder") return "Founder";
+    if (plan === "standard") return "Standard";
+    return "Aucune offre active";
+  }, [role, plan]);
+
+  const statusLabel = useMemo(() => {
+    if (role === "super_admin") return "Accès total";
+    if (subscriptionStatus === "active") return "Actif";
+    if (subscriptionStatus === "trialing") return "Essai gratuit";
+    if (subscriptionStatus === "past_due") return "Paiement à vérifier";
+    if (subscriptionStatus === "canceled") return "Résilié";
+    return "En attente";
+  }, [role, subscriptionStatus]);
+
+  async function loadSettings() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -47,6 +79,7 @@ export default function ProfilePage() {
       return;
     }
 
+    setUserId(user.id);
     setEmail(user.email || "");
 
     const { data: profileData } = await supabase
@@ -62,70 +95,170 @@ export default function ProfilePage() {
       setSubscriptionStatus(profileData.subscription_status);
     }
 
-    const { data: identityData } = await supabase
-      .from("prime_identity_history")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(8);
-
-    if (identityData && identityData.length > 0) {
-      setIdentity(identityData[0]);
-      setIdentityHistory(identityData);
-    }
-
-    const { data: sessionsData } = await supabase
-      .from("sessions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "closed")
-      .order("created_at", { ascending: false });
-
-    if (sessionsData) setSessions(sessionsData);
-
-    const { data: prescriptionsData } = await supabase
-      .from("prescriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(6);
-
-    if (prescriptionsData) setPrescriptions(prescriptionsData);
-
     setLoading(false);
   }
 
-  const averageScore = useMemo(() => {
-    const identityScore = Number(identity?.discipline_average || 0);
-    if (identityScore > 0) return Math.round(identityScore);
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/auth");
+  }
 
-    const scores = sessions
-      .map((session) => Number(session.discipline_score))
-      .filter((score) => !Number.isNaN(score) && score > 0);
+  async function handlePasswordReset() {
+    if (!email) return;
 
-    if (scores.length === 0) return 0;
-    return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
-  }, [identity, sessions]);
+    setMessage("");
 
-  const bestScore = useMemo(() => {
-    const scores = sessions
-      .map((session) => Number(session.discipline_score))
-      .filter((score) => !Number.isNaN(score) && score > 0);
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://prime-v1-six.vercel.app";
 
-    if (scores.length === 0) return 0;
-    return Math.max(...scores);
-  }, [sessions]);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/reset-password`,
+    });
 
-  const activePrescription = prescriptions.find(
-    (prescription) => prescription.status === "active"
-  );
+    if (error) {
+      setMessage("Impossible d’envoyer le lien pour le moment.");
+      return;
+    }
 
-  const profileName = identity?.profile || "Trader en construction";
-  const primeLevel = getPrimeLevel(averageScore, sessions.length);
-  const dominantStrength = getProfileStrength(profileName);
-  const watchPoint = getProfileWeakness(profileName);
-  const accountLabel = getAccountLabel(role, plan);
-  const subscriptionLabel = getSubscriptionLabel(role, subscriptionStatus);
+    setMessage("Un lien de changement de mot de passe vient d’être envoyé.");
+  }
+
+
+  async function handleExportData() {
+    if (!userId || !email) return;
+
+    setExporting(true);
+    setMessage("");
+
+    try {
+      const [profileResult, identityResult, sessionsResult, prescriptionsResult, seasonsResult] =
+        await Promise.all([
+          supabase.from("profiles").select("*").eq("email", email).maybeSingle(),
+          supabase
+            .from("prime_identity_history")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("sessions")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("prescriptions")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("prime_seasons")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false }),
+        ]);
+
+      const sessions = sessionsResult.data || [];
+      const scores = sessions
+        .map((session) => Number(session.discipline_score || 0))
+        .filter((score) => !Number.isNaN(score) && score > 0);
+
+      const exportPayload = {
+        application: "PRIME",
+        export_type: "user_data_rgpd",
+        generated_at: new Date().toISOString(),
+        user: {
+          id: userId,
+          email,
+          display_name: displayName,
+          role,
+          plan,
+          subscription_status: subscriptionStatus,
+        },
+        profile: profileResult.data || null,
+        identity_history: identityResult.data || [],
+        sessions,
+        prescriptions: prescriptionsResult.data || [],
+        seasons: seasonsResult.data || [],
+        statistics: {
+          sessions_count: sessions.length,
+          average_discipline:
+            scores.length > 0
+              ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+              : 0,
+          best_discipline: scores.length > 0 ? Math.max(...scores) : 0,
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+        type: "application/json",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const date = new Date().toISOString().slice(0, 10);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `prime-export-${date}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setMessage("Export terminé. Ton fichier PRIME vient d’être téléchargé.");
+    } catch (error) {
+      setMessage("Impossible d’exporter tes données pour le moment.");
+    }
+
+    setExporting(false);
+  }
+
+  async function handleStartNewSeason() {
+    if (!userId) return;
+
+    setSeasonLoading(true);
+    setMessage("");
+
+    const { data: seasonsData } = await supabase
+      .from("prime_seasons")
+      .select("season_number")
+      .eq("user_id", userId)
+      .order("season_number", { ascending: false })
+      .limit(1);
+
+    const nextSeasonNumber =
+      seasonsData && seasonsData.length > 0
+        ? Number(seasonsData[0].season_number || 1) + 1
+        : 1;
+
+    const { error } = await supabase.from("prime_seasons").insert({
+      user_id: userId,
+      season_number: nextSeasonNumber,
+      title: `Saison ${nextSeasonNumber}`,
+      status: "active",
+      started_at: new Date().toISOString(),
+      note: "Nouvelle progression PRIME démarrée depuis les paramètres.",
+    });
+
+    if (error) {
+      setMessage("Impossible de créer une nouvelle saison pour le moment.");
+      setSeasonLoading(false);
+      return;
+    }
+
+    await supabase
+      .from("prescriptions")
+      .update({ status: "archived" })
+      .eq("user_id", userId)
+      .eq("status", "active");
+
+    setShowSeasonConfirm(false);
+    setSeasonLoading(false);
+    setMessage(
+      `Nouvelle Saison ${nextSeasonNumber} créée. Ton historique est conservé, ta progression repart d’une nouvelle base.`
+    );
+  }
+
+  function handleComingSoon(label) {
+    setMessage(`${label} sera disponible dans une prochaine mise à jour.`);
+  }
 
   if (loading) {
     return (
@@ -143,74 +276,101 @@ export default function ProfilePage() {
             text-transform: uppercase;
           }
         `}</style>
-        Chargement Profil...
+        Chargement Settings...
       </main>
     );
   }
 
   return (
-    <main className="profile-page">
+    <main className="settings-page">
       <style>{`
         * { box-sizing: border-box; }
+        html, body { margin: 0; background: #000; }
 
-        html,
-        body {
-          margin: 0;
-          background: #000;
-        }
-
-        .profile-page {
+        .settings-page {
           min-height: 100vh;
           padding: 28px 16px 132px;
           color: white;
           font-family: Inter, Arial, sans-serif;
           background:
-            radial-gradient(circle at 82% 2%, rgba(212,176,106,0.12), transparent 28%),
-            radial-gradient(circle at 8% 16%, rgba(255,255,255,0.035), transparent 22%),
-            linear-gradient(180deg, #030303 0%, #000 54%, #000 100%);
+            radial-gradient(circle at 84% 2%, rgba(212,176,106,0.12), transparent 26%),
+            radial-gradient(circle at 8% 12%, rgba(255,255,255,0.035), transparent 22%),
+            linear-gradient(180deg, #030303 0%, #000 56%, #000 100%);
           overflow-x: hidden;
         }
 
-        .page {
-          width: 100%;
-          max-width: 460px;
-          margin: 0 auto;
-        }
+        .page { width: 100%; max-width: 460px; margin: 0 auto; }
 
         .topbar {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 14px;
-          margin-bottom: 28px;
+          margin-bottom: 26px;
         }
 
-        .brand {
-          margin: 0;
-          color: #D4B06A;
-          letter-spacing: 8px;
-          font-size: 13px;
-          font-weight: 950;
-          text-transform: uppercase;
-        }
-
-        .settings-button {
-          width: 46px;
-          height: 46px;
+        .back-button {
+          width: 44px;
+          height: 44px;
           border-radius: 16px;
-          border: 1px solid rgba(212,176,106,0.22);
-          background: rgba(212,176,106,0.08);
-          color: #D4B06A;
+          border: 1px solid rgba(255,255,255,0.09);
+          background: rgba(255,255,255,0.045);
+          color: white;
           display: grid;
           place-items: center;
           cursor: pointer;
         }
 
-        .hero-card,
+        .brand {
+          margin: 0;
+          color: #D4B06A;
+          font-size: 13px;
+          font-weight: 950;
+          letter-spacing: 7px;
+          text-transform: uppercase;
+        }
+
+        .hero { margin-bottom: 20px; animation: fadeUp .45s ease both; }
+
+        .eyebrow {
+          width: fit-content;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: rgba(212,176,106,0.09);
+          border: 1px solid rgba(212,176,106,0.25);
+          color: #D4B06A;
+          font-size: 10.5px;
+          font-weight: 950;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          margin-bottom: 16px;
+        }
+
+        .title {
+          margin: 0;
+          font-size: 43px;
+          line-height: .96;
+          font-weight: 1000;
+          letter-spacing: -2.4px;
+        }
+
+        .title span {
+          display: block;
+          background: linear-gradient(180deg, #fff 0%, #D4B06A 88%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+          margin: 15px 0 0;
+          color: rgba(255,255,255,0.64);
+          font-size: 15.5px;
+          line-height: 1.55;
+        }
+
+        .status-card,
         .section,
-        .stat-card,
-        .identity-card,
-        .action-card {
+        .quote-card {
           background:
             linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.018)),
             rgba(12,12,12,0.94);
@@ -219,260 +379,104 @@ export default function ProfilePage() {
           backdrop-filter: blur(18px);
         }
 
-        .hero-card {
-          position: relative;
-          overflow: hidden;
-          border-radius: 34px;
-          padding: 22px;
+        .status-card {
+          border-radius: 30px;
+          padding: 20px;
           margin-bottom: 16px;
           border-color: rgba(212,176,106,0.22);
         }
 
-        .hero-card::before {
-          content: "";
-          position: absolute;
-          top: -70px;
-          right: -80px;
-          width: 190px;
-          height: 190px;
-          background: radial-gradient(circle, rgba(212,176,106,0.16), transparent 62%);
-          pointer-events: none;
-        }
-
-        .profile-head {
-          position: relative;
-          z-index: 1;
+        .status-top {
           display: flex;
           align-items: flex-start;
-          gap: 16px;
+          justify-content: space-between;
+          gap: 12px;
         }
 
         .avatar {
-          width: 74px;
-          height: 74px;
-          border-radius: 25px;
+          width: 56px;
+          height: 56px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #9d742f, #d6b25f, #fff2b8);
+          color: #000;
           display: grid;
           place-items: center;
-          color: #000;
-          font-size: 31px;
+          font-size: 24px;
           font-weight: 1000;
-          background: linear-gradient(135deg, #9d742f, #d6b25f, #fff2b8);
-          box-shadow: 0 18px 45px rgba(212,176,106,0.12);
           flex-shrink: 0;
         }
 
-        .name {
+        .account-name {
           margin: 0;
-          font-size: 31px;
-          line-height: 0.98;
+          font-size: 24px;
+          line-height: 1.05;
           font-weight: 1000;
-          letter-spacing: -1.5px;
+          letter-spacing: -0.8px;
         }
 
-        .email {
+        .account-email {
           margin: 8px 0 0;
-          color: rgba(255,255,255,0.54);
+          color: rgba(255,255,255,0.55);
           font-size: 13px;
           line-height: 1.35;
           word-break: break-word;
         }
 
-        .badge-row {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 9px;
-          margin-top: 18px;
-        }
-
-        .badge {
+        .pill {
           width: fit-content;
-          padding: 8px 11px;
+          padding: 8px 10px;
           border-radius: 999px;
-          background: rgba(212,176,106,0.09);
+          background: rgba(212,176,106,0.10);
           border: 1px solid rgba(212,176,106,0.24);
           color: #D4B06A;
           font-size: 10px;
           font-weight: 950;
-          letter-spacing: 1.45px;
+          letter-spacing: 1.4px;
           text-transform: uppercase;
-        }
-
-        .badge.dark {
-          background: rgba(255,255,255,0.045);
-          border-color: rgba(255,255,255,0.09);
-          color: rgba(255,255,255,0.68);
-        }
-
-        .identity-card {
-          border-radius: 30px;
-          padding: 20px;
-          margin-bottom: 16px;
-          border-color: rgba(212,176,106,0.20);
-        }
-
-        .label {
-          color: #D4B06A;
-          font-size: 10.5px;
-          letter-spacing: 2.6px;
-          text-transform: uppercase;
-          font-weight: 950;
-          margin: 0 0 12px;
-        }
-
-        .identity-title {
-          margin: 0;
-          font-size: 31px;
-          line-height: 1;
-          font-weight: 1000;
-          letter-spacing: -1.3px;
-        }
-
-        .identity-text {
-          margin: 13px 0 0;
-          color: rgba(255,255,255,0.65);
-          font-size: 14.5px;
-          line-height: 1.55;
-        }
-
-        .score-area {
-          display: grid;
-          grid-template-columns: 128px 1fr;
-          gap: 18px;
-          align-items: center;
-          margin-top: 20px;
-        }
-
-        .score-ring {
-          width: 128px;
-          height: 128px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background:
-            conic-gradient(#D4B06A ${averageScore * 3.6}deg, rgba(255,255,255,0.08) 0deg);
-          box-shadow: 0 0 42px rgba(212,176,106,0.12);
-        }
-
-        .score-inner {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          background:
-            radial-gradient(circle at 50% 32%, rgba(212,176,106,0.11), transparent 48%),
-            #030303;
-          display: grid;
-          place-items: center;
-          border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .score-number {
-          font-size: 31px;
-          font-weight: 1000;
-          letter-spacing: -1.2px;
-        }
-
-        .score-number span {
-          color: #D4B06A;
-          font-size: 14px;
-        }
-
-        .score-copy {
-          color: rgba(255,255,255,0.66);
-          font-size: 14px;
-          line-height: 1.5;
-          margin: 0;
-        }
-
-        .score-copy strong {
-          color: #D4B06A;
-        }
-
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 10px;
-          margin-bottom: 16px;
-        }
-
-        .stat-card {
-          min-height: 112px;
-          border-radius: 23px;
-          padding: 15px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-
-        .stat-icon {
-          color: #D4B06A;
-        }
-
-        .stat-label {
-          margin: 10px 0 0;
-          color: rgba(212,176,106,0.86);
-          font-size: 9.5px;
-          letter-spacing: 1.7px;
-          text-transform: uppercase;
-          font-weight: 950;
-          line-height: 1.25;
-        }
-
-        .stat-value {
-          margin: 6px 0 0;
-          font-size: 22px;
-          font-weight: 1000;
-          line-height: 1;
-          letter-spacing: -0.5px;
+          white-space: nowrap;
         }
 
         .section {
           border-radius: 28px;
           padding: 18px;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
 
         .section-head {
           display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 12px;
-          margin-bottom: 16px;
+          align-items: center;
+          gap: 11px;
+          margin-bottom: 15px;
+        }
+
+        .section-icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 14px;
+          display: grid;
+          place-items: center;
+          color: #D4B06A;
+          background: rgba(212,176,106,0.09);
+          border: 1px solid rgba(212,176,106,0.18);
+          flex-shrink: 0;
         }
 
         .section-title {
           margin: 0;
-          color: #D4B06A;
-          font-size: 10.5px;
-          letter-spacing: 2.6px;
-          text-transform: uppercase;
+          font-size: 19px;
+          line-height: 1.1;
           font-weight: 950;
+          letter-spacing: -0.4px;
         }
 
-        .section-main {
-          margin: 6px 0 0;
-          font-size: 22px;
-          line-height: 1.05;
-          font-weight: 1000;
-          letter-spacing: -0.7px;
+        .section-copy {
+          margin: 5px 0 0;
+          color: rgba(255,255,255,0.54);
+          font-size: 12.5px;
+          line-height: 1.4;
         }
 
-        .section-link {
-          color: rgba(255,255,255,0.55);
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          font-size: 12px;
-          font-weight: 800;
-          white-space: nowrap;
-        }
-
-        .info-list {
-          display: grid;
-          gap: 11px;
-        }
+        .info-grid { display: grid; gap: 10px; }
 
         .info-row {
           display: flex;
@@ -482,9 +486,7 @@ export default function ProfilePage() {
           border-bottom: 1px solid rgba(255,255,255,0.07);
         }
 
-        .info-row:last-child {
-          border-bottom: none;
-        }
+        .info-row:last-child { border-bottom: none; }
 
         .info-label {
           color: rgba(255,255,255,0.52);
@@ -497,475 +499,468 @@ export default function ProfilePage() {
           font-size: 13px;
           font-weight: 850;
           text-align: right;
+          word-break: break-word;
         }
 
-        .gold {
-          color: #D4B06A;
-        }
+        .gold { color: #D4B06A; }
+        .green { color: #7DFFA1; }
 
-        .timeline {
-          display: grid;
-          gap: 12px;
-        }
+        .action-list { display: grid; gap: 10px; }
 
-        .timeline-item {
-          display: grid;
-          grid-template-columns: 34px 1fr;
-          gap: 12px;
-          align-items: flex-start;
-        }
-
-        .timeline-dot {
-          width: 34px;
-          height: 34px;
-          border-radius: 13px;
-          display: grid;
-          place-items: center;
-          color: #D4B06A;
-          background: rgba(212,176,106,0.09);
-          border: 1px solid rgba(212,176,106,0.18);
-        }
-
-        .timeline-title {
-          margin: 0;
-          font-size: 14.5px;
-          font-weight: 950;
-          line-height: 1.25;
-        }
-
-        .timeline-date {
-          margin: 5px 0 0;
-          color: rgba(255,255,255,0.48);
-          font-size: 12px;
-          line-height: 1.35;
-        }
-
-        .prescription-card {
-          padding: 15px;
-          border-radius: 20px;
-          background: rgba(212,176,106,0.075);
-          border: 1px solid rgba(212,176,106,0.18);
-        }
-
-        .prescription-title {
-          margin: 0;
-          color: #D4B06A;
-          font-size: 15px;
-          line-height: 1.25;
-          font-weight: 950;
-        }
-
-        .prescription-text {
-          margin: 9px 0 0;
-          color: rgba(255,255,255,0.70);
-          font-size: 13.5px;
-          line-height: 1.48;
-        }
-
-        .action-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-bottom: 16px;
-        }
-
-        .action-card {
-          min-height: 112px;
-          padding: 17px;
-          border-radius: 24px;
+        .setting-action {
+          width: 100%;
+          min-height: 58px;
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 18px;
+          padding: 13px 14px;
+          background: rgba(255,255,255,0.035);
           color: white;
           text-decoration: none;
           display: flex;
-          flex-direction: column;
+          align-items: center;
           justify-content: space-between;
+          gap: 12px;
+          cursor: pointer;
+          text-align: left;
+          font-family: inherit;
         }
 
-        .action-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
+        .setting-action:hover {
+          border-color: rgba(212,176,106,0.22);
+          background: rgba(212,176,106,0.055);
         }
+
+        .setting-action.danger-action:hover {
+          border-color: rgba(255,104,104,0.28);
+          background: rgba(255,104,104,0.07);
+        }
+
+        .action-left { display: flex; align-items: center; gap: 12px; }
 
         .action-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 12px;
+          display: grid;
+          place-items: center;
+          background: rgba(0,0,0,0.30);
+          border: 1px solid rgba(255,255,255,0.08);
           color: #D4B06A;
+          flex-shrink: 0;
         }
 
-        .arrow {
-          color: rgba(255,255,255,0.34);
-        }
-
-        .action-label {
-          color: rgba(212,176,106,0.84);
-          font-size: 10px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          margin: 0 0 8px;
-          font-weight: 950;
-        }
+        .danger-action .action-icon { color: #ff6868; }
 
         .action-title {
           margin: 0;
-          font-size: 18px;
-          line-height: 1.12;
-          font-weight: 950;
+          font-size: 14px;
+          line-height: 1.15;
+          font-weight: 900;
+        }
+
+        .action-subtitle {
+          margin: 5px 0 0;
+          color: rgba(255,255,255,0.48);
+          font-size: 12px;
+          line-height: 1.3;
+        }
+
+        .founder-card {
+          border-color: rgba(212,176,106,0.30);
+          background:
+            radial-gradient(circle at 80% 12%, rgba(212,176,106,0.14), transparent 32%),
+            linear-gradient(145deg, rgba(212,176,106,0.10), rgba(255,255,255,0.018)),
+            rgba(12,12,12,0.96);
+        }
+
+        .founder-text {
+          margin: 0;
+          color: rgba(255,255,255,0.78);
+          font-size: 14px;
+          line-height: 1.58;
+          font-weight: 650;
+        }
+
+        .founder-text strong { color: #D4B06A; }
+
+        .message {
+          margin: 0 0 14px;
+          padding: 13px 14px;
+          border-radius: 16px;
+          background: rgba(212,176,106,0.09);
+          border: 1px solid rgba(212,176,106,0.18);
+          color: rgba(255,255,255,0.78);
+          font-size: 13px;
+          line-height: 1.4;
+          font-weight: 700;
         }
 
         .quote-card {
-          padding: 24px;
           border-radius: 30px;
-          margin-top: 4px;
+          padding: 26px;
+          margin-top: 18px;
           text-align: center;
+          border-color: rgba(212,176,106,0.22);
           background:
             radial-gradient(circle at 50% 0%, rgba(212,176,106,0.12), transparent 36%),
             rgba(10,10,10,0.96);
-          border: 1px solid rgba(212,176,106,0.22);
-          box-shadow: 0 22px 70px rgba(0,0,0,0.58);
         }
 
         .quote-card h2 {
           margin: 0;
-          font-size: 29px;
-          line-height: 1;
+          font-size: 34px;
+          line-height: .98;
           font-weight: 1000;
-          letter-spacing: -1.4px;
+          letter-spacing: -1.8px;
         }
 
-        .quote-card span {
+        .quote-card h2 span {
           display: block;
           color: #D4B06A;
         }
 
         .quote-card p {
-          margin: 14px 0 0;
+          margin: 18px 0 0;
           color: rgba(255,255,255,0.54);
           font-size: 13px;
-          line-height: 1.45;
+          line-height: 1.5;
+        }
+
+        .footer-brand {
+          margin: 30px 0 0;
+          text-align: center;
+          color: #D4B06A;
+          letter-spacing: 8px;
+          font-size: 13px;
+          font-weight: 950;
+        }
+
+
+
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.76);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 18px;
+          z-index: 100;
+        }
+
+        .modal-card {
+          width: 100%;
+          max-width: 430px;
+          border-radius: 30px;
+          padding: 22px;
+          border-color: rgba(212,176,106,0.24);
+        }
+
+        .modal-title {
+          margin: 0;
+          font-size: 28px;
+          line-height: 1;
+          font-weight: 1000;
+          letter-spacing: -1.2px;
+        }
+
+        .modal-title span { color: #D4B06A; }
+
+        .modal-text {
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.58;
+          margin: 14px 0 0;
+        }
+
+        .modal-list {
+          margin: 16px 0;
+          padding: 15px;
+          border-radius: 18px;
+          background: rgba(212,176,106,0.07);
+          border: 1px solid rgba(212,176,106,0.16);
+          display: grid;
+          gap: 8px;
+          color: rgba(255,255,255,0.80);
+          font-size: 13.5px;
+          line-height: 1.35;
+          font-weight: 700;
+        }
+
+        .modal-list span { color: #D4B06A; margin-right: 6px; }
+
+        .modal-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: 18px;
+        }
+
+        .modal-button {
+          min-height: 50px;
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(255,255,255,0.05);
+          color: white;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .modal-button.gold {
+          border: none;
+          background: linear-gradient(95deg, #9d742f, #d6b25f 52%, #fff2b8);
+          color: #000;
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         @media(max-width: 390px) {
-          .profile-page {
-            padding-left: 14px;
-            padding-right: 14px;
-          }
-
-          .name {
-            font-size: 28px;
-          }
-
-          .avatar {
-            width: 66px;
-            height: 66px;
-            border-radius: 22px;
-          }
-
-          .score-area {
-            grid-template-columns: 1fr;
-          }
-
-          .score-ring {
-            margin: 0 auto;
-          }
-
-          .stats-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-          }
-
-          .stat-card {
-            min-height: 104px;
-            padding: 13px;
-          }
-
-          .stat-value {
-            font-size: 20px;
-          }
-
-          .action-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-          }
-
-          .action-card {
-            min-height: 108px;
-            padding: 15px;
-          }
-
-          .action-title {
-            font-size: 16px;
-          }
+          .settings-page { padding-left: 14px; padding-right: 14px; }
+          .title { font-size: 38px; }
+          .avatar { width: 52px; height: 52px; border-radius: 18px; }
+          .account-name { font-size: 22px; }
+          .section { padding: 16px; border-radius: 26px; }
+          .quote-card h2 { font-size: 30px; }
         }
       `}</style>
 
       <div className="page">
         <div className="topbar">
-          <p className="brand">PRIME</p>
-
-          <button
-            type="button"
-            className="settings-button"
-            onClick={() => router.push("/settings")}
-            aria-label="Ouvrir les paramètres"
-          >
-            <Settings size={22} />
+          <button className="back-button" type="button" onClick={() => router.push("/profile")} aria-label="Retour au profil">
+            <ArrowLeft size={21} />
           </button>
+
+          <p className="brand">PRIME</p>
+          <div style={{ width: 44 }} />
         </div>
 
-        <section className="hero-card">
-          <div className="profile-head">
-            <div className="avatar">
-              {displayName?.charAt(0)?.toUpperCase() || "P"}
-            </div>
+        <section className="hero">
+          <div className="eyebrow">Paramètres</div>
+          <h1 className="title">Ton espace<span>compte.</span></h1>
+          <p className="subtitle">Gère ton accès, ton abonnement, tes données et les informations légales de PRIME.</p>
+        </section>
 
+        {message && <p className="message">{message}</p>}
+
+        <section className="status-card">
+          <div className="status-top">
+            <div className="avatar">{displayName?.charAt(0)?.toUpperCase() || "P"}</div>
             <div style={{ flex: 1 }}>
-              <h1 className="name">{displayName}</h1>
-              <p className="email">{email}</p>
+              <h2 className="account-name">{displayName}</h2>
+              <p className="account-email">{email}</p>
             </div>
-          </div>
-
-          <div className="badge-row">
-            <div className="badge">{accountLabel}</div>
-            <div className="badge dark">{subscriptionLabel}</div>
+            <div className="pill">{accountLabel}</div>
           </div>
         </section>
 
-        <section className="identity-card">
-          <p className="label">Identité PRIME</p>
+        <section className="section">
+          <SectionHead icon={<User size={21} />} title="Mon compte" subtitle="Informations principales et sécurité." />
+          <div className="info-grid">
+            <InfoRow label="Nom" value={displayName} />
+            <InfoRow label="Email" value={email} />
+            <InfoRow label="Rôle" value={accountLabel} />
+          </div>
 
-          <h2 className="identity-title">{profileName}</h2>
+          <div className="action-list" style={{ marginTop: 14 }}>
+            <SettingAction icon={<User size={18} />} title="Modifier mon profil" subtitle="Nom affiché et informations personnelles." onClick={() => router.push("/profile")} />
+            <SettingAction icon={<Lock size={18} />} title="Changer mon mot de passe" subtitle="Recevoir un lien sécurisé par email." onClick={handlePasswordReset} />
+            <SettingAction icon={<LogOut size={18} />} title="Déconnexion" subtitle="Quitter ton compte PRIME." onClick={handleLogout} />
+          </div>
+        </section>
 
-          <p className="identity-text">
-            Ton profil évolue avec tes sessions. PRIME observe tes décisions,
-            tes répétitions et ta capacité à respecter ton cadre.
-          </p>
+        <section className="section">
+          <SectionHead icon={<Wallet size={21} />} title="Mon abonnement" subtitle="Offre actuelle et statut d’accès." />
+          <div className="info-grid">
+            <InfoRow label="Offre" value={planLabel} highlight />
+            <InfoRow label="Statut" value={statusLabel} success={subscriptionStatus === "active" || role === "super_admin"} />
+            <InfoRow
+              label="Facturation"
+              value={
+                role === "super_admin"
+                  ? "Bypass admin"
+                  : plan === "founder"
+                  ? "9,99€/mois"
+                  : plan === "standard"
+                  ? "24,99€/mois"
+                  : "Non configurée"
+              }
+            />
+          </div>
 
-          <div className="score-area">
-            <div className="score-ring">
-              <div className="score-inner">
-                <div className="score-number">
-                  {averageScore}<span>%</span>
-                </div>
-              </div>
-            </div>
+          <div className="action-list" style={{ marginTop: 14 }}>
+            <SettingAction icon={<Wallet size={18} />} title="Gérer mon abonnement" subtitle="Sera relié au portail Stripe après intégration." onClick={() => handleComingSoon("Gestion de l’abonnement")} />
+          </div>
+        </section>
 
-            <p className="score-copy">
-              Niveau : <strong>{primeLevel}</strong>
-              <br />
-              Force dominante : <strong>{dominantStrength}</strong>
-              <br />
-              À surveiller : <strong>{watchPoint}</strong>
+        {(plan === "founder" || role === "super_admin") && (
+          <section className="section founder-card">
+            <SectionHead icon={<Crown size={21} />} title={role === "super_admin" ? "Accès Super Admin" : "Founder"} subtitle="Accès privilégié PRIME." />
+            <p className="founder-text">
+              <strong>Merci de faire partie des premiers accès PRIME.</strong>
+              <br /><br />
+              Les Founder participent directement à l’évolution du produit. Tes retours auront un impact concret sur les prochaines fonctionnalités.
             </p>
-          </div>
-        </section>
+            <div className="action-list" style={{ marginTop: 16 }}>
+              <SettingAction icon={<Mail size={18} />} title="Envoyer un feedback" subtitle="Partager une idée, un bug ou une amélioration." href="mailto:support@theprimeapp.com?subject=Feedback%20Founder%20PRIME" />
+            </div>
+          </section>
+        )}
 
-        <section className="stats-grid">
-          <StatCard icon={<BarChart3 size={23} />} label="Score max" value={`${bestScore}%`} />
-          <StatCard icon={<BookOpen size={23} />} label="Sessions" value={sessions.length} />
-          <StatCard icon={<Award size={23} />} label="Niveau" value={primeLevel} />
+        <section className="section">
+          <SectionHead icon={<Database size={21} />} title="Mes données" subtitle="Contrôle, export et nouvelle progression PRIME." />
+          <div className="action-list">
+            <SettingAction
+              icon={<Download size={18} />}
+              title={exporting ? "Export en cours..." : "Exporter mes données"}
+              subtitle="Télécharge profil, sessions, identité, prescriptions et saisons au format JSON."
+              onClick={handleExportData}
+            />
+
+            <SettingAction
+              icon={<RefreshCcw size={18} />}
+              title="Nouvelle Saison PRIME"
+              subtitle="Commence une nouvelle progression tout en conservant ton historique."
+              onClick={() => setShowSeasonConfirm(true)}
+            />
+
+            <SettingAction icon={<Trash2 size={18} />} title="Supprimer mon compte" subtitle="Suppression définitive. Confirmation obligatoire." danger onClick={() => handleComingSoon("Suppression du compte")} />
+          </div>
         </section>
 
         <section className="section">
-          <div className="section-head">
-            <div>
-              <p className="section-title">Structure comportementale</p>
-              <h2 className="section-main">Ce que PRIME lit chez toi</h2>
-            </div>
-          </div>
-
-          <div className="info-list">
-            <InfoRow label="Profil actuel" value={profileName} highlight />
-            <InfoRow label="Force dominante" value={dominantStrength} />
-            <InfoRow label="Point de vigilance" value={watchPoint} />
-            <InfoRow label="Sessions analysées" value={sessions.length} />
-            <InfoRow label="Score moyen" value={`${averageScore}%`} highlight />
+          <SectionHead icon={<FileText size={21} />} title="Légal" subtitle="Documents nécessaires avant le lancement officiel." />
+          <div className="action-list">
+            <SettingAction icon={<BookOpen size={18} />} title="CGU / CGV" subtitle="Conditions d’utilisation et de vente." onClick={() => router.push("/legal/terms")} />
+            <SettingAction icon={<Shield size={18} />} title="Politique de confidentialité" subtitle="Traitement des données et RGPD." onClick={() => router.push("/legal/privacy")} />
+            <SettingAction icon={<FileText size={18} />} title="Mentions légales" subtitle="Informations légales de l’éditeur." onClick={() => router.push("/legal/mentions")} />
           </div>
         </section>
 
         <section className="section">
-          <div className="section-head">
-            <div>
-              <p className="section-title">Prescription</p>
-              <h2 className="section-main">
-                {activePrescription ? "Plan actif" : "Aucun plan actif"}
-              </h2>
-            </div>
-
-            <Link href="/coach" className="section-link">
-              Coach <ChevronRight size={15} />
-            </Link>
+          <SectionHead icon={<LifeBuoy size={21} />} title="Support" subtitle="Aide, bugs et contact." />
+          <div className="action-list">
+            <SettingAction icon={<HelpCircle size={18} />} title="Centre d’aide" subtitle="FAQ et réponses aux questions fréquentes." onClick={() => router.push("/help")} />
+            <SettingAction icon={<Bug size={18} />} title="Signaler un bug" subtitle="Préparer un retour clair pour l’équipe PRIME." href="mailto:support@theprimeapp.com?subject=Bug%20PRIME" />
+            <SettingAction icon={<Mail size={18} />} title="Contacter PRIME" subtitle="support@theprimeapp.com" href="mailto:support@theprimeapp.com" />
           </div>
-
-          {activePrescription ? (
-            <div className="prescription-card">
-              <p className="prescription-title">
-                {activePrescription.title || "Prescription PRIME"}
-              </p>
-              <p className="prescription-text">
-                {activePrescription.rule ||
-                  activePrescription.description ||
-                  "Suis cette prescription jusqu’au bout pour stabiliser ton comportement."}
-              </p>
-            </div>
-          ) : (
-            <p className="identity-text">
-              PRIME activera une prescription lorsqu’un pattern suffisamment clair sera détecté.
-            </p>
-          )}
         </section>
 
         <section className="section">
-          <div className="section-head">
-            <div>
-              <p className="section-title">Historique Identity</p>
-              <h2 className="section-main">Ton évolution récente</h2>
-            </div>
-
-            <Link href="/onboarding" className="section-link">
-              Modifier <ChevronRight size={15} />
-            </Link>
+          <SectionHead icon={<Sparkles size={21} />} title="À propos" subtitle="Version et identité de l’application." />
+          <div className="info-grid">
+            <InfoRow label="Application" value="PRIME" highlight />
+            <InfoRow label="Version" value="v1.0 Founder Edition" />
+            <InfoRow label="Mission" value="Construire des traders disciplinés." />
           </div>
-
-          <div className="timeline">
-            {identityHistory.length > 0 ? (
-              identityHistory.slice(0, 5).map((item, index) => (
-                <div className="timeline-item" key={item.id || index}>
-                  <div className="timeline-dot">
-                    {index === 0 ? <Sparkles size={17} /> : <CalendarDays size={17} />}
-                  </div>
-
-                  <div>
-                    <p className="timeline-title">
-                      {item.profile || "Trader en construction"}
-                    </p>
-                    <p className="timeline-date">
-                      Score moyen : {item.discipline_average || 0}% ·{" "}
-                      {formatDate(item.created_at)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="identity-text">
-                Ton historique d’identité PRIME apparaîtra ici après tes premières sessions.
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="action-grid">
-          <ActionCard href="/session" icon={<Target size={23} />} label="Session" title="Trader avec cadre" />
-          <ActionCard href="/journal" icon={<BookOpen size={23} />} label="Journal" title="Lire l’historique" />
-          <ActionCard href="/coach" icon={<Brain size={23} />} label="Coach" title="Analyser mes patterns" />
-          <ActionCard href="/settings" icon={<Settings size={23} />} label="Compte" title="Ouvrir Settings" />
         </section>
 
         <section className="quote-card">
-          <h2>
-            Ce que tu répètes
-            <span>te définit.</span>
-          </h2>
-
-          <p>
-            PRIME ne suit pas seulement tes résultats.
-            <br />
-            PRIME suit le trader que tu deviens.
-          </p>
+          <h2>La discipline<span>n’est pas un talent.</span></h2>
+          <p>C’est une décision que tu prends chaque jour.<br />PRIME est là pour te la rappeler.</p>
         </section>
+
+        <p className="footer-brand">PRIME.</p>
       </div>
+
+
+      {showSeasonConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-card">
+            <h2 className="modal-title">
+              Nouvelle <span>Saison PRIME ?</span>
+            </h2>
+
+            <p className="modal-text">
+              Ton historique sera conservé. PRIME ouvrira simplement un nouveau chapitre de progression.
+            </p>
+
+            <div className="modal-list">
+              <div><span>✓</span>Les anciennes sessions restent archivées.</div>
+              <div><span>✓</span>Les prescriptions actives seront archivées.</div>
+              <div><span>✓</span>Ta nouvelle saison repart d’une base propre.</div>
+              <div><span>✓</span>Ton évolution restera lisible dans le temps.</div>
+            </div>
+
+            <p className="modal-text">
+              Chaque grand trader repart un jour de zéro. PRIME conserve ton passé, mais t’offre une nouvelle progression.
+            </p>
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="modal-button"
+                onClick={() => setShowSeasonConfirm(false)}
+              >
+                Annuler
+              </button>
+
+              <button
+                type="button"
+                className="modal-button gold"
+                onClick={handleStartNewSeason}
+                disabled={seasonLoading}
+              >
+                {seasonLoading ? "Création..." : "Recommencer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav active="Profil" />
     </main>
   );
 }
 
-function StatCard({ icon, label, value }) {
+function SectionHead({ icon, title, subtitle }) {
   return (
-    <div className="stat-card">
-      <div className="stat-icon">{icon}</div>
+    <div className="section-head">
+      <div className="section-icon">{icon}</div>
       <div>
-        <p className="stat-label">{label}</p>
-        <p className="stat-value">{value}</p>
+        <h2 className="section-title">{title}</h2>
+        <p className="section-copy">{subtitle}</p>
       </div>
     </div>
   );
 }
 
-function InfoRow({ label, value, highlight }) {
+function InfoRow({ label, value, highlight, success }) {
   return (
     <div className="info-row">
       <span className="info-label">{label}</span>
-      <span className={`info-value ${highlight ? "gold" : ""}`}>
+      <span className={`info-value ${highlight ? "gold" : ""} ${success ? "green" : ""}`}>
         {value || "Non renseigné"}
       </span>
     </div>
   );
 }
 
-function ActionCard({ href, icon, label, title }) {
-  return (
-    <Link href={href} className="action-card">
-      <div className="action-top">
+function SettingAction({ icon, title, subtitle, href, onClick, danger }) {
+  const content = (
+    <>
+      <div className="action-left">
         <div className="action-icon">{icon}</div>
-        <ChevronRight size={18} className="arrow" />
+        <div>
+          <p className="action-title">{title}</p>
+          <p className="action-subtitle">{subtitle}</p>
+        </div>
       </div>
+      <ChevronRight size={18} color={danger ? "#ff6868" : "rgba(255,255,255,0.36)"} />
+    </>
+  );
 
-      <div>
-        <p className="action-label">{label}</p>
-        <h3 className="action-title">{title}</h3>
-      </div>
-    </Link>
+  if (href) {
+    return <a className={`setting-action ${danger ? "danger-action" : ""}`} href={href}>{content}</a>;
+  }
+
+  return (
+    <button type="button" className={`setting-action ${danger ? "danger-action" : ""}`} onClick={onClick}>
+      {content}
+    </button>
   );
 }
-
-function getAccountLabel(role, plan) {
-  if (role === "super_admin") return "Super Admin";
-  if (plan === "founder") return "Founder";
-  if (plan === "standard") return "Standard";
-  return "Compte PRIME";
-}
-
-function getSubscriptionLabel(role, status) {
-  if (role === "super_admin") return "Accès total";
-  if (status === "active") return "Abonnement actif";
-  if (status === "trialing") return "Essai gratuit";
-  if (status === "past_due") return "Paiement à vérifier";
-  if (status === "canceled") return "Résilié";
-  return "Accès en préparation";
-}
-
-function getPrimeLevel(score, count) {
-  if (count < 5) return "En construction";
-  if (score >= 85) return "Consistant";
-  if (score >= 70) return "Confirmé";
-  if (score >= 55) return "Intermédiaire";
-  return "À stabiliser";
-}
-
-function getProfileStrength(profile) {
-  if (profile.includes("Patient")) return "Attente";
-  if (profile.includes("Impulsif")) return "Énergie";
-  if (profile.includes("FOMO")) return "Réactivité";
-  if (profile.includes("Agressif")) return "Décision";
-  if (profile.includes("Désorganisé")) return "Adaptabilité";
-  return "Construction";
-}
-
-function getProfileWeakness(profile) {
-  if (profile.includes("Patient")) return "Excès de confiance";
-  if (profile.includes("Impulsif")) return "Entrées trop rapides";
-  if (profile.includes("FOMO")) return "Peur de rater";
-  if (profile.includes("Agressif")) return "Risque excessif";
-  if (profile.includes("Désorganisé")) return "Manque de structure";
-  return "Manque de données";
-}
-
-function formatDate(value) {
-  if (!value) return "Date inconnue";
-
-  return new Date(value).toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 
