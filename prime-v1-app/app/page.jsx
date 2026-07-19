@@ -50,11 +50,22 @@ export default function HomePage() {
       return;
     }
 
-    const { data: profileData } = await supabase
+   const { data: profileData, error: profileError } = await supabase
   .from("profiles")
-  .select("display_name, role, plan, subscription_status")
-  .eq("email", user.email)
+  .select("display_name, role")
+  .eq("id", user.id)
   .maybeSingle();
+
+if (profileError) {
+  console.error("Erreur chargement profil :", profileError);
+}
+
+if (profileData?.display_name) {
+  setDisplayName(profileData.display_name);
+}
+
+const isSuperAdmin = profileData?.role === "super_admin";
+const hasActiveSubscription = true;
 
 if (profileData?.display_name) {
   setDisplayName(profileData.display_name);
