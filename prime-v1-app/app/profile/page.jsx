@@ -49,11 +49,15 @@ export default function ProfilePage() {
 
     setEmail(user.email || "");
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("display_name, role, plan, subscription_status")
-      .eq("email", user.email)
-      .maybeSingle();
+const { data: profileData, error: profileError } = await supabase
+  .from("profiles")
+  .select("display_name, role, plan, subscription_status")
+  .eq("id", user.id)
+  .maybeSingle();
+
+if (profileError) {
+  console.error("Erreur chargement profil :", profileError);
+}
 
     if (profileData?.display_name) setDisplayName(profileData.display_name);
     if (profileData?.role) setRole(profileData.role);
