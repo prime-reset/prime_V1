@@ -58,9 +58,9 @@ const { data: profileData, error: profileError } = await supabase
 if (profileError) {
   console.error("Erreur chargement profil :", profileError);
 }
-    if (profileData?.display_name) setDisplayName(profileData.display_name);
-    if (profileData?.role) setRole(profileData.role);
-    }
+
+if (profileData?.display_name) setDisplayName(profileData.display_name);
+if (profileData?.role) setRole(profileData.role);
 
     const { data: identityData } = await supabase
       .from("prime_identity_history")
