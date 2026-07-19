@@ -51,19 +51,15 @@ export default function ProfilePage() {
 
 const { data: profileData, error: profileError } = await supabase
   .from("profiles")
-  .select("display_name, role, plan, subscription_status")
+  .select("display_name, role")
   .eq("id", user.id)
   .maybeSingle();
 
 if (profileError) {
   console.error("Erreur chargement profil :", profileError);
 }
-
     if (profileData?.display_name) setDisplayName(profileData.display_name);
     if (profileData?.role) setRole(profileData.role);
-    if (profileData?.plan) setPlan(profileData.plan);
-    if (profileData?.subscription_status) {
-      setSubscriptionStatus(profileData.subscription_status);
     }
 
     const { data: identityData } = await supabase
