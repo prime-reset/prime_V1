@@ -67,10 +67,6 @@ if (profileData?.display_name) {
 const isSuperAdmin = profileData?.role === "super_admin";
 const hasActiveSubscription = true;
 
-if (profileData?.display_name) {
-  setDisplayName(profileData.display_name);
-}
-
 const isSuperAdmin = profileData?.role === "super_admin";
 const hasActiveSubscription =
   profileData?.subscription_status === "active" ||
