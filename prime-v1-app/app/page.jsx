@@ -67,11 +67,6 @@ if (profileData?.display_name) {
 const isSuperAdmin = profileData?.role === "super_admin";
 const hasActiveSubscription = true;
 
-const isSuperAdmin = profileData?.role === "super_admin";
-const hasActiveSubscription =
-  profileData?.subscription_status === "active" ||
-  profileData?.subscription_status === "trialing";
-
 const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
     // À activer au moment de Stripe :
 // if (!canAccessPrime) {
