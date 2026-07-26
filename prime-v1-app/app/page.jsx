@@ -99,14 +99,19 @@ const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
       setSessions(sessionsData);
       setSessionsCount(sessionsData.length);
 
-      const scores = sessionsData
-        .map((s) => Number(s.discipline_score))
-        .filter((score) => !Number.isNaN(score));
+    const scores = sessionsData
+  .map((session) => Number(session.discipline_score))
+  .filter((score) => !Number.isNaN(score));
 
-      if (!identityData && scores.length > 0) {
-        const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-        setAverageScore(avg);
-      }
+if (scores.length > 0) {
+  const avg = Math.round(
+    scores.reduce((total, score) => total + score, 0) / scores.length
+  );
+
+  setAverageScore(avg);
+} else {
+  setAverageScore(0);
+}
 
       setRisk(getRiskFromSessions(sessionsData));
     }
@@ -1203,8 +1208,8 @@ function DisciplineTradingChart({ data, score }) {
   const paddingRight = 26;
   const paddingTop = 28;
   const paddingBottom = 30;
-  const minY = 40;
-  const maxY = 100;
+  const minY = 0;
+const maxY = 100;
   
   const expanded = data;
   const plotWidth = width - paddingLeft - paddingRight;
@@ -1232,7 +1237,7 @@ function DisciplineTradingChart({ data, score }) {
       </div>
 
       <svg className="chart-svg" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-        {[50, 60, 70, 80, 90, 100].map((level) => (
+        {[0, 20, 40, 60, 70, 80, 100].map((level) => (
           <g key={level}>
             <text
               x="4"
@@ -1337,7 +1342,7 @@ function expandChartData(data, currentScore) {
   const base = data && data.length > 0 ? data : [];
   const closes = base
     .map((item) => Number(item.close || 0))
-    .filter((value) => !Number.isNaN(value) && value > 0);
+    .filter((value) => !Number.isNaN(value) && value >= 0);
 
   const anchors = closes.length > 0
     ? closes
