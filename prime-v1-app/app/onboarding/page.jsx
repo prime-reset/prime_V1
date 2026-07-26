@@ -222,16 +222,131 @@ export default function PrimeIdentityPage() {
       error = response.error;
     }
 
+   if (error) {
+  setSaving(false);
+  alert("Profil généré, mais erreur Supabase : " + error.message);
+  return;
+}
+
+/*
+ * Récupère la dernière identité enregistrée afin de ne créer
+ * une nouvelle étape que lorsque le profil PRIME change réellement.
+ */
+const { data: previousIdentity, error: previousIdentityError } =
+  await supabase
+    .from("prime_identity_history")
+    .select("profile")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+if (previousIdentityError) {
+  console.error(
+    "Erreur lecture historique Identity :",
+    previousIdentityError
+  );
+}
+
+const identityHasChanged =
+  !previousIdentity ||
+  previousIdentity.profile !== detectedProfile;
+
+if (identityHasChanged) {
+  /*
+   * Récupère les sessions déjà clôturées pour enregistrer
+   * l’état réel du trader au moment du changement d’identité.
+   */
+  const { data: sessionsData, error: sessionsError } =
+    await supabase
+      .from("sessions")
+      .select("discipline_score, dominant_error")
+      .eq("user_id", user.id)
+      .eq("status", "closed");
+
+  if (sessionsError) {
+    console.error(
+      "Erreur lecture sessions Identity :",
+      sessionsError
+    );
+  }
+
+  const validSessions = sessionsData || [];
+
+  const scores = validSessions
+    .map((session) => Number(session.discipline_score))
+    .filter((score) => Number.isFinite(score));
+
+  const disciplineAverage =
+    scores.length > 0
+      ? Math.round(
+          scores.reduce((sum, score) => sum + score, 0) /
+            scores.length
+        )
+      : 0;
+
+  const errors = validSessions
+    .map((session) => session.dominant_error)
+    .filter(Boolean);
+
+  const dominantError =
+    errors.length > 0
+      ? errors.reduce((mostFrequent, currentError) => {
+          const currentCount = errors.filter(
+            (errorName) => errorName === currentError
+          ).length;
+
+          const mostFrequentCount = errors.filter(
+            (errorName) => errorName === mostFrequent
+          ).length;
+
+          return currentCount > mostFrequentCount
+            ? currentError
+            : mostFrequent;
+        }, errors[0])
+      : null;
+
+  const { error: identityHistoryError } = await supabase
+    .from("prime_identity_history")
+    .insert([
+      {
+        user_id: user.id,
+        profile: detectedProfile,
+        confidence_score: disciplineAverage,
+        previous_profile: previousIdentity?.profile || null,
+        progression: disciplineAverage,
+        total_sessions: validSessions.length,
+        discipline_average: disciplineAverage,
+        dominant_error: dominantError,
+      },
+    ]);
+
+  if (identityHistoryError) {
     setSaving(false);
 
-    if (error) {
-      alert("Profil généré, mais erreur Supabase : " + error.message);
-      return;
-    }
+    console.error(
+      "Erreur sauvegarde historique Identity :",
+      identityHistoryError
+    );
 
-    alert("Profil PRIME sauvegardé.");
-  };
+    alert(
+      "Le profil a été sauvegardé, mais l’historique Identity n’a pas pu être créé : " +
+        identityHistoryError.message
+    );
 
+    return;
+  }
+}
+
+setSaving(false);
+
+if (identityHasChanged) {
+  alert(
+    "Profil PRIME sauvegardé et nouvelle identité ajoutée à ton évolution."
+  );
+} else {
+  alert("Profil PRIME sauvegardé.");
+}
   return (
     <main className="identity-page">
       <style>{`
