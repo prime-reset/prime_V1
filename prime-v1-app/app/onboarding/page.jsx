@@ -347,6 +347,7 @@ if (identityHasChanged) {
 } else {
   alert("Profil PRIME sauvegardé.");
 }
+  };
   return (
     <main className="identity-page">
       <style>{`
