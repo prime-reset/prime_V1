@@ -163,9 +163,10 @@ const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
   const prescriptionPercent = activePrescription
     ? Math.min(Math.round((prescriptionProgress / prescriptionDuration) * 100), 100)
     : 0;
-console.log("Sessions :", sessions.length);
-console.log("ChartData :", chartData);
+
  const chartData = getDisciplineChartData(sessions);
+  console.log("Sessions :", sessions.length);
+console.log("ChartData :", chartData);
   const structure = getBehaviorStructure(chartData);
   const scoreTrend = getScoreTrend(chartData);
 
@@ -1204,8 +1205,8 @@ function DisciplineTradingChart({ data, score }) {
   const paddingBottom = 30;
   const minY = 40;
   const maxY = 100;
-
-  const expanded = expandChartData(data, score);
+  
+  const expanded = data;
   const plotWidth = width - paddingLeft - paddingRight;
   const plotHeight = height - paddingTop - paddingBottom;
   const xStep = plotWidth / Math.max(expanded.length - 1, 1);
