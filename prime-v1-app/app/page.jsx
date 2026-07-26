@@ -164,7 +164,7 @@ const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
     ? Math.min(Math.round((prescriptionProgress / prescriptionDuration) * 100), 100)
     : 0;
 
-  const chartData = getDisciplineChartData(sessions, averageScore);
+ const chartData = getDisciplineChartData(sessions);
   const structure = getBehaviorStructure(chartData);
   const scoreTrend = getScoreTrend(chartData);
 
@@ -1000,7 +1000,27 @@ const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
             <div className="range-pill">7 dernières sessions</div>
           </div>
 
-          <DisciplineTradingChart data={chartData} score={averageScore} />
+         {chartData.length > 0 ? (
+  <DisciplineTradingChart data={chartData} score={averageScore} />
+) : (
+  <div className="chart-wrap">
+    <div
+      style={{
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "30px",
+        textAlign: "center",
+        color: "rgba(255,255,255,0.58)",
+        fontSize: "14px",
+        lineHeight: "1.5",
+      }}
+    >
+      Tes premières données apparaîtront après ta première session.
+    </div>
+  </div>
+)}
 
           <div className="structure-box">
             <div className="structure-icon">
@@ -1485,25 +1505,28 @@ function getRiskFromSessions(sessions) {
   };
 }
 
-function getDisciplineChartData(sessions, averageScore) {
-  const recent = sessions
+function getDisciplineChartData(sessions) {
+  const scores = sessions
     .slice(0, 7)
     .reverse()
-    .map((session) => Number(session.discipline_score || 0))
+    .map((session) => Number(session.discipline_score))
     .filter((score) => !Number.isNaN(score) && score > 0);
 
-  const scores = recent.length > 0
-    ? recent
-    : [52, 57, 63, 61, 70, 76, averageScore || 69];
+  if (scores.length === 0) {
+    return [];
+  }
 
   return scores.map((score, index) => {
-    const previous = index === 0 ? Math.max(score - 3, 40) : scores[index - 1];
+    const previous = index === 0 ? score : scores[index - 1];
     const open = previous;
     const close = score;
     const high = Math.min(Math.max(open, close) + 3, 100);
-    const low = Math.max(Math.min(open, close) - 3, 40);
+    const low = Math.max(Math.min(open, close) - 3, 0);
+
     const slice = scores.slice(Math.max(0, index - 2), index + 1);
-    const ma = Math.round(slice.reduce((a, b) => a + b, 0) / slice.length);
+    const ma = Math.round(
+      slice.reduce((total, value) => total + value, 0) / slice.length
+    );
 
     return {
       label: `S${index + 1}`,
@@ -1515,7 +1538,6 @@ function getDisciplineChartData(sessions, averageScore) {
     };
   });
 }
-
 function getScoreTrend(data) {
   if (!data || data.length < 2) {
     return { value: 0, label: "depuis la dernière session" };
