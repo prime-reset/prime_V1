@@ -163,7 +163,8 @@ const canAccessPrime = isSuperAdmin || hasActiveSubscription || true;
   const prescriptionPercent = activePrescription
     ? Math.min(Math.round((prescriptionProgress / prescriptionDuration) * 100), 100)
     : 0;
-
+console.log("Sessions :", sessions.length);
+console.log("ChartData :", chartData);
  const chartData = getDisciplineChartData(sessions);
   const structure = getBehaviorStructure(chartData);
   const scoreTrend = getScoreTrend(chartData);
