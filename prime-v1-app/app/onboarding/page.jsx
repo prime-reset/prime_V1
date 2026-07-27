@@ -37,23 +37,35 @@ export default function PrimeIdentityPage() {
     loadDisplayName();
   }, []);
 
-  const loadDisplayName = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+ const loadDisplayName = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (!user?.email) return;
+  if (!user) return;
 
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("email", user.email)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("display_name, answers, detected_profile")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    if (data?.display_name) {
-      setDisplayName(data.display_name);
-    }
-  };
+  if (error) {
+    console.error("Erreur chargement Identity :", error);
+    return;
+  }
+
+  if (data?.display_name) {
+    setDisplayName(data.display_name);
+  }
+
+  if (data?.answers) {
+    setProfile((previousProfile) => ({
+      ...previousProfile,
+      ...data.answers,
+    }));
+  }
+};
 
   const updateField = (field, value) => {
     setProfile((prev) => ({
@@ -187,13 +199,28 @@ export default function PrimeIdentityPage() {
       return;
     }
 
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", user.email)
-      .maybeSingle();
+    const { data: existingProfile, error: existingProfileError } =
+  await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+if (existingProfileError) {
+  setSaving(false);
+  console.error(
+    "Erreur recherche profil existant :",
+    existingProfileError
+  );
+  alert(
+    "Impossible de retrouver ton profil : " +
+      existingProfileError.message
+  );
+  return;
+}
 
     const payload = {
+      id: user.id,
       email: user.email,
       display_name: displayName,
       detected_profile: detectedProfile,
