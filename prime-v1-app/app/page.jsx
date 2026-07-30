@@ -338,7 +338,7 @@ console.log("ChartData :", chartData);
           color: rgba(212,176,106,0.92);
           font-size: 10.5px;
           font-weight: 950;
-          letter-spacing: 3.2px;
+              letter-spacing: 3.2px;
           text-transform: uppercase;
           margin: 0 0 13px;
         }
@@ -678,7 +678,7 @@ console.log("ChartData :", chartData);
           margin: 0;
           font-size: 23px;
           line-height: 1.08;
-          font-weight: 1000;
+                font-weight: 1000;
           color: #D4B06A;
           letter-spacing: -0.8px;
         }
@@ -1018,7 +1018,7 @@ console.log("ChartData :", chartData);
         alignItems: "center",
         justifyContent: "center",
         padding: "30px",
-        textAlign: "center",
+           textAlign: "center",
         color: "rgba(255,255,255,0.58)",
         fontSize: "14px",
         lineHeight: "1.5",
@@ -1357,8 +1357,7 @@ function expandChartData(data, currentScore) {
     const right = Math.min(Math.ceil(position), anchors.length - 1);
     const ratio = position - left;
     const interpolated = anchors[left] + (anchors[right] - anchors[left]) * ratio;
-
-    const wave =
+      const wave =
       Math.sin(i * 0.88) * 3.2 +
       Math.sin(i * 0.29) * 1.9;
 
@@ -1656,4 +1655,3 @@ function getWeekPlanRate(days) {
   const respectedDays = tradedDays.filter((day) => day.planRespected).length;
   return Math.round((respectedDays / tradedDays.length) * 100);
 }
-
