@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import {
   Brain,
@@ -312,10 +313,25 @@ export default function CoachPage() {
     sessions.map((s) => s.dominant_error).filter(Boolean)
   );
 
-  const recentDominantError = getDominantValue(
-    recentSessions.map((s) => s.dominant_error).filter(Boolean)
-  );
+  const recentErrors = recentSessions
+    .map((s) => s.dominant_error)
+    .filter(Boolean);
 
+  const calculatedRecentDominantError = getDominantValue(recentErrors);
+
+  const recentDominantErrorCount = calculatedRecentDominantError
+    ? recentErrors.filter(
+        (error) => error === calculatedRecentDominantError
+      ).length
+    : 0;
+
+  const recentDominantError =
+    recentDominantErrorCount >= 2
+      ? calculatedRecentDominantError
+      : null;
+
+  // Le Coach analyse l'état actuel sur les dernières sessions clôturées.
+  // L'identité PRIME conserve la vision globale de la saison.
   const detectedPattern = detectPrimePattern(sessions);
   const primeIdentity = getPrimeIdentity(
     sessions,
@@ -327,7 +343,7 @@ export default function CoachPage() {
     averageScore: recentAverageScore,
     dominantMentalState,
     dominantError: recentDominantError,
-    sessionsCount: sessions.length,
+    sessionsCount: closedSessions.length,
     detectedPattern,
     primeIdentity,
   });
@@ -362,7 +378,6 @@ export default function CoachPage() {
     sessions,
     averageScore: recentAverageScore,
     detectedPattern,
-    dominantError: recentDominantError,
   });
 
   const stability = getStabilityLevel({
@@ -544,12 +559,12 @@ function ResetFlow({ step, setStep, reflection, setReflection, commitment, setCo
   return <div className="reset-step"><p className="label">RESET VALIDÉ</p><h2 className="card-title">Tu as repris le contrôle.</h2><p className="text">Tu n’as pas besoin de récupérer maintenant. Tu viens de protéger ton compte, ton énergie et ta discipline. C’est une vraie victoire PRIME.</p><div className="reset-actions"><button className="secondary-button" onClick={() => window.location.href = "/"}>Retour au cockpit</button></div></div>;
 }
 
-function getResetSignal({ sessions, averageScore, detectedPattern, dominantError }) {
+function getResetSignal({ sessions, averageScore, detectedPattern }) {
   const closedSessions = sessions.filter((s) => s.status === "closed").sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const lastThree = closedSessions.slice(0, 3);
   const negativeOffPlan = lastThree.filter((s) => s.plan_respected === false && Number(s.session_pnl || 0) < 0).length;
   const repeatedLosses = lastThree.filter((s) => Number(s.session_pnl || 0) < 0).length;
-  if (detectedPattern?.type === "revenge_trading" || dominantError === "Revenge trade") return { show: true, level: "critical", message: "PRIME détecte un risque de récupération émotionnelle. Le danger n’est plus le marché : c’est la volonté de réparer une perte." };
+  if (detectedPattern?.type === "revenge_trading") return { show: true, level: "critical", message: "PRIME détecte un risque de récupération émotionnelle. Le danger n’est plus le marché : c’est la volonté de réparer une perte." };
   if (detectedPattern?.type === "overtrading") return { show: true, level: "warning", message: "PRIME détecte une suractivité. Tu risques de confondre présence au marché et qualité d’exécution." };
   if (detectedPattern?.type === "low_discipline_streak" || averageScore < 55) return { show: true, level: "warning", message: "PRIME détecte une baisse de discipline. Le Reset est conseillé pour éviter une dérive plus coûteuse." };
   if (negativeOffPlan >= 1 || repeatedLosses >= 3) return { show: true, level: "warning", message: "Tes dernières traces montrent un risque de perte de contrôle. Le Reset peut empêcher une mauvaise session de devenir une mauvaise journée." };
