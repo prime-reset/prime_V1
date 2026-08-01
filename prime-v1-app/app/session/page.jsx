@@ -893,7 +893,7 @@ function DebriefStep({
         <h2 className="question">Dans quel état termines-tu ?</h2>
 
         <div className="option-grid">
-          {["Satisfaite", "Neutre", "Frustrée", "Stressée", "Fière", "Déçue"].map(
+          {["Satisfait", "Neutre", "Frustré", "Stressé", "Fière", "Déçu"].map(
             (state) => (
               <button
                 key={state}
