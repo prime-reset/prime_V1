@@ -711,7 +711,7 @@ function PreparationStep({
         <h2 className="question">Dans quel état arrives-tu au marché ?</h2>
 
         <div className="option-grid">
-          {["Calme", "Focus", "Stressée", "Impatiente", "Fatiguée"].map(
+          {["Calme", "Focus", "Stressé", "Impatient", "Fatigué"].map(
             (state) => (
               <button
                 key={state}
