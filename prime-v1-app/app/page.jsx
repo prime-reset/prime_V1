@@ -19,6 +19,7 @@ import {
 
 import { supabase } from "../lib/supabase";
 import BottomNav from "./components/BottomNav";
+import PrimeSkeleton from "./components/PrimeSkeleton";
 
 export default function HomePage() {
   const router = useRouter();
@@ -133,24 +134,7 @@ if (scores.length > 0) {
   };
 
   if (loading) {
-    return (
-      <main className="loading-screen">
-        <style>{`
-          .loading-screen {
-            min-height: 100vh;
-            background: #000;
-            color: #D4B06A;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Inter, Arial, sans-serif;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-          }
-        `}</style>
-        Chargement PRIME...
-      </main>
-    );
+    return <PrimeSkeleton type="dashboard" />;
   }
 
   const lastSession = sessions[0] || null;
