@@ -21,9 +21,11 @@ import {
 
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
+import { usePrimeToast } from "../components/PrimeToast";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const toast = usePrimeToast();
 
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState("Trader");
@@ -63,6 +65,10 @@ const { data: profileData, error: profileError } = await supabase
 
 if (profileError) {
   console.error("Erreur chargement profil :", profileError);
+  toast.error(
+    "Profil indisponible",
+    "Certaines informations n’ont pas pu être chargées."
+  );
 }
 
 if (profileData?.display_name) setDisplayName(profileData.display_name);
@@ -109,12 +115,18 @@ if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Sélectionne uniquement une image.");
+      toast.error(
+        "Format non accepté",
+        "Sélectionne uniquement une image."
+      );
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("La photo ne doit pas dépasser 5 Mo.");
+      toast.error(
+        "Photo trop lourde",
+        "La photo ne doit pas dépasser 5 Mo."
+      );
       return;
     }
 
@@ -126,7 +138,10 @@ if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
       } = await supabase.auth.getUser();
 
       if (!user) {
-        alert("Utilisateur non connecté.");
+        toast.error(
+          "Session expirée",
+          "Reconnecte-toi pour modifier ta photo."
+        );
         return;
       }
 
@@ -162,9 +177,17 @@ if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
 
       setAvatarUrl(versionedUrl);
       setAvatarMenuOpen(false);
+
+      toast.success(
+        "Photo mise à jour",
+        "Ta photo de profil a bien été enregistrée."
+      );
     } catch (error) {
       console.error("Erreur upload avatar :", error);
-      alert("Impossible d’enregistrer la photo de profil.");
+      toast.error(
+        "Enregistrement impossible",
+        "La photo n’a pas pu être enregistrée. Réessaie."
+      );
     } finally {
       setUploadingAvatar(false);
     }
@@ -178,7 +201,13 @@ if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) return;
+      if (!user) {
+        toast.error(
+          "Session expirée",
+          "Reconnecte-toi pour supprimer ta photo."
+        );
+        return;
+      }
 
       const { data: files } = await supabase.storage
         .from("avatars")
@@ -199,9 +228,17 @@ if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
 
       setAvatarUrl("");
       setAvatarMenuOpen(false);
+
+      toast.success(
+        "Photo supprimée",
+        "L’initiale de ton profil est de nouveau affichée."
+      );
     } catch (error) {
       console.error("Erreur suppression avatar :", error);
-      alert("Impossible de supprimer la photo de profil.");
+      toast.error(
+        "Suppression impossible",
+        "La photo n’a pas pu être supprimée. Réessaie."
+      );
     } finally {
       setUploadingAvatar(false);
     }
