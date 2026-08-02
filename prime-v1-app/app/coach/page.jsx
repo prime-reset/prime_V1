@@ -16,6 +16,7 @@ import {
 
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
+import PrimeSkeleton from "../components/PrimeSkeleton";
 
 export default function CoachPage() {
   const [sessions, setSessions] = useState([]);
@@ -403,6 +404,10 @@ export default function CoachPage() {
   if (detectedPattern?.type === "overtrading") {
     rootCause = "Suractivité";
     risk = "Dégradation de l’edge";
+  }
+
+  if (loading) {
+    return <PrimeSkeleton type="coach" />;
   }
 
   return (
