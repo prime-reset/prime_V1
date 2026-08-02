@@ -19,6 +19,7 @@ import {
 
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
+import PrimeSkeleton from "../components/PrimeSkeleton";
 
 export default function SessionPage() {
   const [step, setStep] = useState("preparation");
@@ -426,6 +427,12 @@ export default function SessionPage() {
   const checklistProgress = Math.round(
     (Object.values(checked).filter(Boolean).length / checklist.length) * 100
   );
+
+  const loading = !primeProfile && todaySessionCount === 0 && !activeSessionId;
+
+  if (loading) {
+    return <PrimeSkeleton type="session" />;
+  }
 
   if (analysisPhase) {
     return (
