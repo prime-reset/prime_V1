@@ -1,5 +1,5 @@
 import "./globals.css";
-
+import { PrimeToastProvider } from "./components/PrimeToast";
 export const metadata = {
   title: "PRIME",
   description: "Trading Discipline OS",
