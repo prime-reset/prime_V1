@@ -408,7 +408,7 @@ export default function JournalPage() {
         />
       )}
 
-      <BottomNav active="Journal" />
+      {!selectedSession && <BottomNav active="Journal" />}
     </main>
   );
 }
@@ -1139,7 +1139,7 @@ function BaseStyles() {
       .modal-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 100;
+        z-index: 99999;
         display: flex;
         align-items: flex-end;
         justify-content: center;
@@ -1149,11 +1149,14 @@ function BaseStyles() {
       }
 
       .modal-sheet {
+        position: relative;
+        z-index: 100000;
         width: 100%;
         max-width: 460px;
         max-height: 88vh;
         overflow-y: auto;
         padding: 18px;
+        padding-bottom: 34px;
         border-radius: 28px 28px 18px 18px;
         color: white;
         background: #0d0d0d;
@@ -1232,6 +1235,10 @@ function BaseStyles() {
       .modal-analysis,
       .modal-note {
         margin-top: 14px;
+      }
+
+      .modal-note {
+        margin-bottom: 8px;
       }
 
       .modal-analysis h3 {
