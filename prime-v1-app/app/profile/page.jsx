@@ -22,6 +22,7 @@ import {
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
 import { usePrimeToast } from "../components/PrimeToast";
+import PrimeSkeleton from "../components/PrimeSkeleton";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -277,24 +278,7 @@ if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
   const subscriptionLabel = getSubscriptionLabel(role, subscriptionStatus);
 
   if (loading) {
-    return (
-      <main className="loading-screen">
-        <style>{`
-          .loading-screen {
-            min-height: 100vh;
-            background: #000;
-            color: #D4B06A;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Inter, Arial, sans-serif;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-          }
-        `}</style>
-        Chargement Profil...
-      </main>
-    );
+    return <PrimeSkeleton type="profile" />;
   }
 
   return (
