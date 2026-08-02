@@ -14,6 +14,9 @@ import {
   Settings,
   Sparkles,
   Target,
+  Camera,
+  Trash2,
+  LoaderCircle,
 } from "lucide-react";
 
 import { supabase } from "../../lib/supabase";
@@ -32,6 +35,9 @@ export default function ProfilePage() {
   const [identityHistory, setIdentityHistory] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -51,7 +57,7 @@ export default function ProfilePage() {
 
 const { data: profileData, error: profileError } = await supabase
   .from("profiles")
-  .select("display_name, role")
+  .select("display_name, role, avatar_url")
   .eq("id", user.id)
   .maybeSingle();
 
@@ -61,6 +67,7 @@ if (profileError) {
 
 if (profileData?.display_name) setDisplayName(profileData.display_name);
 if (profileData?.role) setRole(profileData.role);
+if (profileData?.avatar_url) setAvatarUrl(profileData.avatar_url);
 
     const { data: identityData } = await supabase
       .from("prime_identity_history")
@@ -93,6 +100,111 @@ if (profileData?.role) setRole(profileData.role);
     if (prescriptionsData) setPrescriptions(prescriptionsData);
 
     setLoading(false);
+  }
+
+  async function handleAvatarUpload(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Sélectionne uniquement une image.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("La photo ne doit pas dépasser 5 Mo.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("Utilisateur non connecté.");
+        return;
+      }
+
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filePath = `${user.id}/profile.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+      const versionedUrl = `${publicUrl}?v=${Date.now()}`;
+
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: versionedUrl })
+        .eq("id", user.id);
+
+      if (profileUpdateError) {
+        throw profileUpdateError;
+      }
+
+      setAvatarUrl(versionedUrl);
+      setAvatarMenuOpen(false);
+    } catch (error) {
+      console.error("Erreur upload avatar :", error);
+      alert("Impossible d’enregistrer la photo de profil.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function removeAvatar() {
+    setUploadingAvatar(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: files } = await supabase.storage
+        .from("avatars")
+        .list(user.id);
+
+      if (files?.length) {
+        await supabase.storage
+          .from("avatars")
+          .remove(files.map((file) => `${user.id}/${file.name}`));
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: null })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setAvatarUrl("");
+      setAvatarMenuOpen(false);
+    } catch (error) {
+      console.error("Erreur suppression avatar :", error);
+      alert("Impossible de supprimer la photo de profil.");
+    } finally {
+      setUploadingAvatar(false);
+    }
   }
 
   const averageScore = useMemo(() => {
@@ -164,10 +276,7 @@ if (profileData?.role) setRole(profileData.role);
           padding: 28px 16px 132px;
           color: white;
           font-family: Inter, Arial, sans-serif;
-          background:
-            radial-gradient(circle at 82% 2%, rgba(212,176,106,0.12), transparent 28%),
-            radial-gradient(circle at 8% 16%, rgba(255,255,255,0.035), transparent 22%),
-            linear-gradient(180deg, #030303 0%, #000 54%, #000 100%);
+          background: #050505;
           overflow-x: hidden;
         }
 
@@ -211,12 +320,9 @@ if (profileData?.role) setRole(profileData.role);
         .stat-card,
         .identity-card,
         .action-card {
-          background:
-            linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.018)),
-            rgba(12,12,12,0.94);
-          border: 1px solid rgba(255,255,255,0.09);
-          box-shadow: 0 22px 70px rgba(0,0,0,0.58);
-          backdrop-filter: blur(18px);
+          background: #101010;
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.38);
         }
 
         .hero-card {
@@ -228,17 +334,6 @@ if (profileData?.role) setRole(profileData.role);
           border-color: rgba(212,176,106,0.22);
         }
 
-        .hero-card::before {
-          content: "";
-          position: absolute;
-          top: -70px;
-          right: -80px;
-          width: 190px;
-          height: 190px;
-          background: radial-gradient(circle, rgba(212,176,106,0.16), transparent 62%);
-          pointer-events: none;
-        }
-
         .profile-head {
           position: relative;
           z-index: 1;
@@ -247,18 +342,94 @@ if (profileData?.role) setRole(profileData.role);
           gap: 16px;
         }
 
-        .avatar {
-          width: 74px;
-          height: 74px;
-          border-radius: 25px;
+        .avatar-wrap {
+          position: relative;
+          flex-shrink: 0;
+        }
+
+        .avatar-button {
+          width: 82px;
+          height: 82px;
+          padding: 0;
+          overflow: hidden;
+          border-radius: 26px;
           display: grid;
           place-items: center;
-          color: #000;
+          color: #050505;
           font-size: 31px;
           font-weight: 1000;
           background: linear-gradient(135deg, #9d742f, #d6b25f, #fff2b8);
-          box-shadow: 0 18px 45px rgba(212,176,106,0.12);
-          flex-shrink: 0;
+          border: 1px solid rgba(212,176,106,0.28);
+          cursor: pointer;
+        }
+
+        .avatar-button img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .avatar-button:disabled {
+          cursor: wait;
+        }
+
+        .avatar-edit {
+          position: absolute;
+          right: -5px;
+          bottom: -5px;
+          width: 30px;
+          height: 30px;
+          display: grid;
+          place-items: center;
+          border-radius: 11px;
+          color: #050505;
+          background: #D4B06A;
+          border: 3px solid #101010;
+          pointer-events: none;
+        }
+
+        .avatar-menu {
+          position: absolute;
+          top: 92px;
+          left: 0;
+          z-index: 20;
+          width: 190px;
+          padding: 8px;
+          border-radius: 18px;
+          background: #171717;
+          border: 1px solid rgba(255,255,255,0.10);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+        }
+
+        .avatar-menu label,
+        .avatar-menu button {
+          width: 100%;
+          min-height: 42px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          color: white;
+          border: none;
+          border-radius: 12px;
+          background: transparent;
+          font-size: 13px;
+          font-weight: 850;
+          cursor: pointer;
+        }
+
+        .avatar-menu label:hover,
+        .avatar-menu button:hover {
+          background: rgba(255,255,255,0.05);
+        }
+
+        .avatar-menu button {
+          color: #F05B5B;
+        }
+
+        .avatar-input {
+          display: none;
         }
 
         .name {
@@ -275,6 +446,21 @@ if (profileData?.role) setRole(profileData.role);
           font-size: 13px;
           line-height: 1.35;
           word-break: break-word;
+        }
+
+        .avatar-hint {
+          margin: 7px 0 0;
+          color: rgba(255,255,255,0.34);
+          font-size: 11px;
+          line-height: 1.35;
+        }
+
+        .avatar-loader {
+          animation: avatarSpin .9s linear infinite;
+        }
+
+        @keyframes avatarSpin {
+          to { transform: rotate(360deg); }
         }
 
         .badge-row {
@@ -359,9 +545,7 @@ if (profileData?.role) setRole(profileData.role);
           width: 100px;
           height: 100px;
           border-radius: 50%;
-          background:
-            radial-gradient(circle at 50% 32%, rgba(212,176,106,0.11), transparent 48%),
-            #030303;
+          background: #050505;
           display: grid;
           place-items: center;
           border: 1px solid rgba(255,255,255,0.08);
@@ -615,9 +799,7 @@ if (profileData?.role) setRole(profileData.role);
           border-radius: 30px;
           margin-top: 4px;
           text-align: center;
-          background:
-            radial-gradient(circle at 50% 0%, rgba(212,176,106,0.12), transparent 36%),
-            rgba(10,10,10,0.96);
+          background: #101010;
           border: 1px solid rgba(212,176,106,0.22);
           box-shadow: 0 22px 70px rgba(0,0,0,0.58);
         }
@@ -652,10 +834,14 @@ if (profileData?.role) setRole(profileData.role);
             font-size: 28px;
           }
 
-          .avatar {
-            width: 66px;
-            height: 66px;
+          .avatar-button {
+            width: 70px;
+            height: 70px;
             border-radius: 22px;
+          }
+
+          .avatar-menu {
+            top: 80px;
           }
 
           .score-area {
@@ -712,13 +898,56 @@ if (profileData?.role) setRole(profileData.role);
 
         <section className="hero-card">
           <div className="profile-head">
-            <div className="avatar">
-              {displayName?.charAt(0)?.toUpperCase() || "P"}
+            <div className="avatar-wrap">
+              <button
+                type="button"
+                className="avatar-button"
+                onClick={() => setAvatarMenuOpen((open) => !open)}
+                disabled={uploadingAvatar}
+                aria-label="Modifier la photo de profil"
+              >
+                {uploadingAvatar ? (
+                  <LoaderCircle size={26} className="avatar-loader" />
+                ) : avatarUrl ? (
+                  <img src={avatarUrl} alt={`Photo de profil de ${displayName}`} />
+                ) : (
+                  displayName?.charAt(0)?.toUpperCase() || "P"
+                )}
+              </button>
+
+              <span className="avatar-edit">
+                <Camera size={15} />
+              </span>
+
+              {avatarMenuOpen && (
+                <div className="avatar-menu">
+                  <label>
+                    <Camera size={17} />
+                    {avatarUrl ? "Changer la photo" : "Ajouter une photo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="avatar-input"
+                      onChange={handleAvatarUpload}
+                    />
+                  </label>
+
+                  {avatarUrl && (
+                    <button type="button" onClick={removeAvatar}>
+                      <Trash2 size={17} />
+                      Supprimer la photo
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             <div style={{ flex: 1 }}>
               <h1 className="name">{displayName}</h1>
               <p className="email">{email}</p>
+              <p className="avatar-hint">
+                Appuie sur ta photo pour la modifier.
+              </p>
             </div>
           </div>
 
@@ -859,15 +1088,13 @@ if (profileData?.role) setRole(profileData.role);
         </section>
 
         <section className="quote-card">
+          <p className="label">DOSSIER PRIME</p>
           <h2>
-            Ce que tu répètes
-            <span>te définit.</span>
+            {sessions.length}
+            <span>sessions analysées.</span>
           </h2>
-
           <p>
-            PRIME ne suit pas seulement tes résultats.
-            <br />
-            PRIME suit le trader que tu deviens.
+            Ton profil continue d’évoluer à chaque session clôturée.
           </p>
         </section>
       </div>
@@ -967,4 +1194,3 @@ function formatDate(value) {
     year: "numeric",
   });
 }
-
