@@ -21,6 +21,7 @@ import {
 
 import { supabase } from "../../lib/supabase";
 import BottomNav from "../components/BottomNav";
+import PrimeSkeleton from "../components/PrimeSkeleton";
 
 const FILTERS = [
   { key: "all", label: "Toutes" },
@@ -345,11 +346,7 @@ export default function JournalPage() {
           <span>Timeline comportementale</span>
         </div>
 
-        {loading && (
-          <section className="card">
-            <p className="empty">Chargement du journal...</p>
-          </section>
-        )}
+        {loading && <PrimeSkeleton type="journal" />}
 
         {!loading && sessions.length === 0 && (
           <section className="card">
