@@ -97,33 +97,88 @@ export function getAllInsights(
       id: "consistency",
 
       run: () =>
-        detectConsistency(
-          normalizedSessions,
-          context
-        ),
-    },
+       const detectors = [
+  {
+    id: "revenge",
+    run: () =>
+      detectRevenge(
+        normalizedSessions,
+        context
+      ),
+  },
 
-    /*
-      detectProgress()
+  {
+    id: "overtrading",
+    run: () =>
+      detectOvertrading(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectRegression()
+  {
+    id: "regression",
+    run: () =>
+      detectRegression(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectRecovery()
+  {
+    id: "recovery",
+    run: () =>
+      detectRecovery(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectRevenge()
+  {
+    id: "progress",
+    run: () =>
+      detectProgress(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectOvertrading()
+  {
+    id: "behavioral-edge",
+    run: () =>
+      detectEdge(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectBestMentalState()
+  {
+    id: "execution-state",
+    run: () =>
+      detectExecutionState(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectDisciplineTrend()
+  {
+    id: "best-mental-state",
+    run: () =>
+      detectBestMentalState(
+        normalizedSessions,
+        context
+      ),
+  },
 
-      detectEdge()
-
-      detectConfidence()
-
-    */
-  ];
+  {
+    id: "consistency",
+    run: () =>
+      detectConsistency(
+        normalizedSessions,
+        context
+      ),
+  },
+];
 
   const insights = detectors
 
