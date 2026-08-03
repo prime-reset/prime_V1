@@ -1,4 +1,12 @@
 import detectConsistency from "./detectors/consistency";
+import detectProgress from "./detectors/progress";
+import detectRecovery from "./detectors/recovery";
+import detectRegression from "./detectors/regression";
+import detectBestMentalState from "./detectors/bestMentalState";
+import detectEdge from "./detectors/edge";
+import detectOvertrading from "./detectors/overtrading";
+import detectRevenge from "./detectors/revenge";
+import detectExecutionState from "./detectors/executionState";
 
 /**
  * ==========================================================
