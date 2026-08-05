@@ -1,5 +1,5 @@
 "use client";
-import { getBestInsight } from "../lib/primeInsights";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -20,6 +20,7 @@ import {
 import { supabase } from "../lib/supabase";
 import BottomNav from "./components/BottomNav";
 import PrimeSkeleton from "./components/PrimeSkeleton";
+import { getBestInsight } from "../lib/primeInsights";
 
 export default function HomePage() {
   const router = useRouter();
@@ -116,13 +117,9 @@ if (scores.length > 0) {
 }
 
       setRisk(getRiskFromSessions(sessionsData));
+      setBestInsight(getBestInsight(sessionsData));
     }
-const insight =
-  getBestInsight(
-    sessionsData
-  );
 
-setBestInsight(insight);
     const { data: prescriptionData } = await supabase
       .from("prescriptions")
       .select("*")
@@ -295,64 +292,66 @@ console.log("ChartData :", chartData);
           font-weight: 760;
           color: rgba(255,255,255,0.93);
         }
-.prime-says-content {
-  display: grid;
-}
 
-.insight-explanation {
-  margin: 14px 0 0;
-  color: rgba(255,255,255,0.68);
-  font-size: 14px;
-  line-height: 1.55;
-}
+        .prime-says-content {
+          display: grid;
+        }
 
-.insight-action {
-  margin-top: 18px;
-  padding: 15px;
-  border-radius: 17px;
-  background: rgba(212,176,106,0.075);
-  border: 1px solid rgba(212,176,106,0.18);
-}
+        .insight-explanation {
+          margin: 14px 0 0;
+          color: rgba(255,255,255,0.68);
+          font-size: 14px;
+          line-height: 1.55;
+        }
 
-.insight-action-label {
-  margin: 0 0 7px;
-  color: #D4B06A;
-  font-size: 10.5px;
-  font-weight: 950;
-  letter-spacing: 2.2px;
-  text-transform: uppercase;
-}
+        .insight-action {
+          margin-top: 18px;
+          padding: 15px;
+          border-radius: 17px;
+          background: rgba(212,176,106,0.075);
+          border: 1px solid rgba(212,176,106,0.18);
+        }
 
-.insight-action-text {
-  margin: 0;
-  color: rgba(255,255,255,0.92);
-  font-size: 14px;
-  line-height: 1.55;
-  font-weight: 760;
-}
+        .insight-action-label {
+          margin: 0 0 7px;
+          color: #D4B06A;
+          font-size: 10.5px;
+          font-weight: 950;
+          letter-spacing: 2.2px;
+          text-transform: uppercase;
+        }
 
-.insight-meta {
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  color: rgba(255,255,255,0.46);
-  font-size: 11px;
-  line-height: 1.4;
-}
+        .insight-action-text {
+          margin: 0;
+          color: rgba(255,255,255,0.92);
+          font-size: 14px;
+          line-height: 1.55;
+          font-weight: 760;
+        }
 
-.insight-confidence-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #7DFFA1;
-  box-shadow: 0 0 12px rgba(125,255,161,0.48);
-}
+        .insight-meta {
+          margin-top: 14px;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 7px;
+          color: rgba(255,255,255,0.46);
+          font-size: 11px;
+          line-height: 1.4;
+        }
 
-.insight-separator {
-  color: rgba(212,176,106,0.6);
-}
+        .insight-confidence-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #7DFFA1;
+          box-shadow: 0 0 12px rgba(125,255,161,0.48);
+        }
+
+        .insight-separator {
+          color: rgba(212,176,106,0.6);
+        }
+
         .card,
         .score-panel,
         .workspace-card,
@@ -976,104 +975,44 @@ console.log("ChartData :", chartData);
               <Brain size={17} />
               PRIME parle
             </div>
-          <div className="prime-says-content">
+            <div className="prime-says-content">
+              <p className="prime-says-text">
+                {bestInsight?.insight || primeMessage}
+              </p>
 
-  <p className="prime-says-text">
-    {bestInsight?.insight || primeMessage}
-  </p>
+              {bestInsight && (
+                <>
+                  <p className="insight-explanation">
+                    {bestInsight.explanation}
+                  </p>
 
- {bestInsight && (
-  <>
-    <p className="insight-explanation">
-      {bestInsight.explanation}
-    </p>
+                  <div className="insight-action">
+                    <p className="insight-action-label">
+                      Action recommandée
+                    </p>
 
-    <div className="insight-action">
-      <p className="insight-action-label">
-        Action recommandée
-      </p>
+                    <p className="insight-action-text">
+                      {bestInsight.action}
+                    </p>
+                  </div>
 
-      <p className="insight-action-text">
-        {bestInsight.action}
-      </p>
-    </div>
+                  <div className="insight-meta">
+                    <span className="insight-confidence-dot" />
 
-    <div className="insight-meta">
-      <span className="insight-confidence-dot" />
+                    <span>
+                      Confiance {getConfidenceLabel(bestInsight.confidence)}
+                    </span>
 
-      <span>
-        Confiance {getConfidenceLabel(bestInsight.confidence)}
-      </span>
+                    <span className="insight-separator">•</span>
 
-      <span className="insight-separator">•</span>
-
-      <span>
-        Analyse basée sur{" "}
-        {bestInsight.data?.totalSessions || sessionsCount} session
-        {(bestInsight.data?.totalSessions || sessionsCount) > 1 ? "s" : ""}
-      </span>
-    </div>
-  </>
-)}
-      >
-        {bestInsight.explanation}
-      </p>
-
-      <div
-        style={{
-          marginTop: 18,
-          padding: 14,
-          borderRadius: 16,
-          background:
-            "rgba(212,176,106,.08)",
-          border:
-            "1px solid rgba(212,176,106,.18)",
-        }}
-      >
-        <div
-          style={{
-            color: "#D4B06A",
-            fontWeight: 900,
-            marginBottom: 6,
-            fontSize: 12,
-            letterSpacing: 2,
-            textTransform:
-              "uppercase",
-          }}
-        >
-          Action recommandée
-        </div>
-
-        <div
-          style={{
-            lineHeight: 1.55,
-            color: "white",
-            fontSize: 14,
-          }}
-        >
-          {bestInsight.action}
-        </div>
-      </div>
-
-   <div className="insight-meta">
-  <span className="insight-confidence-dot" />
-
-  <span>
-    Confiance {getConfidenceLabel(bestInsight.confidence)}
-  </span>
-
-  <span className="insight-separator">•</span>
-
-  <span>
-    Analyse basée sur{" "}
-    {bestInsight.meta?.totalSessions || sessionsCount} session
-    {(bestInsight.meta?.totalSessions || sessionsCount) > 1 ? "s" : ""}
-  </span>
-</div>
-    </>
-  )}
-
-</div>
+                    <span>
+                      Analyse basée sur {getInsightSessionCount(bestInsight, sessionsCount)} session
+                      {getInsightSessionCount(bestInsight, sessionsCount) > 1 ? "s" : ""}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
           </section>
         </section>
 
@@ -1328,6 +1267,7 @@ console.log("ChartData :", chartData);
     </main>
   );
 }
+
 function getConfidenceLabel(confidence) {
   const value = Number(confidence || 0);
 
@@ -1337,6 +1277,19 @@ function getConfidenceLabel(confidence) {
 
   return "en construction";
 }
+
+function getInsightSessionCount(insight, fallbackCount) {
+  const count = Number(
+    insight?.meta?.totalSessions ??
+      insight?.data?.totalSessions ??
+      insight?.data?.sessionCount ??
+      fallbackCount ??
+      0
+  );
+
+  return Number.isFinite(count) ? count : 0;
+}
+
 function ActionButton({ href, icon, label, title }) {
   return (
     <Link href={href} className="action-card">
