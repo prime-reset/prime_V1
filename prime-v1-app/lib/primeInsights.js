@@ -8,32 +8,11 @@ import detectOvertrading from "./detectors/overtrading";
 import detectRevenge from "./detectors/revenge";
 import detectExecutionState from "./detectors/executionState";
 
-/**
- * ==========================================================
- * PRIME INSIGHTS ENGINE
- * ==========================================================
- *
- * Ce moteur exécute tous les détecteurs comportementaux.
- *
- * Chaque détecteur peut :
- *
- * - retourner un insight
- * - retourner null
- *
- * Le moteur garde uniquement les insights valides,
- * les classe par priorité,
- * puis retourne le meilleur.
- *
- */
-
 const MINIMUM_SESSIONS_FOR_ANALYSIS = 5;
 
 /**
- * ==========================================================
- * Insight principal affiché sur le Cockpit
- * ==========================================================
+ * Retourne l'insight principal.
  */
-
 export function getBestInsight(
   sessions = [],
   context = {}
@@ -56,7 +35,7 @@ export function getBestInsight(
       context
     );
 
-  if (insights.length === 0) {
+  if (!insights.length) {
     return buildObservationInsight(
       normalizedSessions.length
     );
@@ -66,18 +45,8 @@ export function getBestInsight(
 }
 
 /**
- * ==========================================================
- * Retourne TOUS les insights.
- *
- * Plus tard :
- *
- * - ADN Trader
- * - Rapport hebdomadaire
- * - Timeline
- * - Coach
- * ==========================================================
+ * Exécute tous les détecteurs.
  */
-
 export function getAllInsights(
   sessions = [],
   context = {}
@@ -92,124 +61,118 @@ export function getAllInsights(
     return [];
   }
 
-const detectors = [
-  {
-    id: "revenge",
-    run: () =>
-      detectRevenge(
-        normalizedSessions,
-        context
-      ),
-  },
+  const detectors = [
+    {
+      id: "revenge",
+      run: () =>
+        detectRevenge(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "overtrading",
-    run: () =>
-      detectOvertrading(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "overtrading",
+      run: () =>
+        detectOvertrading(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "regression",
-    run: () =>
-      detectRegression(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "regression",
+      run: () =>
+        detectRegression(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "recovery",
-    run: () =>
-      detectRecovery(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "recovery",
+      run: () =>
+        detectRecovery(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "progress",
-    run: () =>
-      detectProgress(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "progress",
+      run: () =>
+        detectProgress(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "behavioral-edge",
-    run: () =>
-      detectEdge(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "behavioral-edge",
+      run: () =>
+        detectEdge(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "execution-state",
-    run: () =>
-      detectExecutionState(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "execution-state",
+      run: () =>
+        detectExecutionState(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "best-mental-state",
-    run: () =>
-      detectBestMentalState(
-        normalizedSessions,
-        context
-      ),
-  },
+    {
+      id: "best-mental-state",
+      run: () =>
+        detectBestMentalState(
+          normalizedSessions,
+          context
+        ),
+    },
 
-  {
-    id: "consistency",
-    run: () =>
-      detectConsistency(
-        normalizedSessions,
-        context
-      ),
-  },
-];
+    {
+      id: "consistency",
+      run: () =>
+        detectConsistency(
+          normalizedSessions,
+          context
+        ),
+    },
+  ];
 
   const insights = detectors
-
     .map((detector) =>
       safelyRunDetector(detector)
     )
-
     .filter(Boolean)
-
     .filter(isValidInsight)
-
     .map((insight) =>
       enrichInsight(
         insight,
         normalizedSessions
       )
     )
-
     .sort(compareInsights);
 
   return removeDuplicateInsights(
     insights
   );
-}
-/**
- * ==========================================================
- * Exécution sécurisée des détecteurs
- * ==========================================================
+  /**
+ * Exécute un détecteur sans casser
+ * tout le moteur s’il rencontre une erreur.
  */
-
-function safelyRunDetector(detector) {
+function safelyRunDetector(
+  detector
+) {
   try {
     return detector.run();
   } catch (error) {
     console.error(
-      `[PRIME Insights] Erreur dans "${detector.id}"`,
+      `[PRIME Insights] Erreur dans le détecteur "${detector.id}" :`,
       error
     );
 
@@ -218,20 +181,20 @@ function safelyRunDetector(detector) {
 }
 
 /**
- * ==========================================================
- * Vérifie que le détecteur respecte
+ * Vérifie que l’insight respecte
  * le contrat PRIME.
- * ==========================================================
  */
-
-function isValidInsight(insight) {
-  if (!insight) return false;
-
-  if (typeof insight !== "object") {
+function isValidInsight(
+  insight
+) {
+  if (
+    !insight ||
+    typeof insight !== "object"
+  ) {
     return false;
   }
 
-  const requiredFields = [
+  const requiredStringFields = [
     "id",
     "category",
     "title",
@@ -240,44 +203,61 @@ function isValidInsight(insight) {
     "action",
   ];
 
-  const stringsValid =
-    requiredFields.every((field) => {
-      return (
-        typeof insight[field] === "string" &&
-        insight[field].trim().length > 0
-      );
-    });
+  const hasRequiredStrings =
+    requiredStringFields.every(
+      (field) => {
+        return (
+          typeof insight[field] ===
+            "string" &&
+          insight[field]
+            .trim()
+            .length > 0
+        );
+      }
+    );
 
-  const priorityValid =
-    Number.isFinite(Number(insight.priority));
+  const priority =
+    Number(
+      insight.priority
+    );
 
-  const confidenceValid =
-    Number.isFinite(Number(insight.confidence));
+  const confidence =
+    Number(
+      insight.confidence
+    );
+
+  const hasValidPriority =
+    Number.isFinite(priority) &&
+    priority >= 0 &&
+    priority <= 100;
+
+  const hasValidConfidence =
+    Number.isFinite(confidence) &&
+    confidence >= 0 &&
+    confidence <= 100;
 
   return (
-    stringsValid &&
-    priorityValid &&
-    confidenceValid
+    hasRequiredStrings &&
+    hasValidPriority &&
+    hasValidConfidence
   );
 }
 
 /**
- * ==========================================================
  * Ajoute les métadonnées communes.
- * ==========================================================
  */
-
 function enrichInsight(
   insight,
   sessions
 ) {
   return {
-
     ...insight,
 
     priority: clamp(
       Math.round(
-        Number(insight.priority)
+        Number(
+          insight.priority
+        )
       ),
       0,
       100
@@ -285,44 +265,47 @@ function enrichInsight(
 
     confidence: clamp(
       Math.round(
-        Number(insight.confidence)
+        Number(
+          insight.confidence
+        )
       ),
       0,
       100
     ),
 
     generatedAt:
-      new Date().toISOString(),
+      new Date()
+        .toISOString(),
 
     meta: {
-
       totalSessions:
         sessions.length,
 
       latestSessionAt:
-        sessions[0]?.created_at ||
-
-        null,
+        sessions[0]
+          ?.created_at || null,
 
       engineVersion:
         "1.0.0",
 
-      ...(insight.meta || {})
+      ...(insight.meta || {}),
     },
 
     data:
-      insight.data || {}
+      insight.data || {},
   };
 }
 
 /**
- * ==========================================================
- * Classement des insights
- * ==========================================================
+ * Classement :
+ * 1. priorité ;
+ * 2. confiance ;
+ * 3. récence.
  */
-
-function compareInsights(a, b) {
-
+function compareInsights(
+  a,
+  b
+) {
   if (
     b.priority !==
     a.priority
@@ -345,12 +328,14 @@ function compareInsights(a, b) {
 
   const recencyA =
     Number(
-      a.data?.recencyScore || 0
+      a.data
+        ?.recencyScore || 0
     );
 
   const recencyB =
     Number(
-      b.data?.recencyScore || 0
+      b.data
+        ?.recencyScore || 0
     );
 
   return (
@@ -358,105 +343,112 @@ function compareInsights(a, b) {
     recencyA
   );
 }
+
 /**
- * ==========================================================
- * Suppression des doublons
- * ==========================================================
+ * Supprime les doublons.
  */
+function removeDuplicateInsights(
+  insights
+) {
+  const seen =
+    new Set();
 
-function removeDuplicateInsights(insights) {
-  const seen = new Set();
+  return insights.filter(
+    (insight) => {
+      const signature = [
+        insight.category,
+        normalizeText(
+          insight.insight
+        ),
+      ].join("::");
 
-  return insights.filter((insight) => {
-    const signature = [
-      insight.category,
-      normalizeText(insight.insight),
-    ].join("::");
+      if (
+        seen.has(signature)
+      ) {
+        return false;
+      }
 
-    if (seen.has(signature)) {
-      return false;
+      seen.add(signature);
+
+      return true;
     }
-
-    seen.add(signature);
-
-    return true;
-  });
+  );
 }
-
-/**
- * ==========================================================
- * Normalisation des sessions
- * ==========================================================
- *
- * Le moteur :
- *
- * - garde uniquement les sessions clôturées ;
- * - convertit les données numériques ;
- * - trie de la plus récente à la plus ancienne.
+  /**
+ * Nettoie les sessions avant analyse.
  */
-
-function normalizeSessions(sessions) {
-  if (!Array.isArray(sessions)) {
+function normalizeSessions(
+  sessions
+) {
+  if (
+    !Array.isArray(
+      sessions
+    )
+  ) {
     return [];
   }
 
   return sessions
-    .filter((session) => {
-      return (
-        session &&
-        session.status === "closed" &&
-        session.created_at
-      );
-    })
+    .filter(
+      (session) => {
+        return (
+          session &&
+          session.status ===
+            "closed" &&
+          session.created_at
+        );
+      }
+    )
+    .map(
+      (session) => {
+        return {
+          ...session,
 
-    .map((session) => {
-      return {
-        ...session,
+          discipline_score:
+            toNullableNumber(
+              session
+                .discipline_score
+            ),
 
-        discipline_score:
-          toNullableNumber(
-            session.discipline_score
-          ),
-
-        session_pnl:
-          toNullableNumber(
-            session.session_pnl
-          ),
-      };
-    })
-
-    .sort((a, b) => {
-      return (
-        new Date(
-          b.created_at
-        ).getTime() -
-        new Date(
-          a.created_at
-        ).getTime()
-      );
-    });
+          session_pnl:
+            toNullableNumber(
+              session
+                .session_pnl
+            ),
+        };
+      }
+    )
+    .sort(
+      (a, b) => {
+        return (
+          new Date(
+            b.created_at
+          ).getTime() -
+          new Date(
+            a.created_at
+          ).getTime()
+        );
+      }
+    );
 }
 
 /**
- * ==========================================================
- * Données insuffisantes
- * ==========================================================
- *
- * PRIME reste honnête :
- * aucune conclusion forte avant 5 sessions.
+ * Fallback lorsque PRIME
+ * manque encore de données.
  */
-
 function buildInsufficientDataInsight(
   sessionCount
 ) {
-  const remaining = Math.max(
-    MINIMUM_SESSIONS_FOR_ANALYSIS -
-      sessionCount,
-    0
-  );
+  const remaining =
+    Math.max(
+      MINIMUM_SESSIONS_FOR_ANALYSIS -
+        sessionCount,
+      0
+    );
 
   return {
-    id: "insufficient-data",
+    id:
+      "insufficient-data",
 
     priority: 10,
 
@@ -465,7 +457,8 @@ function buildInsufficientDataInsight(
         sessionCount
       ),
 
-    category: "confidence",
+    category:
+      "confidence",
 
     title:
       "Aujourd’hui PRIME remarque...",
@@ -474,15 +467,21 @@ function buildInsufficientDataInsight(
       sessionCount === 0
         ? "Ton empreinte comportementale n’est pas encore construite."
         : `PRIME dispose actuellement de ${sessionCount} session${
-            sessionCount > 1 ? "s" : ""
+            sessionCount > 1
+              ? "s"
+              : ""
           } clôturée${
-            sessionCount > 1 ? "s" : ""
+            sessionCount > 1
+              ? "s"
+              : ""
           }.`,
 
     explanation:
       remaining > 0
         ? `Il manque encore ${remaining} session${
-            remaining > 1 ? "s" : ""
+            remaining > 1
+              ? "s"
+              : ""
           } pour commencer à tirer une première conclusion fiable.`
         : "PRIME prépare actuellement ta première analyse comportementale.",
 
@@ -500,7 +499,8 @@ function buildInsufficientDataInsight(
     },
 
     generatedAt:
-      new Date().toISOString(),
+      new Date()
+        .toISOString(),
 
     meta: {
       totalSessions:
@@ -514,20 +514,18 @@ function buildInsufficientDataInsight(
     },
   };
 }
-/**
- * ==========================================================
- * Aucun signal fort détecté
- * ==========================================================
- *
- * PRIME préfère reconnaître qu’il observe encore
- * plutôt que d’inventer une conclusion.
- */
 
+/**
+ * Fallback lorsque les données
+ * sont suffisantes mais qu’aucun
+ * signal fort ne se détache.
+ */
 function buildObservationInsight(
   sessionCount
 ) {
   return {
-    id: "observation",
+    id:
+      "observation",
 
     priority: 20,
 
@@ -536,7 +534,8 @@ function buildObservationInsight(
         sessionCount
       ),
 
-    category: "confidence",
+    category:
+      "confidence",
 
     title:
       "Aujourd’hui PRIME remarque...",
@@ -555,7 +554,8 @@ function buildObservationInsight(
     },
 
     generatedAt:
-      new Date().toISOString(),
+      new Date()
+        .toISOString(),
 
     meta: {
       totalSessions:
@@ -569,36 +569,40 @@ function buildObservationInsight(
     },
   };
 }
-
-/**
- * ==========================================================
- * Confiance générale
- * ==========================================================
- *
- * Elle dépend ici uniquement du volume
- * de sessions disponibles.
+  /**
+ * Niveau de confiance de base
+ * selon le volume de données.
  */
-
 function calculateBaselineConfidence(
   sessionCount
 ) {
-  if (sessionCount >= 100) {
+  if (
+    sessionCount >= 100
+  ) {
     return 95;
   }
 
-  if (sessionCount >= 50) {
+  if (
+    sessionCount >= 50
+  ) {
     return 88;
   }
 
-  if (sessionCount >= 20) {
+  if (
+    sessionCount >= 20
+  ) {
     return 75;
   }
 
-  if (sessionCount >= 10) {
+  if (
+    sessionCount >= 10
+  ) {
     return 60;
   }
 
-  if (sessionCount >= 5) {
+  if (
+    sessionCount >= 5
+  ) {
     return 45;
   }
 
@@ -609,12 +613,12 @@ function calculateBaselineConfidence(
 }
 
 /**
- * ==========================================================
- * Conversion numérique sécurisée
- * ==========================================================
+ * Convertit une valeur
+ * en nombre ou null.
  */
-
-function toNullableNumber(value) {
+function toNullableNumber(
+  value
+) {
   if (
     value === null ||
     value === undefined ||
@@ -626,30 +630,36 @@ function toNullableNumber(value) {
   const number =
     Number(value);
 
-  return Number.isNaN(number)
+  return Number.isNaN(
+    number
+  )
     ? null
     : number;
 }
 
 /**
- * ==========================================================
- * Nettoyage de texte
- * ==========================================================
+ * Nettoie un texte
+ * pour la comparaison.
  */
-
-function normalizeText(value) {
-  return String(value || "")
+function normalizeText(
+  value
+) {
+  return String(
+    value || ""
+  )
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, " ");
+    .replace(
+      /\s+/g,
+      " "
+    );
 }
 
 /**
- * ==========================================================
- * Limitation d’une valeur
- * ==========================================================
+ * Maintient une valeur
+ * entre un minimum
+ * et un maximum.
  */
-
 function clamp(
   value,
   minimum,
@@ -665,3 +675,4 @@ function clamp(
 }
 
 export default getBestInsight;
+}
