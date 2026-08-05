@@ -92,12 +92,7 @@ export function getAllInsights(
     return [];
   }
 
-  const detectors = [
-    {
-      id: "consistency",
-
-      run: () =>
-       const detectors = [
+const detectors = [
   {
     id: "revenge",
     run: () =>
