@@ -1,5 +1,5 @@
 "use client";
-
+import { getBestInsight } from "../lib/primeInsights";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -30,6 +30,7 @@ export default function HomePage() {
   const [averageScore, setAverageScore] = useState(0);
   const [sessionsCount, setSessionsCount] = useState(0);
   const [sessions, setSessions] = useState([]);
+  const [bestInsight, setBestInsight] = useState(null);
   const [activePrescription, setActivePrescription] = useState(null);
   const [risk, setRisk] = useState({
     level: "observation",
@@ -116,7 +117,12 @@ if (scores.length > 0) {
 
       setRisk(getRiskFromSessions(sessionsData));
     }
+const insight =
+  getBestInsight(
+    sessionsData
+  );
 
+setBestInsight(insight);
     const { data: prescriptionData } = await supabase
       .from("prescriptions")
       .select("*")
@@ -289,7 +295,64 @@ console.log("ChartData :", chartData);
           font-weight: 760;
           color: rgba(255,255,255,0.93);
         }
+.prime-says-content {
+  display: grid;
+}
 
+.insight-explanation {
+  margin: 14px 0 0;
+  color: rgba(255,255,255,0.68);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.insight-action {
+  margin-top: 18px;
+  padding: 15px;
+  border-radius: 17px;
+  background: rgba(212,176,106,0.075);
+  border: 1px solid rgba(212,176,106,0.18);
+}
+
+.insight-action-label {
+  margin: 0 0 7px;
+  color: #D4B06A;
+  font-size: 10.5px;
+  font-weight: 950;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+}
+
+.insight-action-text {
+  margin: 0;
+  color: rgba(255,255,255,0.92);
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 760;
+}
+
+.insight-meta {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  color: rgba(255,255,255,0.46);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.insight-confidence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #7DFFA1;
+  box-shadow: 0 0 12px rgba(125,255,161,0.48);
+}
+
+.insight-separator {
+  color: rgba(212,176,106,0.6);
+}
         .card,
         .score-panel,
         .workspace-card,
@@ -913,7 +976,104 @@ console.log("ChartData :", chartData);
               <Brain size={17} />
               PRIME parle
             </div>
-            <p className="prime-says-text">{primeMessage}</p>
+          <div className="prime-says-content">
+
+  <p className="prime-says-text">
+    {bestInsight?.insight || primeMessage}
+  </p>
+
+ {bestInsight && (
+  <>
+    <p className="insight-explanation">
+      {bestInsight.explanation}
+    </p>
+
+    <div className="insight-action">
+      <p className="insight-action-label">
+        Action recommandée
+      </p>
+
+      <p className="insight-action-text">
+        {bestInsight.action}
+      </p>
+    </div>
+
+    <div className="insight-meta">
+      <span className="insight-confidence-dot" />
+
+      <span>
+        Confiance {getConfidenceLabel(bestInsight.confidence)}
+      </span>
+
+      <span className="insight-separator">•</span>
+
+      <span>
+        Analyse basée sur{" "}
+        {bestInsight.data?.totalSessions || sessionsCount} session
+        {(bestInsight.data?.totalSessions || sessionsCount) > 1 ? "s" : ""}
+      </span>
+    </div>
+  </>
+)}
+      >
+        {bestInsight.explanation}
+      </p>
+
+      <div
+        style={{
+          marginTop: 18,
+          padding: 14,
+          borderRadius: 16,
+          background:
+            "rgba(212,176,106,.08)",
+          border:
+            "1px solid rgba(212,176,106,.18)",
+        }}
+      >
+        <div
+          style={{
+            color: "#D4B06A",
+            fontWeight: 900,
+            marginBottom: 6,
+            fontSize: 12,
+            letterSpacing: 2,
+            textTransform:
+              "uppercase",
+          }}
+        >
+          Action recommandée
+        </div>
+
+        <div
+          style={{
+            lineHeight: 1.55,
+            color: "white",
+            fontSize: 14,
+          }}
+        >
+          {bestInsight.action}
+        </div>
+      </div>
+
+   <div className="insight-meta">
+  <span className="insight-confidence-dot" />
+
+  <span>
+    Confiance {getConfidenceLabel(bestInsight.confidence)}
+  </span>
+
+  <span className="insight-separator">•</span>
+
+  <span>
+    Analyse basée sur{" "}
+    {bestInsight.meta?.totalSessions || sessionsCount} session
+    {(bestInsight.meta?.totalSessions || sessionsCount) > 1 ? "s" : ""}
+  </span>
+</div>
+    </>
+  )}
+
+</div>
           </section>
         </section>
 
@@ -1168,7 +1328,15 @@ console.log("ChartData :", chartData);
     </main>
   );
 }
+function getConfidenceLabel(confidence) {
+  const value = Number(confidence || 0);
 
+  if (value >= 80) return "très élevée";
+  if (value >= 65) return "élevée";
+  if (value >= 45) return "modérée";
+
+  return "en construction";
+}
 function ActionButton({ href, icon, label, title }) {
   return (
     <Link href={href} className="action-card">
