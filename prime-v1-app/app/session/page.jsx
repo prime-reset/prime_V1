@@ -43,6 +43,7 @@ export default function SessionPage() {
   const [prescriptionAnswered, setPrescriptionAnswered] = useState(false);
   const [primeProfile, setPrimeProfile] = useState(null);
   const [todaySessionCount, setTodaySessionCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -51,46 +52,70 @@ export default function SessionPage() {
   }, []);
 
   const loadInitialData = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      setLoading(true);
 
-    if (!user) return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const { data: profileData } = await supabase
-      .from("prime_identity_history")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      if (!user) {
+        return;
+      }
 
-    if (profileData) setPrimeProfile(profileData.profile);
+      const { data: profileData, error: profileError } = await supabase
+        .from("prime_identity_history")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    const { data: prescriptionData } = await supabase
-      .from("prescriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      if (profileError) {
+        console.error("Erreur chargement identité PRIME :", profileError);
+      }
 
-    if (prescriptionData) {
-      setActivePrescription(prescriptionData);
-      setPrescriptionAnswered(prescriptionData.last_check_date === today);
+      if (profileData?.profile) {
+        setPrimeProfile(profileData.profile);
+      }
+
+      const { data: prescriptionData, error: prescriptionError } = await supabase
+        .from("prescriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (prescriptionError) {
+        console.error("Erreur chargement prescription :", prescriptionError);
+      }
+
+      if (prescriptionData) {
+        setActivePrescription(prescriptionData);
+        setPrescriptionAnswered(prescriptionData.last_check_date === today);
+      }
+
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+
+      const { data: todaySessions, error: sessionsError } = await supabase
+        .from("sessions")
+        .select("id")
+        .eq("user_id", user.id)
+        .gte("created_at", start.toISOString());
+
+      if (sessionsError) {
+        console.error("Erreur chargement sessions :", sessionsError);
+      }
+
+      setTodaySessionCount(todaySessions?.length || 0);
+    } catch (error) {
+      console.error("Erreur initialisation Session :", error);
+    } finally {
+      setLoading(false);
     }
-
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-
-    const { data: todaySessions } = await supabase
-      .from("sessions")
-      .select("id")
-      .eq("user_id", user.id)
-      .gte("created_at", start.toISOString());
-
-    setTodaySessionCount(todaySessions?.length || 0);
   };
 
   const checklist = useMemo(
@@ -427,8 +452,6 @@ export default function SessionPage() {
   const checklistProgress = Math.round(
     (Object.values(checked).filter(Boolean).length / checklist.length) * 100
   );
-
-  const loading = !primeProfile && todaySessionCount === 0 && !activeSessionId;
 
   if (loading) {
     return <PrimeSkeleton type="session" />;
