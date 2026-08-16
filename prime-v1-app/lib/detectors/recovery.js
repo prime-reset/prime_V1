@@ -2,35 +2,42 @@
  * Détecteur PRIME — Recovery
  *
  * Objectif :
- * Analyser la réaction comportementale du trader
- * après une session financièrement négative.
+ * Identifier la capacité du trader à reprendre
+ * le contrôle après une dérive ou une perte.
  *
- * PRIME cherche notamment à savoir si :
+ * PRIME distingue désormais :
  *
- * - la discipline s’améliore après une perte ;
- * - le plan reste respecté ;
- * - les erreurs émotionnelles diminuent ;
- * - une perte déclenche au contraire une dérive.
+ * - récupération historique après une perte ;
+ * - stabilisation récente ;
+ * - vraie recovery streak active.
  *
- * Le détecteur retourne :
- * - un insight standardisé ;
- * - ou null si les données sont insuffisantes.
+ * Une série récente de sessions propres
+ * peut devenir prioritaire sur un ancien
+ * pattern comportemental négatif.
  */
 
 const MINIMUM_SESSIONS = 8;
 const MINIMUM_LOSS_EVENTS = 2;
+
 const DISCIPLINE_IMPROVEMENT_THRESHOLD = 5;
 const DISCIPLINE_DECLINE_THRESHOLD = -8;
 
+const RECOVERY_STREAK_THRESHOLD = 3;
+const CLEAN_SCORE_THRESHOLD = 75;
+
 /**
- * Détecte la capacité de récupération après une perte.
+ * Détecte une récupération comportementale.
  *
  * @param {Array<Object>} sessions
  * @returns {Object|null}
  */
-export function detectRecovery(sessions = []) {
+export function detectRecovery(
+  sessions = []
+) {
   const chronologicalSessions =
-    getClosedSessionsChronologically(sessions);
+    getClosedSessionsChronologically(
+      sessions
+    );
 
   if (
     chronologicalSessions.length <
@@ -39,17 +46,34 @@ export function detectRecovery(sessions = []) {
     return null;
   }
 
+  /**
+   * ----------------------------------------------------------
+   * NOUVEAU :
+   * mesure de la série propre actuellement active.
+   * ----------------------------------------------------------
+   */
+
+  const currentCleanStreak =
+    getCurrentCleanStreak(
+      chronologicalSessions
+    );
+
+  const recentRecoveryActive =
+    currentCleanStreak >=
+    RECOVERY_STREAK_THRESHOLD;
+
+  /**
+   * Analyse historique :
+   *
+   * perte
+   *   ↓
+   * session suivante
+   */
+
   const recoveryEvents =
     buildRecoveryEvents(
       chronologicalSessions
     );
-
-  if (
-    recoveryEvents.length <
-    MINIMUM_LOSS_EVENTS
-  ) {
-    return null;
-  }
 
   const improvedEvents =
     recoveryEvents.filter(
@@ -91,96 +115,156 @@ export function detectRecovery(sessions = []) {
     ).length;
 
   const averageScoreBeforeLoss =
-    Math.round(
-      average(
-        recoveryEvents.map(
-          (event) =>
-            event.lossSessionScore
+    recoveryEvents.length > 0
+      ? Math.round(
+          average(
+            recoveryEvents.map(
+              (event) =>
+                event.lossSessionScore
+            )
+          )
         )
-      )
-    );
+      : 0;
 
   const averageScoreAfterLoss =
-    Math.round(
-      average(
-        recoveryEvents.map(
-          (event) =>
-            event.nextSessionScore
+    recoveryEvents.length > 0
+      ? Math.round(
+          average(
+            recoveryEvents.map(
+              (event) =>
+                event.nextSessionScore
+            )
+          )
         )
-      )
-    );
+      : 0;
 
   const averageRecoveryDelta =
-    Math.round(
-      average(
-        recoveryEvents.map(
-          (event) =>
-            event.scoreDelta
+    recoveryEvents.length > 0
+      ? Math.round(
+          average(
+            recoveryEvents.map(
+              (event) =>
+                event.scoreDelta
+            )
+          )
         )
-      )
-    );
+      : 0;
 
   const recoveryRate =
-    Math.round(
-      (
-        improvedEvents.length /
-        recoveryEvents.length
-      ) * 100
+    getRate(
+      improvedEvents.length,
+      recoveryEvents.length
     );
 
   const stabilityRate =
-    Math.round(
-      (
-        (
-          improvedEvents.length +
-          stableEvents.length
-        ) /
-        recoveryEvents.length
-      ) * 100
+    getRate(
+      improvedEvents.length +
+        stableEvents.length,
+      recoveryEvents.length
     );
 
   const planRespectRate =
-    Math.round(
-      (
-        respectedPlanAfterLoss /
-        recoveryEvents.length
-      ) * 100
+    getRate(
+      respectedPlanAfterLoss,
+      recoveryEvents.length
     );
 
   const emotionalErrorRate =
-    Math.round(
-      (
-        emotionalErrorsAfterLoss /
-        recoveryEvents.length
-      ) * 100
+    getRate(
+      emotionalErrorsAfterLoss,
+      recoveryEvents.length
     );
 
-  const recoveryDetected =
+  /**
+   * Analyse récente.
+   */
+
+  const recentSessions =
+    chronologicalSessions.slice(-5);
+
+  const recentAverageScore =
+    getAverageScore(
+      recentSessions
+    );
+
+  const recentPlanRespectRate =
+    getPlanRespectRate(
+      recentSessions
+    );
+
+  const recentEmotionalErrorRate =
+    getEmotionalErrorRate(
+      recentSessions
+    );
+
+  const historicalRecoveryDetected =
+    recoveryEvents.length >=
+      MINIMUM_LOSS_EVENTS &&
     (
-      recoveryRate >= 50 &&
-      averageRecoveryDelta >= 4
-    ) ||
-    (
-      stabilityRate >= 75 &&
-      planRespectRate >= 70 &&
-      emotionalErrorRate <= 25
+      (
+        recoveryRate >= 50 &&
+        averageRecoveryDelta >= 4
+      ) ||
+      (
+        stabilityRate >= 75 &&
+        planRespectRate >= 70 &&
+        emotionalErrorRate <= 25
+      )
     );
 
   const fragileRecoveryDetected =
-    declinedEvents.length >= 2 ||
-    emotionalErrorRate >= 50;
+    recoveryEvents.length >=
+      MINIMUM_LOSS_EVENTS &&
+    (
+      declinedEvents.length >= 2 ||
+      emotionalErrorRate >= 50
+    );
+
+  /**
+   * Nouvelle règle :
+   *
+   * 3 sessions propres consécutives
+   * représentent une récupération récente,
+   * même si l'historique post-perte
+   * reste imparfait.
+   */
+
+  const recentRecoveryDetected =
+    recentRecoveryActive &&
+    recentAverageScore >=
+      CLEAN_SCORE_THRESHOLD &&
+    recentPlanRespectRate >= 80 &&
+    recentEmotionalErrorRate === 0;
 
   if (
-    !recoveryDetected &&
-    !fragileRecoveryDetected
+    !historicalRecoveryDetected &&
+    !fragileRecoveryDetected &&
+    !recentRecoveryDetected
   ) {
     return null;
   }
 
-  const recoveryType =
+  /**
+   * Si une recovery récente est confirmée,
+   * elle prend le dessus sur l'historique fragile.
+   */
+
+  let recoveryType;
+
+  if (
+    recentRecoveryDetected
+  ) {
+    recoveryType =
+      "active";
+  } else if (
     fragileRecoveryDetected
-      ? "fragile"
-      : "positive";
+  ) {
+    recoveryType =
+      "fragile";
+  } else {
+    recoveryType =
+      "positive";
+  }
 
   const confidence =
     calculateConfidence({
@@ -199,6 +283,14 @@ export function detectRecovery(sessions = []) {
       emotionalErrorRate,
 
       averageRecoveryDelta,
+
+      currentCleanStreak,
+
+      recentRecoveryDetected,
+
+      recentAverageScore,
+
+      recentPlanRespectRate,
     });
 
   const priority =
@@ -215,8 +307,17 @@ export function detectRecovery(sessions = []) {
       emotionalErrorRate,
 
       averageRecoveryDelta,
+
+      currentCleanStreak,
+
+      recentRecoveryDetected,
+
+      recentAverageScore,
+
+      recentPlanRespectRate,
     });
-    const message =
+
+  const message =
     buildRecoveryMessage({
       recoveryType,
 
@@ -245,11 +346,21 @@ export function detectRecovery(sessions = []) {
       planRespectRate,
 
       emotionalErrorRate,
+
+      currentCleanStreak,
+
+      recentAverageScore,
+
+      recentPlanRespectRate,
+
+      recentEmotionalErrorRate,
     });
 
   return {
     id:
-      recoveryType === "fragile"
+      recoveryType === "active"
+        ? "recovery-active"
+        : recoveryType === "fragile"
         ? "recovery-fragile"
         : "recovery-positive",
 
@@ -304,9 +415,19 @@ export function detectRecovery(sessions = []) {
 
       emotionalErrorRate,
 
+      currentCleanStreak,
+
+      recentRecoveryDetected,
+
+      recentAverageScore,
+
+      recentPlanRespectRate,
+
+      recentEmotionalErrorRate,
+
       recencyScore:
         getRecoveryRecencyScore(
-          recoveryEvents
+          chronologicalSessions
         ),
     },
   };
@@ -315,51 +436,43 @@ export function detectRecovery(sessions = []) {
 /**
  * Trie les sessions clôturées
  * de la plus ancienne à la plus récente.
- *
- * L’ordre chronologique est indispensable
- * pour analyser ce qui se passe après une perte.
  */
-
 function getClosedSessionsChronologically(
   sessions
 ) {
-  if (!Array.isArray(sessions)) {
+  if (
+    !Array.isArray(
+      sessions
+    )
+  ) {
     return [];
   }
 
   return sessions
-    .filter((session) => {
-      return (
+    .filter(
+      (session) =>
         session &&
         session.status === "closed" &&
         session.created_at
-      );
-    })
-
-    .sort((a, b) => {
-      return (
+    )
+    .sort(
+      (a, b) =>
         new Date(
           a.created_at
         ).getTime() -
         new Date(
           b.created_at
         ).getTime()
-      );
-    });
+    );
 }
 
 /**
- * Construit les événements de récupération.
+ * Construit les événements :
  *
- * Un événement correspond à :
- *
- * session perdante
- *        ↓
+ * perte
+ *   ↓
  * session suivante
- *
- * PRIME compare alors les deux comportements.
  */
-
 function buildRecoveryEvents(
   sessions
 ) {
@@ -367,7 +480,8 @@ function buildRecoveryEvents(
 
   for (
     let index = 0;
-    index < sessions.length - 1;
+    index <
+    sessions.length - 1;
     index += 1
   ) {
     const lossSession =
@@ -390,12 +504,14 @@ function buildRecoveryEvents(
 
     const lossSessionScore =
       toValidScore(
-        lossSession.discipline_score
+        lossSession
+          .discipline_score
       );
 
     const nextSessionScore =
       toValidScore(
-        nextSession.discipline_score
+        nextSession
+          .discipline_score
       );
 
     if (
@@ -430,10 +546,68 @@ function buildRecoveryEvents(
 }
 
 /**
- * Détermine si l’erreur déclarée
- * après une perte est émotionnelle.
+ * Série actuelle de sessions propres.
  */
+function getCurrentCleanStreak(
+  sessions
+) {
+  let streak = 0;
 
+  for (
+    let index =
+      sessions.length - 1;
+    index >= 0;
+    index -= 1
+  ) {
+    if (
+      isCleanSession(
+        sessions[index]
+      )
+    ) {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * Une session propre signifie :
+ *
+ * - score >= 75 ;
+ * - plan respecté ;
+ * - aucune erreur émotionnelle.
+ */
+function isCleanSession(
+  session
+) {
+  if (!session) {
+    return false;
+  }
+
+  const score =
+    toValidScore(
+      session.discipline_score
+    );
+
+  return (
+    score !== null &&
+    score >=
+      CLEAN_SCORE_THRESHOLD &&
+    session.plan_respected ===
+      true &&
+    !isEmotionalError(
+      session.dominant_error
+    )
+  );
+}
+
+/**
+ * Erreurs considérées comme
+ * émotionnelles par PRIME.
+ */
 function isEmotionalError(
   error
 ) {
@@ -446,24 +620,126 @@ function isEmotionalError(
   const normalized =
     error
       .trim()
-      .toLowerCase();
+      .toLowerCase()
+      .replace(
+        /\s+/g,
+        " "
+      );
 
   return [
     "revenge trade",
     "overtrading",
     "entrée fomo",
     "trade hors plan",
-  ].includes(normalized);
+  ].includes(
+    normalized
+  );
 }
 
 /**
- * Convertit une valeur
- * en score valide de 0 à 100.
+ * Moyenne de discipline.
  */
+function getAverageScore(
+  sessions
+) {
+  const scores =
+    sessions
+      .map(
+        (session) =>
+          toValidScore(
+            session
+              .discipline_score
+          )
+      )
+      .filter(
+        (score) =>
+          score !== null
+      );
+
+  if (
+    scores.length === 0
+  ) {
+    return 0;
+  }
+
+  return Math.round(
+    average(scores)
+  );
+}
+
+/**
+ * Respect du plan
+ * sur une période donnée.
+ */
+function getPlanRespectRate(
+  sessions
+) {
+  const sessionsWithPlan =
+    sessions.filter(
+      (session) =>
+        session.plan_respected ===
+          true ||
+        session.plan_respected ===
+          false
+    );
+
+  if (
+    sessionsWithPlan.length === 0
+  ) {
+    return 0;
+  }
+
+  const respected =
+    sessionsWithPlan.filter(
+      (session) =>
+        session.plan_respected ===
+        true
+    ).length;
+
+  return getRate(
+    respected,
+    sessionsWithPlan.length
+  );
+}
+
+/**
+ * Taux d'erreurs émotionnelles
+ * sur une période donnée.
+ */
+function getEmotionalErrorRate(
+  sessions
+) {
+  if (
+    sessions.length === 0
+  ) {
+    return 0;
+  }
+
+  const emotional =
+    sessions.filter(
+      (session) =>
+        isEmotionalError(
+          session.dominant_error
+        )
+    ).length;
+
+  return getRate(
+    emotional,
+    sessions.length
+  );
+}
 
 function toValidScore(
   value
 ) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
   const score =
     Number(value);
 
@@ -477,11 +753,6 @@ function toValidScore(
 
   return score;
 }
-
-/**
- * Convertit une valeur
- * numérique de façon sécurisée.
- */
 
 function toValidNumber(
   value
@@ -497,17 +768,19 @@ function toValidNumber(
   const number =
     Number(value);
 
-  return Number.isNaN(number)
+  return Number.isNaN(
+    number
+  )
     ? null
     : number;
 }
 
-/**
- * Calcule une moyenne simple.
- */
-
-function average(values) {
-  if (!values.length) {
+function average(
+  values
+) {
+  if (
+    !values.length
+  ) {
     return 0;
   }
 
@@ -516,14 +789,30 @@ function average(values) {
       (sum, value) =>
         sum + value,
       0
-    ) / values.length
+    ) /
+    values.length
   );
 }
-/**
- * Calcule le niveau de confiance
- * de l’insight Recovery.
- */
 
+function getRate(
+  count,
+  total
+) {
+  if (!total) {
+    return 0;
+  }
+
+  return Math.round(
+    (
+      count /
+      total
+    ) * 100
+  );
+}
+
+/**
+ * Confiance Recovery.
+ */
 function calculateConfidence({
   totalSessions,
   recoveryEvents,
@@ -532,63 +821,115 @@ function calculateConfidence({
   planRespectRate,
   emotionalErrorRate,
   averageRecoveryDelta,
+  currentCleanStreak,
+  recentRecoveryDetected,
+  recentAverageScore,
+  recentPlanRespectRate,
 }) {
   let confidence = 38;
 
-  if (totalSessions >= 10) {
+  if (
+    totalSessions >= 10
+  ) {
     confidence += 8;
   }
 
-  if (totalSessions >= 20) {
-    confidence += 10;
+  if (
+    totalSessions >= 20
+  ) {
+    confidence += 8;
   }
 
-  if (totalSessions >= 50) {
-    confidence += 10;
+  if (
+    recoveryEvents >= 3
+  ) {
+    confidence += 5;
   }
 
-  if (recoveryEvents >= 3) {
+  if (
+    recoveryEvents >= 5
+  ) {
     confidence += 6;
   }
 
-  if (recoveryEvents >= 5) {
+  if (
+    recoveryRate >= 60
+  ) {
+    confidence += 4;
+  }
+
+  if (
+    stabilityRate >= 80
+  ) {
+    confidence += 4;
+  }
+
+  if (
+    planRespectRate >= 75
+  ) {
+    confidence += 4;
+  }
+
+  if (
+    emotionalErrorRate <= 20
+  ) {
+    confidence += 4;
+  }
+
+  if (
+    Math.abs(
+      averageRecoveryDelta
+    ) >= 8
+  ) {
+    confidence += 4;
+  }
+
+  if (
+    currentCleanStreak >= 3
+  ) {
     confidence += 8;
   }
 
-  if (recoveryRate >= 60) {
+  if (
+    currentCleanStreak >= 5
+  ) {
     confidence += 5;
   }
 
-  if (stabilityRate >= 80) {
-    confidence += 5;
+  if (
+    recentRecoveryDetected
+  ) {
+    confidence += 8;
   }
 
-  if (planRespectRate >= 75) {
+  if (
+    recentAverageScore >= 85
+  ) {
     confidence += 4;
   }
 
-  if (emotionalErrorRate <= 20) {
+  if (
+    recentPlanRespectRate === 100
+  ) {
     confidence += 4;
-  }
-
-  if (Math.abs(averageRecoveryDelta) >= 8) {
-    confidence += 5;
   }
 
   return clamp(
-    Math.round(confidence),
+    Math.round(
+      confidence
+    ),
     0,
     100
   );
 }
 
 /**
- * Définit la priorité de l’insight.
+ * Priorité Recovery.
  *
- * Une récupération fragile peut devenir
- * prioritaire car elle révèle un risque.
+ * Une vraie recovery récente
+ * doit pouvoir dépasser
+ * une vulnérabilité historique.
  */
-
 function calculatePriority({
   recoveryType,
   recoveryEvents,
@@ -596,83 +937,144 @@ function calculatePriority({
   stabilityRate,
   emotionalErrorRate,
   averageRecoveryDelta,
+  currentCleanStreak,
+  recentRecoveryDetected,
+  recentAverageScore,
+  recentPlanRespectRate,
 }) {
-  let priority =
-    recoveryType === "fragile"
-      ? 82
-      : 72;
+  let priority;
 
-  if (recoveryEvents >= 4) {
-    priority += 4;
+  if (
+    recoveryType === "active"
+  ) {
+    priority = 91;
+  } else if (
+    recoveryType === "fragile"
+  ) {
+    priority = 82;
+  } else {
+    priority = 72;
   }
 
-  if (recoveryEvents >= 6) {
+  if (
+    recoveryEvents >= 4
+  ) {
     priority += 3;
   }
 
   if (
-    recoveryType === "fragile" &&
+    recoveryEvents >= 6
+  ) {
+    priority += 2;
+  }
+
+  if (
+    recoveryType ===
+      "fragile" &&
     emotionalErrorRate >= 50
   ) {
     priority += 6;
   }
 
   if (
-    recoveryType === "fragile" &&
+    recoveryType ===
+      "fragile" &&
     averageRecoveryDelta <= -10
   ) {
     priority += 5;
   }
 
   if (
-    recoveryType === "positive" &&
+    recoveryType !==
+      "fragile" &&
     recoveryRate >= 70
   ) {
-    priority += 4;
+    priority += 3;
   }
 
   if (
-    recoveryType === "positive" &&
+    recoveryType !==
+      "fragile" &&
     stabilityRate >= 85
   ) {
     priority += 3;
   }
 
+  if (
+    currentCleanStreak >= 3
+  ) {
+    priority += 4;
+  }
+
+  if (
+    currentCleanStreak >= 5
+  ) {
+    priority += 2;
+  }
+
+  if (
+    recentRecoveryDetected
+  ) {
+    priority += 4;
+  }
+
+  if (
+    recentAverageScore >= 85
+  ) {
+    priority += 2;
+  }
+
+  if (
+    recentPlanRespectRate === 100
+  ) {
+    priority += 2;
+  }
+
   return clamp(
     priority,
     0,
-    recoveryType === "fragile"
+    recoveryType === "active"
+      ? 98
+      : recoveryType ===
+          "fragile"
       ? 96
-      : 88
+      : 90
   );
 }
 
 /**
- * Calcule la récence du signal Recovery.
- *
- * Plus les événements observés sont récents,
- * plus l’insight est pertinent.
+ * Récence basée sur la dernière
+ * session clôturée.
  */
-
 function getRecoveryRecencyScore(
-  recoveryEvents
+  sessions
 ) {
-  if (!recoveryEvents.length) {
+  if (
+    !sessions.length
+  ) {
     return 0;
   }
 
-  const latestEvent =
-    recoveryEvents[
-      recoveryEvents.length - 1
+  const latestSession =
+    sessions[
+      sessions.length - 1
     ];
+
+  if (
+    !latestSession?.created_at
+  ) {
+    return 0;
+  }
 
   const latestDate =
     new Date(
-      latestEvent.recoveryDate
+      latestSession.created_at
     ).getTime();
 
   if (
-    Number.isNaN(latestDate)
+    Number.isNaN(
+      latestDate
+    )
   ) {
     return 0;
   }
@@ -691,19 +1093,27 @@ function getRecoveryRecencyScore(
       )
     );
 
-  if (daysSince <= 3) {
+  if (
+    daysSince <= 3
+  ) {
     return 100;
   }
 
-  if (daysSince <= 7) {
+  if (
+    daysSince <= 7
+  ) {
     return 85;
   }
 
-  if (daysSince <= 14) {
+  if (
+    daysSince <= 14
+  ) {
     return 65;
   }
 
-  if (daysSince <= 30) {
+  if (
+    daysSince <= 30
+  ) {
     return 45;
   }
 
@@ -711,10 +1121,8 @@ function getRecoveryRecencyScore(
 }
 
 /**
- * Produit le message adapté
- * au type de récupération détecté.
+ * Message Recovery.
  */
-
 function buildRecoveryMessage({
   recoveryType,
   recoveryEvents,
@@ -728,17 +1136,40 @@ function buildRecoveryMessage({
   stabilityRate,
   planRespectRate,
   emotionalErrorRate,
+  currentCleanStreak,
+  recentAverageScore,
+  recentPlanRespectRate,
+  recentEmotionalErrorRate,
 }) {
-  if (recoveryType === "fragile") {
+  if (
+    recoveryType ===
+    "active"
+  ) {
+    return {
+      insight:
+        `Tu viens d’enchaîner ${currentCleanStreak} sessions propres après une période de dérive.`,
+
+      explanation:
+        `Sur tes sessions récentes, ta discipline moyenne atteint ${recentAverageScore} %, ton plan est respecté ${recentPlanRespectRate} % du temps et aucune erreur émotionnelle récente n’est détectée.`,
+
+      action:
+        "Ne cherche pas à accélérer parce que tu vas mieux. Protège exactement le comportement qui vient de te permettre de reprendre le contrôle.",
+    };
+  }
+
+  if (
+    recoveryType ===
+    "fragile"
+  ) {
     if (
       emotionalErrorRate >= 50
     ) {
       return {
         insight:
-          `Après une perte, une erreur émotionnelle apparaît dans ${emotionalErrorRate} % des cas observés.`,
+          `Après une perte, une erreur émotionnelle apparaît encore dans ${emotionalErrorRate} % des cas observés.`,
 
         explanation:
-          "PRIME détecte que la perte ne reste pas toujours un simple résultat financier. Elle peut devenir un déclencheur comportemental lors de la session suivante.",
+          "PRIME détecte que la récupération reste fragile. Le résultat financier peut encore influencer la session suivante.",
 
         action:
           "Après une perte, impose une coupure claire avant toute nouvelle session et relis ton plan avant de reprendre.",
@@ -747,7 +1178,7 @@ function buildRecoveryMessage({
 
     return {
       insight:
-        `Ta discipline baisse en moyenne de ${Math.abs(
+        `Ta discipline baisse encore en moyenne de ${Math.abs(
           averageRecoveryDelta
         )} points après une perte.`,
 
@@ -768,13 +1199,14 @@ function buildRecoveryMessage({
         `Dans ${recoveryRate} % des cas, ta discipline s’améliore après une perte.`,
 
       explanation:
-        `Ton score moyen passe de ${averageScoreBeforeLoss} % à ${averageScoreAfterLoss} % sur la session suivante. PRIME observe une capacité réelle à transformer l’échec en ajustement.`,
+        `Ton score moyen passe de ${averageScoreBeforeLoss} % à ${averageScoreAfterLoss} % sur la session suivante.`,
 
       action:
         "Continue d’analyser chaque perte avant de reprendre. Ce débrief semble renforcer ton comportement plutôt que l’affaiblir.",
     };
   }
-    if (
+
+  if (
     stabilityRate >= 75 &&
     planRespectRate >= 70
   ) {
@@ -783,7 +1215,7 @@ function buildRecoveryMessage({
         `Après une perte, tu conserves une exécution stable dans ${stabilityRate} % des cas.`,
 
       explanation:
-        `Ton plan reste respecté dans ${planRespectRate} % des sessions suivantes, avec seulement ${emotionalErrorRate} % d’erreurs émotionnelles détectées.`,
+        `Ton plan reste respecté dans ${planRespectRate} % des sessions suivantes, avec ${emotionalErrorRate} % d’erreurs émotionnelles observées.`,
 
       action:
         "Continue de protéger cette stabilité. Le bon objectif après une perte n’est pas de récupérer, mais de rester identique dans ton processus.",
@@ -796,7 +1228,7 @@ function buildRecoveryMessage({
   ) {
     return {
       insight:
-        `Tes pertes sont plus souvent suivies d’une amélioration que d’une dégradation de ta discipline.`,
+        "Tes pertes sont plus souvent suivies d’une amélioration que d’une dégradation de ta discipline.",
 
       explanation:
         `Sur ${recoveryEvents} événements analysés, ${improvedEvents} montrent une progression et ${declinedEvents} une baisse nette.`,
@@ -819,10 +1251,9 @@ function buildRecoveryMessage({
 }
 
 /**
- * Maintient une valeur entre
- * un minimum et un maximum.
+ * Maintient une valeur
+ * entre un minimum et un maximum.
  */
-
 function clamp(
   value,
   minimum,
