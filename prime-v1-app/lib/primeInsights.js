@@ -161,7 +161,9 @@ export function getAllInsights(
   return removeDuplicateInsights(
     insights
   );
-  /**
+}
+
+/**
  * Exécute un détecteur sans casser
  * tout le moteur s’il rencontre une erreur.
  */
@@ -374,7 +376,8 @@ function removeDuplicateInsights(
     }
   );
 }
-  /**
+
+/**
  * Nettoie les sessions avant analyse.
  */
 function normalizeSessions(
@@ -569,7 +572,8 @@ function buildObservationInsight(
     },
   };
 }
-  /**
+
+/**
  * Niveau de confiance de base
  * selon le volume de données.
  */
