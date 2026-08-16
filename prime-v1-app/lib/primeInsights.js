@@ -675,4 +675,3 @@ function clamp(
 }
 
 export default getBestInsight;
-}
