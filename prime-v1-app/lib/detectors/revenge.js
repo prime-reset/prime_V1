@@ -2,30 +2,26 @@
  * Détecteur PRIME — Revenge Trading
  *
  * Objectif :
- * Identifier une spirale comportementale de récupération
- * après une perte financière.
+ * Identifier une spirale comportementale après une perte
+ * tout en distinguant :
  *
- * PRIME cherche notamment :
+ * - une vulnérabilité historique ;
+ * - un pattern actuellement actif.
  *
- * - une erreur "Revenge trade" déclarée ;
- * - une baisse de discipline après une perte ;
- * - un plan moins respecté ;
- * - une répétition récente ;
- * - une aggravation du PnL ;
- * - une dérive émotionnelle sur la session suivante.
- *
- * Le détecteur retourne :
- * - un insight standardisé ;
- * - ou null si les données sont insuffisantes.
+ * Règle importante :
+ * après 3 sessions propres consécutives depuis le dernier
+ * signal émotionnel, Revenge cesse d’être considéré comme actif.
  */
 
 const MINIMUM_SESSIONS = 8;
-const MINIMUM_REVENGE_EVENTS = 2;
 const RECENT_WINDOW = 10;
+const MINIMUM_REVENGE_EVENTS = 2;
+
 const DISCIPLINE_DECLINE_THRESHOLD = -8;
+const CLEAN_STREAK_TO_DEACTIVATE = 3;
 
 /**
- * Détecte un pattern de revenge trading.
+ * Détecte un pattern de revenge trading actif.
  *
  * @param {Array<Object>} sessions
  * @returns {Object|null}
@@ -63,10 +59,6 @@ export function detectRevenge(
         ) === "revenge trade"
     );
 
-  const repeatedDeclaredRevenge =
-    declaredRevengeSessions.length >=
-    MINIMUM_REVENGE_EVENTS;
-
   const recentThree =
     recentSessions.slice(-3);
 
@@ -80,6 +72,46 @@ export function detectRevenge(
 
   const activeRecentPattern =
     recentRevengeCount >= 2;
+
+  const repeatedDeclaredRevenge =
+    declaredRevengeSessions.length >=
+    MINIMUM_REVENGE_EVENTS;
+
+  /**
+   * ----------------------------------------------------------
+   * NOUVEAU :
+   * mesure la propreté depuis le dernier signal émotionnel.
+   * ----------------------------------------------------------
+   */
+
+  const latestEmotionalIndex =
+    findLatestEmotionalSessionIndex(
+      recentSessions
+    );
+
+  const cleanStreak =
+    getCleanStreakAfterIndex(
+      recentSessions,
+      latestEmotionalIndex
+    );
+
+  const recentRecoveryConfirmed =
+    cleanStreak >=
+    CLEAN_STREAK_TO_DEACTIVATE;
+
+  /**
+   * Si le trader a maintenant enchaîné
+   * 3 sessions propres ou plus,
+   * l’ancien Revenge reste historique
+   * mais n’est plus un signal actif.
+   */
+
+  if (
+    recentRecoveryConfirmed &&
+    !activeRecentPattern
+  ) {
+    return null;
+  }
 
   const disciplineDeclines =
     revengeEvents.filter(
@@ -117,7 +149,7 @@ export function detectRevenge(
     );
 
   const averageScoreBefore =
-    revengeEvents.length > 0
+    revengeEvents.length
       ? Math.round(
           average(
             revengeEvents.map(
@@ -129,7 +161,7 @@ export function detectRevenge(
       : 0;
 
   const averageScoreAfter =
-    revengeEvents.length > 0
+    revengeEvents.length
       ? Math.round(
           average(
             revengeEvents.map(
@@ -144,55 +176,44 @@ export function detectRevenge(
     averageScoreAfter -
     averageScoreBefore;
 
+  const disciplineDeclineRate =
+    getRate(
+      disciplineDeclines.length,
+      revengeEvents.length
+    );
+
   const planBreakRate =
-    revengeEvents.length > 0
-      ? Math.round(
-          (
-            planBreaksAfterLoss.length /
-            revengeEvents.length
-          ) * 100
-        )
-      : 0;
+    getRate(
+      planBreaksAfterLoss.length,
+      revengeEvents.length
+    );
 
   const emotionalErrorRate =
-    revengeEvents.length > 0
-      ? Math.round(
-          (
-            emotionalErrorsAfterLoss.length /
-            revengeEvents.length
-          ) * 100
-        )
-      : 0;
-
-  const disciplineDeclineRate =
-    revengeEvents.length > 0
-      ? Math.round(
-          (
-            disciplineDeclines.length /
-            revengeEvents.length
-          ) * 100
-        )
-      : 0;
+    getRate(
+      emotionalErrorsAfterLoss.length,
+      revengeEvents.length
+    );
 
   const deeperLossRate =
-    revengeEvents.length > 0
-      ? Math.round(
-          (
-            deeperLossesAfterLoss.length /
-            revengeEvents.length
-          ) * 100
-        )
-      : 0;
+    getRate(
+      deeperLossesAfterLoss.length,
+      revengeEvents.length
+    );
 
   const spiralSignals = {
     repeatedDeclaredRevenge,
+
     activeRecentPattern,
+
     disciplineDecline:
       disciplineDeclineRate >= 40,
+
     planBreak:
       planBreakRate >= 40,
+
     emotionalError:
       emotionalErrorRate >= 40,
+
     deeperLoss:
       deeperLossRate >= 30,
   };
@@ -204,11 +225,11 @@ export function detectRevenge(
 
   const revengeDetected =
     (
-      repeatedDeclaredRevenge &&
+      activeRecentPattern &&
       positiveSignals >= 2
     ) ||
     (
-      activeRecentPattern &&
+      repeatedDeclaredRevenge &&
       positiveSignals >= 2
     ) ||
     (
@@ -220,13 +241,24 @@ export function detectRevenge(
     return null;
   }
 
+  /**
+   * Nouveau garde-fou :
+   *
+   * Même si les statistiques historiques
+   * restent négatives, un seul ancien Revenge
+   * ne doit pas empêcher Recovery de prendre la parole.
+   */
+
+  const latestSignalAt =
+    getLatestEmotionalSignalDate(
+      recentSessions,
+      revengeEvents
+    );
+
   const confidence =
     calculateConfidence({
       totalSessions:
         chronologicalSessions.length,
-
-      analyzedSessions:
-        recentSessions.length,
 
       revengeEvents:
         revengeEvents.length,
@@ -245,6 +277,8 @@ export function detectRevenge(
       deeperLossRate,
 
       activeRecentPattern,
+
+      cleanStreak,
     });
 
   const priority =
@@ -266,16 +300,17 @@ export function detectRevenge(
       deeperLossRate,
 
       activeRecentPattern,
+
+      cleanStreak,
     });
-    const message =
+
+  const message =
     buildRevengeMessage({
       revengeEvents:
         revengeEvents.length,
 
       declaredRevengeEvents:
         declaredRevengeSessions.length,
-
-      recentRevengeCount,
 
       averageScoreBefore,
 
@@ -293,17 +328,21 @@ export function detectRevenge(
 
       activeRecentPattern,
 
+      cleanStreak,
+
       positiveSignals,
     });
 
   return {
-    id: "revenge-trading",
+    id:
+      "revenge-trading",
 
     priority,
 
     confidence,
 
-    category: "risk",
+    category:
+      "risk",
 
     title:
       "Aujourd’hui PRIME remarque...",
@@ -334,6 +373,10 @@ export function detectRevenge(
 
       activeRecentPattern,
 
+      cleanStreak,
+
+      recentRecoveryConfirmed,
+
       averageScoreBefore,
 
       averageScoreAfter,
@@ -352,23 +395,16 @@ export function detectRevenge(
 
       recencyScore:
         getRecencyScore(
-          declaredRevengeSessions[
-            declaredRevengeSessions.length - 1
-          ]?.created_at ||
-          revengeEvents[
-            revengeEvents.length - 1
-          ]?.recoveryDate
+          latestSignalAt
         ),
     },
   };
 }
 
 /**
- * Garde uniquement les sessions clôturées
- * et les trie de la plus ancienne
- * à la plus récente.
+ * Trie les sessions clôturées
+ * de la plus ancienne à la plus récente.
  */
-
 function getClosedSessionsChronologically(
   sessions
 ) {
@@ -377,37 +413,30 @@ function getClosedSessionsChronologically(
   }
 
   return sessions
-    .filter((session) => {
-      return (
+    .filter(
+      (session) =>
         session &&
         session.status === "closed" &&
         session.created_at
-      );
-    })
-
-    .sort((a, b) => {
-      return (
+    )
+    .sort(
+      (a, b) =>
         new Date(
           a.created_at
         ).getTime() -
         new Date(
           b.created_at
         ).getTime()
-      );
-    });
+    );
 }
 
 /**
- * Construit les événements
- * de revenge potentiels.
+ * Construit les événements :
  *
- * Un événement correspond à :
- *
- * session perdante
- *        ↓
+ * perte
+ *   ↓
  * session suivante
  */
-
 function buildRevengeEvents(
   sessions
 ) {
@@ -415,7 +444,8 @@ function buildRevengeEvents(
 
   for (
     let index = 0;
-    index < sessions.length - 1;
+    index <
+    sessions.length - 1;
     index += 1
   ) {
     const lossSession =
@@ -488,10 +518,106 @@ function buildRevengeEvents(
 }
 
 /**
- * Vérifie si l’erreur déclarée
- * appartient à une dérive émotionnelle.
+ * Renvoie l’index du dernier signal
+ * émotionnel récent.
  */
+function findLatestEmotionalSessionIndex(
+  sessions
+) {
+  for (
+    let index =
+      sessions.length - 1;
+    index >= 0;
+    index -= 1
+  ) {
+    if (
+      isEmotionalError(
+        sessions[index]
+          .dominant_error
+      )
+    ) {
+      return index;
+    }
+  }
 
+  return -1;
+}
+
+/**
+ * Compte les sessions propres
+ * après le dernier signal émotionnel.
+ */
+function getCleanStreakAfterIndex(
+  sessions,
+  signalIndex
+) {
+  if (
+    signalIndex < 0
+  ) {
+    return sessions.length;
+  }
+
+  let streak = 0;
+
+  for (
+    let index =
+      signalIndex + 1;
+    index < sessions.length;
+    index += 1
+  ) {
+    if (
+      isCleanSession(
+        sessions[index]
+      )
+    ) {
+      streak += 1;
+    } else {
+      streak = 0;
+    }
+  }
+
+  return streak;
+}
+
+/**
+ * Détermine si une session
+ * peut être considérée comme propre.
+ */
+function isCleanSession(
+  session
+) {
+  if (!session) {
+    return false;
+  }
+
+  const score =
+    toValidScore(
+      session.discipline_score
+    );
+
+  const noEmotionalError =
+    !isEmotionalError(
+      session.dominant_error
+    );
+
+  const planRespected =
+    session.plan_respected === true;
+
+  const strongDiscipline =
+    score !== null &&
+    score >= 75;
+
+  return (
+    noEmotionalError &&
+    planRespected &&
+    strongDiscipline
+  );
+}
+
+/**
+ * Vérifie si l’erreur appartient
+ * à une dérive émotionnelle.
+ */
 function isEmotionalError(
   error
 ) {
@@ -503,13 +629,10 @@ function isEmotionalError(
     "overtrading",
     "entrée fomo",
     "trade hors plan",
-  ].includes(normalized);
+  ].includes(
+    normalized
+  );
 }
-
-/**
- * Normalise le libellé
- * d’une erreur.
- */
 
 function normalizeError(
   value
@@ -523,16 +646,58 @@ function normalizeError(
   return value
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, " ");
+    .replace(
+      /\s+/g,
+      " "
+    );
 }
+
 /**
- * Convertit une valeur
- * en score valide de 0 à 100.
+ * Retourne la date du signal
+ * émotionnel le plus récent.
  */
+function getLatestEmotionalSignalDate(
+  sessions,
+  revengeEvents
+) {
+  const emotionalSessions =
+    sessions.filter(
+      (session) =>
+        isEmotionalError(
+          session.dominant_error
+        )
+    );
+
+  if (
+    emotionalSessions.length
+  ) {
+    return emotionalSessions[
+      emotionalSessions.length - 1
+    ].created_at;
+  }
+
+  if (
+    revengeEvents.length
+  ) {
+    return revengeEvents[
+      revengeEvents.length - 1
+    ].recoveryDate;
+  }
+
+  return null;
+}
 
 function toValidScore(
   value
 ) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
   const score =
     Number(value);
 
@@ -546,11 +711,6 @@ function toValidScore(
 
   return score;
 }
-
-/**
- * Convertit une valeur numérique
- * de manière sécurisée.
- */
 
 function toValidNumber(
   value
@@ -571,10 +731,6 @@ function toValidNumber(
     : number;
 }
 
-/**
- * Calcule une moyenne simple.
- */
-
 function average(
   values
 ) {
@@ -587,18 +743,35 @@ function average(
       (sum, value) =>
         sum + value,
       0
-    ) / values.length
+    ) /
+    values.length
+  );
+}
+
+function getRate(
+  count,
+  total
+) {
+  if (!total) {
+    return 0;
+  }
+
+  return Math.round(
+    (
+      count /
+      total
+    ) * 100
   );
 }
 
 /**
- * Calcule le niveau de confiance
- * de l’insight Revenge.
+ * Confiance :
+ * historique + convergence des signaux,
+ * mais pénalisée si le trader recommence
+ * à produire des sessions propres.
  */
-
 function calculateConfidence({
   totalSessions,
-  analyzedSessions,
   revengeEvents,
   declaredRevengeEvents,
   positiveSignals,
@@ -607,6 +780,7 @@ function calculateConfidence({
   emotionalErrorRate,
   deeperLossRate,
   activeRecentPattern,
+  cleanStreak,
 }) {
   let confidence = 42;
 
@@ -619,19 +793,7 @@ function calculateConfidence({
   if (
     totalSessions >= 20
   ) {
-    confidence += 10;
-  }
-
-  if (
-    totalSessions >= 50
-  ) {
-    confidence += 10;
-  }
-
-  if (
-    analyzedSessions >= 10
-  ) {
-    confidence += 4;
+    confidence += 8;
   }
 
   if (
@@ -643,7 +805,7 @@ function calculateConfidence({
   if (
     revengeEvents >= 4
   ) {
-    confidence += 6;
+    confidence += 5;
   }
 
   if (
@@ -653,12 +815,6 @@ function calculateConfidence({
   }
 
   if (
-    declaredRevengeEvents >= 4
-  ) {
-    confidence += 5;
-  }
-
-  if (
     positiveSignals >= 3
   ) {
     confidence += 5;
@@ -667,49 +823,69 @@ function calculateConfidence({
   if (
     disciplineDeclineRate >= 50
   ) {
-    confidence += 5;
+    confidence += 4;
   }
 
   if (
     planBreakRate >= 50
   ) {
-    confidence += 5;
+    confidence += 4;
   }
 
   if (
     emotionalErrorRate >= 50
   ) {
-    confidence += 5;
+    confidence += 4;
   }
 
   if (
     deeperLossRate >= 40
   ) {
-    confidence += 4;
+    confidence += 3;
   }
 
   if (
     activeRecentPattern
   ) {
-    confidence += 8;
+    confidence += 10;
+  }
+
+  /**
+   * La confiance dans le fait
+   * que le problème soit ACTUEL
+   * diminue lorsque le trader
+   * enchaîne des sessions propres.
+   */
+
+  if (
+    cleanStreak === 1
+  ) {
+    confidence -= 5;
+  }
+
+  if (
+    cleanStreak === 2
+  ) {
+    confidence -= 12;
   }
 
   return clamp(
-    Math.round(confidence),
+    Math.round(
+      confidence
+    ),
     0,
     100
   );
 }
 
 /**
- * Définit la priorité
- * de l’insight Revenge.
+ * Priorité :
  *
- * Ce détecteur peut devenir
- * l’un des plus prioritaires
- * du moteur PRIME.
+ * Revenge doit rester très prioritaire
+ * lorsqu’il est actif, mais perdre
+ * rapidement la priorité lorsqu’un
+ * redressement récent apparaît.
  */
-
 function calculatePriority({
   revengeEvents,
   declaredRevengeEvents,
@@ -719,17 +895,12 @@ function calculatePriority({
   emotionalErrorRate,
   deeperLossRate,
   activeRecentPattern,
+  cleanStreak,
 }) {
-  let priority = 88;
+  let priority = 84;
 
   if (
     revengeEvents >= 2
-  ) {
-    priority += 3;
-  }
-
-  if (
-    revengeEvents >= 4
   ) {
     priority += 3;
   }
@@ -741,12 +912,6 @@ function calculatePriority({
   }
 
   if (
-    declaredRevengeEvents >= 4
-  ) {
-    priority += 3;
-  }
-
-  if (
     positiveSignals >= 3
   ) {
     priority += 4;
@@ -755,31 +920,52 @@ function calculatePriority({
   if (
     disciplineDeclineRate >= 50
   ) {
-    priority += 4;
+    priority += 3;
   }
 
   if (
     planBreakRate >= 50
   ) {
-    priority += 4;
+    priority += 3;
   }
 
   if (
     emotionalErrorRate >= 50
   ) {
-    priority += 4;
+    priority += 3;
   }
 
   if (
     deeperLossRate >= 40
   ) {
-    priority += 3;
+    priority += 2;
   }
 
   if (
     activeRecentPattern
   ) {
-    priority += 6;
+    priority += 8;
+  }
+
+  /**
+   * Nouveau :
+   * une session propre réduit légèrement
+   * l’urgence, deux la réduisent fortement.
+   *
+   * À 3 sessions propres,
+   * le détecteur retourne déjà null.
+   */
+
+  if (
+    cleanStreak === 1
+  ) {
+    priority -= 8;
+  }
+
+  if (
+    cleanStreak === 2
+  ) {
+    priority -= 18;
   }
 
   return clamp(
@@ -790,10 +976,8 @@ function calculatePriority({
 }
 
 /**
- * Calcule la récence
- * du signal Revenge.
+ * Récence du dernier signal émotionnel.
  */
-
 function getRecencyScore(
   latestSessionAt
 ) {
@@ -807,7 +991,9 @@ function getRecencyScore(
     ).getTime();
 
   if (
-    Number.isNaN(latestDate)
+    Number.isNaN(
+      latestDate
+    )
   ) {
     return 0;
   }
@@ -852,15 +1038,13 @@ function getRecencyScore(
 
   return 20;
 }
-/**
- * Produit le message adapté
- * au signal de revenge trading.
- */
 
+/**
+ * Message utilisateur.
+ */
 function buildRevengeMessage({
   revengeEvents,
   declaredRevengeEvents,
-  recentRevengeCount,
   averageScoreBefore,
   averageScoreAfter,
   averageScoreDelta,
@@ -869,18 +1053,36 @@ function buildRevengeMessage({
   emotionalErrorRate,
   deeperLossRate,
   activeRecentPattern,
+  cleanStreak,
   positiveSignals,
 }) {
-  if (activeRecentPattern) {
+  if (
+    activeRecentPattern
+  ) {
     return {
       insight:
         "Le revenge trading apparaît dans au moins deux de tes trois dernières sessions.",
 
       explanation:
-        "PRIME détecte une spirale récente et active. Le signal est suffisamment rapproché pour nécessiter une intervention immédiate.",
+        "PRIME détecte une spirale récente et active. Ce signal nécessite une intervention immédiate avant qu’il ne devienne une habitude.",
 
       action:
-        "Après une perte, impose une pause obligatoire et interdiction de reprendre sans setup A complet et validation du plan.",
+        "Après une perte, impose une pause obligatoire. Aucun nouveau trade sans setup complet et validation de ton plan.",
+    };
+  }
+
+  if (
+    cleanStreak === 2
+  ) {
+    return {
+      insight:
+        "Ton signal de revenge reste présent dans l’historique, mais tes deux dernières sessions montrent déjà un meilleur contrôle.",
+
+      explanation:
+        "PRIME détecte un début de stabilisation. Le pattern n’est pas encore considéré comme totalement résorbé.",
+
+      action:
+        "Protège encore une session propre. Ne cherche pas à prouver que le problème est réglé : répète simplement ton processus.",
     };
   }
 
@@ -893,7 +1095,7 @@ function buildRevengeMessage({
         `Après une perte, ta discipline baisse dans ${disciplineDeclineRate} % des cas et ton plan est rompu dans ${planBreakRate} % des sessions suivantes.`,
 
       explanation:
-        "La perte agit comme un déclencheur émotionnel qui dégrade à la fois ton score d’exécution et le respect de ton cadre.",
+        `Sur ${revengeEvents} situations post-perte observées, PRIME détecte une relation récurrente entre résultat négatif et dégradation de ton cadre.`,
 
       action:
         "Ne cherche pas à récupérer. Coupe la session, note ton état mental et reprends uniquement lorsque ton plan redevient prioritaire.",
@@ -908,7 +1110,7 @@ function buildRevengeMessage({
         `Une erreur émotionnelle apparaît dans ${emotionalErrorRate} % des sessions suivant une perte.`,
 
       explanation:
-        "PRIME observe que la session suivante est souvent influencée par la volonté de réparer le résultat précédent.",
+        `Cette tendance est basée sur ${revengeEvents} situations post-perte observées. PRIME distingue maintenant ce signal historique de ton comportement le plus récent.`,
 
       action:
         "Transforme toute perte en fin de cycle temporaire. Aucun nouveau trade tant que l’émotion n’est pas revenue à un niveau neutre.",
@@ -920,13 +1122,13 @@ function buildRevengeMessage({
   ) {
     return {
       insight:
-        `Dans ${deeperLossRate} % des cas, une perte est suivie d’une perte encore plus importante.`,
+        `Dans ${deeperLossRate} % des cas observés, une perte est suivie d’une perte plus importante.`,
 
       explanation:
-        "Le comportement de récupération semble aggraver le résultat au lieu de le corriger.",
+        "Le comportement de récupération semble parfois amplifier le risque au lieu de corriger le résultat.",
 
       action:
-        "Fixe une limite de perte journalière stricte et rends toute reprise impossible une fois cette limite atteinte.",
+        "Fixe une limite de perte stricte et rends toute reprise impossible lorsqu’elle est atteinte.",
     };
   }
 
@@ -943,7 +1145,7 @@ function buildRevengeMessage({
         `Ton score moyen passe de ${averageScoreBefore} % à ${averageScoreAfter} % sur la session suivante.`,
 
       action:
-        "Après une perte, ne mesure pas ta capacité à récupérer de l’argent. Mesure uniquement ta capacité à retrouver un comportement stable.",
+        "Après une perte, mesure ta capacité à retrouver un comportement stable plutôt que ta capacité à récupérer de l’argent.",
     };
   }
 
@@ -952,10 +1154,10 @@ function buildRevengeMessage({
   ) {
     return {
       insight:
-        `Le revenge trading a été déclaré ${declaredRevengeEvents} fois sur les sessions analysées.`,
+        `Le revenge trading a été déclaré ${declaredRevengeEvents} fois sur la période analysée.`,
 
       explanation:
-        `PRIME observe ${positiveSignals} signaux convergents autour de la discipline, du plan et de la dégradation du résultat.`,
+        `PRIME observe ${positiveSignals} signaux convergents autour de la discipline, du plan et de la réaction émotionnelle.`,
 
       action:
         "Crée une règle automatique après perte : pause, relecture du plan et validation obligatoire avant toute nouvelle décision.",
@@ -964,10 +1166,10 @@ function buildRevengeMessage({
 
   return {
     insight:
-      "PRIME détecte une tendance à vouloir réparer les pertes par l’action.",
+      "PRIME détecte encore une vulnérabilité à vouloir réparer les pertes par l’action.",
 
     explanation:
-      `Sur ${revengeEvents} événements analysés, plusieurs signaux montrent une dégradation comportementale après une session négative.`,
+      `Sur ${revengeEvents} événements post-perte analysés, plusieurs signaux montrent une dégradation comportementale.`,
 
     action:
       "Après une perte, protège ton capital mental avant ton capital financier. La prochaine décision ne doit jamais servir à corriger la précédente.",
@@ -975,10 +1177,9 @@ function buildRevengeMessage({
 }
 
 /**
- * Maintient une valeur entre
- * un minimum et un maximum.
+ * Maintient une valeur
+ * entre un minimum et un maximum.
  */
-
 function clamp(
   value,
   minimum,
