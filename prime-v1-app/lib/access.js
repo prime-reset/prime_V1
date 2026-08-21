@@ -11,7 +11,13 @@ export async function getUserAccess({
     };
   }
 
-  const { data: profile, error: profileError } = await supabase
+  /*
+   * 1. Récupération du rôle PRIME
+   */
+  const {
+    data: profile,
+    error: profileError,
+  } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userId)
@@ -19,7 +25,7 @@ export async function getUserAccess({
 
   if (profileError) {
     console.error(
-      "[PRIME Access] profile error:",
+      "[PRIME Access] Erreur profil :",
       profileError
     );
 
@@ -31,8 +37,13 @@ export async function getUserAccess({
     };
   }
 
-  const role = profile?.role || "user";
+  const role =
+    profile?.role || "user";
 
+  /*
+   * 2. Les super_admin passent
+   *    toujours sans abonnement.
+   */
   if (role === "super_admin") {
     return {
       allowed: true,
@@ -42,20 +53,36 @@ export async function getUserAccess({
     };
   }
 
-  const { data: subscription, error: subscriptionError } =
-    await supabase
-      .from("subscriptions")
-      .select(
-        "plan, status, start_date, end_date, trial_end, is_trial"
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  /*
+   * 3. Tous les autres comptes
+   *    doivent avoir une subscription.
+   */
+  const {
+    data: subscription,
+    error: subscriptionError,
+  } = await supabase
+    .from("subscriptions")
+    .select(
+      `
+        id,
+        plan,
+        status,
+        stripe_customer_id,
+        stripe_subscription_id,
+        user_id,
+        created_at
+      `
+    )
+    .eq("user_id", userId)
+    .order("created_at", {
+      ascending: false,
+    })
+    .limit(1)
+    .maybeSingle();
 
   if (subscriptionError) {
     console.error(
-      "[PRIME Access] subscription error:",
+      "[PRIME Access] Erreur abonnement :",
       subscriptionError
     );
 
@@ -67,6 +94,10 @@ export async function getUserAccess({
     };
   }
 
+  /*
+   * 4. Aucun abonnement :
+   *    accès refusé.
+   */
   if (!subscription) {
     return {
       allowed: false,
@@ -76,37 +107,32 @@ export async function getUserAccess({
     };
   }
 
-  const now = new Date();
-
-  const trialEnd = subscription.trial_end
-    ? new Date(subscription.trial_end)
-    : null;
-
-  const endDate = subscription.end_date
-    ? new Date(subscription.end_date)
-    : null;
-
-  const activeTrial =
-    subscription.is_trial === true &&
-    trialEnd &&
-    trialEnd > now;
-
-  const activeSubscription =
-    subscription.status === "active" &&
-    (!endDate || endDate > now);
+  /*
+   * 5. Statuts autorisés.
+   *
+   * Stripe utilisera notamment :
+   * active
+   * trialing
+   */
+  const ACTIVE_STATUSES = [
+    "active",
+    "trialing",
+  ];
 
   const allowed =
-    activeTrial ||
-    activeSubscription;
+    ACTIVE_STATUSES.includes(
+      subscription.status
+    );
 
   return {
     allowed,
+
     reason: allowed
-      ? activeTrial
-        ? "trial"
-        : "subscription"
+      ? subscription.status
       : "inactive_subscription",
+
     role,
+
     subscription,
   };
 }
