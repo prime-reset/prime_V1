@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(
-  process.env.STRIPE_SECRET_KEY
-);
-
 const PRICE_IDS = {
   founder: "price_1TcXPF2e7ZbP48FdLW2eiQLD",
   standard: "price_1TcXXF2e7ZbP48FdbmTGdWKZ",
@@ -13,6 +9,12 @@ const PRICE_IDS = {
 
 export async function POST(request) {
   try {
+    /*
+     * ------------------------------------------------
+     * 1. Vérification de la configuration serveur
+     * ------------------------------------------------
+     */
+
     if (
       !process.env.STRIPE_SECRET_KEY ||
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -33,8 +35,25 @@ export async function POST(request) {
     }
 
     /*
-     * Récupération du token Supabase
+     * ------------------------------------------------
+     * 2. Initialisation Stripe
+     *
+     * IMPORTANT :
+     * on initialise Stripe uniquement au moment
+     * de la requête, pas au chargement du module.
+     * ------------------------------------------------
      */
+
+    const stripe = new Stripe(
+      process.env.STRIPE_SECRET_KEY
+    );
+
+    /*
+     * ------------------------------------------------
+     * 3. Récupération du token Supabase
+     * ------------------------------------------------
+     */
+
     const authorization =
       request.headers.get("authorization");
 
@@ -53,24 +72,40 @@ export async function POST(request) {
     }
 
     const accessToken =
-      authorization.replace("Bearer ", "");
+      authorization.replace(
+        "Bearer ",
+        ""
+      );
 
     /*
-     * Vérification de l'utilisateur Supabase
+     * ------------------------------------------------
+     * 4. Initialisation Supabase
+     * ------------------------------------------------
      */
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
+    /*
+     * ------------------------------------------------
+     * 5. Vérification réelle de l'utilisateur
+     * ------------------------------------------------
+     */
+
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser(
-      accessToken
-    );
+    } =
+      await supabase.auth.getUser(
+        accessToken
+      );
 
-    if (userError || !user) {
+    if (
+      userError ||
+      !user
+    ) {
       console.error(
         "[Stripe Checkout] Auth Supabase :",
         userError
@@ -87,12 +122,21 @@ export async function POST(request) {
     }
 
     /*
-     * Offre sélectionnée
+     * ------------------------------------------------
+     * 6. Lecture de l'offre choisie
+     * ------------------------------------------------
      */
-    const body = await request.json();
-    const plan = body?.plan;
 
-    if (!plan || !PRICE_IDS[plan]) {
+    const body =
+      await request.json();
+
+    const plan =
+      body?.plan;
+
+    if (
+      !plan ||
+      !PRICE_IDS[plan]
+    ) {
       return NextResponse.json(
         {
           error: "Offre PRIME invalide.",
@@ -103,11 +147,15 @@ export async function POST(request) {
       );
     }
 
-    const priceId = PRICE_IDS[plan];
+    const priceId =
+      PRICE_IDS[plan];
 
     /*
-     * URL de PRIME
+     * ------------------------------------------------
+     * 7. URL de retour PRIME
+     * ------------------------------------------------
      */
+
     const origin =
       request.headers.get("origin") ||
       process.env.NEXT_PUBLIC_SITE_URL;
@@ -124,11 +172,19 @@ export async function POST(request) {
     }
 
     /*
-     * Configuration de l'abonnement
+     * ------------------------------------------------
+     * 8. Configuration de l'abonnement
      *
-     * Founder = aucun essai
-     * Standard = 7 jours d'essai
+     * Founder :
+     * - 9,99 €/mois
+     * - aucun essai
+     *
+     * Standard :
+     * - 24,99 €/mois
+     * - 7 jours d'essai
+     * ------------------------------------------------
      */
+
     const subscriptionData = {
       metadata: {
         user_id: user.id,
@@ -136,51 +192,80 @@ export async function POST(request) {
       },
     };
 
-    if (plan === "standard") {
-      subscriptionData.trial_period_days = 7;
+    if (
+      plan === "standard"
+    ) {
+      subscriptionData.trial_period_days =
+        7;
     }
 
     /*
-     * Création du Checkout Stripe
+     * ------------------------------------------------
+     * 9. Création de la Checkout Session Stripe
+     * ------------------------------------------------
      */
+
     const checkoutSession =
-      await stripe.checkout.sessions.create({
-        mode: "subscription",
+      await stripe.checkout.sessions.create(
+        {
+          mode: "subscription",
 
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+
+          customer_email:
+            user.email,
+
+          client_reference_id:
+            user.id,
+
+          metadata: {
+            user_id:
+              user.id,
+            plan,
           },
-        ],
 
-        customer_email: user.email,
+          subscription_data:
+            subscriptionData,
 
-        client_reference_id: user.id,
+          success_url:
+            `${origin}/?checkout=success`,
 
-        metadata: {
-          user_id: user.id,
-          plan,
-        },
+          cancel_url:
+            `${origin}/offer?checkout=cancelled`,
+        }
+      );
 
-        subscription_data: subscriptionData,
+    /*
+     * ------------------------------------------------
+     * 10. Vérification de l'URL Checkout
+     * ------------------------------------------------
+     */
 
-        success_url:
-          `${origin}/?checkout=success`,
-
-        cancel_url:
-          `${origin}/offer?checkout=cancelled`,
-      });
-
-    if (!checkoutSession.url) {
+    if (
+      !checkoutSession.url
+    ) {
       throw new Error(
         "Stripe n'a retourné aucune URL Checkout."
       );
     }
 
-    return NextResponse.json({
-      url: checkoutSession.url,
-    });
+    /*
+     * ------------------------------------------------
+     * 11. Retour de l'URL au frontend
+     * ------------------------------------------------
+     */
+
+    return NextResponse.json(
+      {
+        url:
+          checkoutSession.url,
+      }
+    );
   } catch (error) {
     console.error(
       "[Stripe Checkout] Erreur :",
@@ -189,7 +274,8 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        error: "Impossible de démarrer le paiement.",
+        error:
+          "Impossible de démarrer le paiement.",
       },
       {
         status: 500,
