@@ -1,25 +1,80 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
   Brain,
   Check,
-  Crown,
   ShieldCheck,
-  Sparkles,
   Target,
   TrendingUp,
   X,
-  Zap,
 } from "lucide-react";
 
-export default function OfferPage() {
-  const router = useRouter();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
-  const handleSelectOffer = (plan) => {
-    localStorage.setItem("prime_selected_offer", plan);
-    router.push(`/checkout?plan=${plan}`);
+export default function OfferPage() {
+  const [loadingPlan, setLoadingPlan] = useState(null);
+  const [checkoutError, setCheckoutError] = useState("");
+
+  const handleSelectOffer = async (plan) => {
+    try {
+      setCheckoutError("");
+      setLoadingPlan(plan);
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        setCheckoutError(
+          "Ta session a expiré. Reconnecte-toi pour continuer."
+        );
+        return;
+      }
+
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          plan,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            "Impossible de démarrer le paiement."
+        );
+      }
+
+      if (!data?.url) {
+        throw new Error(
+          "Stripe n'a retourné aucune URL de paiement."
+        );
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("[PRIME Checkout]", error);
+
+      setCheckoutError(
+        error?.message ||
+          "Une erreur est survenue. Réessaie."
+      );
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   return (
@@ -241,8 +296,7 @@ export default function OfferPage() {
           margin: 0 auto;
           align-items: stretch;
         }
-
-        .price-card {
+                .price-card {
           position: relative;
           overflow: hidden;
           padding: 26px;
@@ -433,6 +487,18 @@ export default function OfferPage() {
           text-transform: uppercase;
           letter-spacing: .7px;
           cursor: pointer;
+          transition:
+            opacity .2s ease,
+            transform .2s ease;
+        }
+
+        .plan-button:disabled {
+          opacity: .58;
+          cursor: wait;
+        }
+
+        .plan-button:not(:disabled):active {
+          transform: scale(.985);
         }
 
         .plan-button.gold {
@@ -445,6 +511,20 @@ export default function OfferPage() {
           background: rgba(255,255,255,0.055);
           color: white;
           border: 1px solid rgba(255,255,255,0.11);
+        }
+
+        .checkout-error {
+          max-width: 960px;
+          margin: 18px auto 0;
+          padding: 14px 16px;
+          border-radius: 16px;
+          background: rgba(255, 80, 80, 0.08);
+          border: 1px solid rgba(255, 80, 80, 0.22);
+          color: #ffaaaa;
+          font-size: 13px;
+          line-height: 1.5;
+          font-weight: 750;
+          text-align: center;
         }
 
         .product-grid {
@@ -533,8 +613,7 @@ export default function OfferPage() {
           font-size: 14px;
           margin-bottom: 12px;
         }
-
-        @keyframes fadeUp {
+                @keyframes fadeUp {
           from {
             opacity: 0;
             transform: translateY(18px);
@@ -641,10 +720,25 @@ export default function OfferPage() {
           </p>
 
           <div className="hero-points">
-            <div className="hero-point"><span>✓</span>Discipline Score</div>
-            <div className="hero-point"><span>✓</span>Coach IA</div>
-            <div className="hero-point"><span>✓</span>Prescriptions</div>
-            <div className="hero-point"><span>✓</span>Journal intelligent</div>
+            <div className="hero-point">
+              <span>✓</span>
+              Discipline Score
+            </div>
+
+            <div className="hero-point">
+              <span>✓</span>
+              Coach IA
+            </div>
+
+            <div className="hero-point">
+              <span>✓</span>
+              Prescriptions
+            </div>
+
+            <div className="hero-point">
+              <span>✓</span>
+              Journal intelligent
+            </div>
           </div>
         </section>
 
@@ -652,14 +746,19 @@ export default function OfferPage() {
           <p>
             Le problème n’est pas toujours ton setup.
             <br />
-            <span>C’est le comportement que tu répètes.</span>
+            <span>
+              C’est le comportement que tu répètes.
+            </span>
           </p>
         </section>
 
         <section className="comparison">
           <div className="compare-card negative">
             <h2 className="compare-title">
-              <X size={22} color="#ff6868" />
+              <X
+                size={22}
+                color="#ff6868"
+              />
               Sans PRIME
             </h2>
 
@@ -673,7 +772,10 @@ export default function OfferPage() {
 
           <div className="compare-card positive">
             <h2 className="compare-title good">
-              <Check size={22} color="#D4B06A" />
+              <Check
+                size={22}
+                color="#D4B06A"
+              />
               Avec PRIME
             </h2>
 
@@ -688,7 +790,9 @@ export default function OfferPage() {
 
         <section className="section-title">
           <p>Choisis ton accès</p>
-          <h2>Deux offres. Une seule discipline.</h2>
+          <h2>
+            Deux offres. Une seule discipline.
+          </h2>
         </section>
 
         <section className="pricing-grid">
@@ -712,16 +816,23 @@ export default function OfferPage() {
               </div>
 
               <div className="trial gold">
-                <strong>Tarif bloqué à vie.</strong>
+                <strong>
+                  Tarif bloqué à vie.
+                </strong>
                 <br />
                 Aucun essai gratuit sur l’offre Founder.
               </div>
 
               <div className="founder-note">
-                <strong>Les Founder construisent PRIME.</strong>
+                <strong>
+                  Les Founder construisent PRIME.
+                </strong>
+
                 En tant que Founder, tu fais partie des premiers traders qui construiront l’évolution de PRIME.
+
                 <br />
                 <br />
+
                 Tes retours auront un impact direct sur les prochaines fonctionnalités.
               </div>
 
@@ -736,10 +847,18 @@ export default function OfferPage() {
 
               <button
                 className="plan-button gold"
-                onClick={() => handleSelectOffer("founder")}
+                onClick={() =>
+                  handleSelectOffer("founder")
+                }
+                disabled={loadingPlan !== null}
               >
-                Rejoindre les Founder
-                <ArrowRight size={18} />
+                {loadingPlan === "founder"
+                  ? "Connexion à Stripe..."
+                  : "Rejoindre les Founder"}
+
+                {loadingPlan !== "founder" && (
+                  <ArrowRight size={18} />
+                )}
               </button>
             </div>
           </article>
@@ -764,7 +883,9 @@ export default function OfferPage() {
               </div>
 
               <div className="trial green">
-                <strong>7 jours gratuits.</strong>
+                <strong>
+                  7 jours gratuits.
+                </strong>
                 <br />
                 Puis 24,99€/mois. Annulation possible avant la fin de l’essai.
               </div>
@@ -781,18 +902,37 @@ export default function OfferPage() {
 
               <button
                 className="plan-button dark"
-                onClick={() => handleSelectOffer("standard")}
+                onClick={() =>
+                  handleSelectOffer("standard")
+                }
+                disabled={loadingPlan !== null}
               >
-                Commencer mon essai gratuit
-                <ArrowRight size={18} />
+                {loadingPlan === "standard"
+                  ? "Connexion à Stripe..."
+                  : "Commencer mon essai gratuit"}
+
+                {loadingPlan !== "standard" && (
+                  <ArrowRight size={18} />
+                )}
               </button>
             </div>
           </article>
         </section>
 
-        <section className="section-title">
+        {checkoutError && (
+          <div
+            className="checkout-error"
+            role="alert"
+          >
+            {checkoutError}
+          </div>
+        )}
+                <section className="section-title">
           <p>Pourquoi PRIME ?</p>
-          <h2>Ton comportement devient enfin mesurable.</h2>
+
+          <h2>
+            Ton comportement devient enfin mesurable.
+          </h2>
         </section>
 
         <section className="product-grid">
@@ -827,7 +967,10 @@ export default function OfferPage() {
             <br />
             C’était moi.”
           </p>
-          <span>Chaque trader finit par comprendre cette phrase.</span>
+
+          <span>
+            Chaque trader finit par comprendre cette phrase.
+          </span>
         </section>
 
         <footer className="footer">
@@ -842,7 +985,10 @@ export default function OfferPage() {
 function CompareBad({ text }) {
   return (
     <div className="compare-item">
-      <X size={16} color="#ff6868" />
+      <X
+        size={16}
+        color="#ff6868"
+      />
       {text}
     </div>
   );
@@ -851,7 +997,10 @@ function CompareBad({ text }) {
 function CompareGood({ text }) {
   return (
     <div className="compare-item">
-      <Check size={16} color="#D4B06A" />
+      <Check
+        size={16}
+        color="#D4B06A"
+      />
       {text}
     </div>
   );
@@ -866,13 +1015,20 @@ function Feature({ text }) {
   );
 }
 
-function ProductCard({ icon, title, text }) {
+function ProductCard({
+  icon,
+  title,
+  text,
+}) {
   return (
     <div className="product-card">
-      <div className="product-icon">{icon}</div>
+      <div className="product-icon">
+        {icon}
+      </div>
+
       <h3>{title}</h3>
+
       <p>{text}</p>
     </div>
   );
 }
-
