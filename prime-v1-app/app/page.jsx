@@ -1546,14 +1546,6 @@ export default function HomePage() {
   )}
 </section>
 
-            <h2 className="card-title">
-              Discipline :{" "}
-              {lastSession
-                ?.discipline_score ??
-                0}
-              %
-            </h2>
-
             <p className="text">
               Mental :{" "}
               <strong className="green">
