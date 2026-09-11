@@ -39,7 +39,7 @@ export default function HomePage() {
     level: "observation",
     label: "Sous observation",
     message:
-      "PRIME collecte encore assez de données pour lire ton comportement.",
+      "PRIME collecte encore des données pour lire ton comportement.",
   });
 
   useEffect(() => {
@@ -601,23 +601,13 @@ export default function HomePage() {
         }
 
         .workspace-card {
-          text-decoration: none;
           color: white;
           display: flex;
           flex-direction: column;
-          justify-content: space-between;
           padding: 18px;
           border-radius: 28px;
           min-height: 230px;
-          cursor: pointer;
           overflow: hidden;
-        }
-
-        .workspace-head {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          align-items: flex-start;
         }
 
         .workspace-title {
@@ -635,61 +625,49 @@ export default function HomePage() {
           line-height: 1.05;
           font-weight: 1000;
           letter-spacing: -0.7px;
-          word-break: normal;
         }
 
-        .workspace-checks {
-          margin: 14px 0 16px;
+        .platform-list {
           display: grid;
-          gap: 8px;
-          color:
-            rgba(255,255,255,0.86);
-          font-size: 13px;
-          font-weight: 780;
+          gap: 9px;
+          margin-top: 18px;
         }
 
-        .workspace-checks span {
-          color: #D4B06A;
-          margin-right: 7px;
-        }
-
-        .tv-button {
-          width: 100%;
-          min-height: 48px;
-          border-radius: 15px;
+        .platform-link {
+          min-height: 43px;
+          padding: 0 12px;
+          border-radius: 14px;
           display: flex;
           align-items: center;
-          justify-content: center;
-          gap: 9px;
-          background:
-            linear-gradient(
-              95deg,
-              #9d742f,
-              #d6b25f 52%,
-              #fff2b8
-            );
-          color: #000;
-          font-size: 14.5px;
-          font-weight: 1000;
-          letter-spacing: -0.2px;
-          line-height: 1.05;
-          text-align: center;
+          justify-content: space-between;
+          gap: 10px;
+          color: rgba(255,255,255,0.92);
+          text-decoration: none;
+          background: rgba(255,255,255,0.035);
+          border: 1px solid rgba(212,176,106,0.17);
+          transition: transform .16s ease, background .16s ease, border-color .16s ease;
         }
 
-        .tv-icon {
-          width: 31px;
-          height: 31px;
-          border-radius: 9px;
-          border:
-            2px solid
-            rgba(0,0,0,0.82);
-          display: grid;
-          place-items: center;
-          color: #000;
-          font-weight: 1000;
+        .platform-link:hover {
+          background: rgba(212,176,106,0.075);
+          border-color: rgba(212,176,106,0.34);
+        }
+
+        .platform-link:active {
+          transform: scale(0.98);
+        }
+
+        .platform-name {
           font-size: 13px;
-          letter-spacing: -1px;
-          flex-shrink: 0;
+          font-weight: 900;
+          line-height: 1;
+        }
+
+        .platform-arrow {
+          color: #D4B06A;
+          font-size: 17px;
+          font-weight: 950;
+          line-height: 1;
         }
 
         .cta-card {
@@ -1139,16 +1117,16 @@ export default function HomePage() {
           }
 
           .workspace-main {
-            font-size: 21px;
+            font-size: 20px;
           }
 
-          .workspace-checks {
+          .platform-link {
+            min-height: 41px;
+            padding: 0 10px;
+          }
+
+          .platform-name {
             font-size: 12.5px;
-          }
-
-          .tv-button {
-            min-height: 46px;
-            font-size: 13.5px;
           }
 
           .dashboard-grid {
@@ -1328,40 +1306,53 @@ export default function HomePage() {
             </div>
           </section>
 
-          <a
-            className="workspace-card"
-            href="https://www.tradingview.com/chart/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div>
-              <div className="workspace-head">
-                <div>
-                  <p className="workspace-title">
-                    Workspace
-                  </p>
+          <section className="workspace-card">
+            <p className="workspace-title">
+              Workspace
+            </p>
 
-                  <p className="workspace-main">
-                    TradingView
-                  </p>
-                </div>
+            <p className="workspace-main">
+              Plateformes
+            </p>
 
-                <ExternalLink
-                  size={25}
-                  color="#D4B06A"
-                />
-              </div>
+            <div className="platform-list">
+              <a
+                href="https://www.tradingview.com/chart/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="platform-link"
+              >
+                <span className="platform-name">
+                  TradingView
+                </span>
+                <span className="platform-arrow">↗</span>
+              </a>
 
-            
+              <a
+                href="https://trader.tradovate.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="platform-link"
+              >
+                <span className="platform-name">
+                  Tradovate
+                </span>
+                <span className="platform-arrow">↗</span>
+              </a>
+
+              <a
+                href="https://www.wealthcharts.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="platform-link"
+              >
+                <span className="platform-name">
+                  WealthCharts
+                </span>
+                <span className="platform-arrow">↗</span>
+              </a>
             </div>
-
-            <div className="tv-button">
-              <span className="tv-icon">
-                TV
-              </span>
-              Ouvrir TradingView
-            </div>
-          </a>
+          </section>
         </section>
 
         <Link
@@ -1531,47 +1522,7 @@ export default function HomePage() {
   )}
 </section>
 
-            <p className="text">
-              Mental avant :{" "}
-              <strong className="green">
-                {lastSession
-                  ?.mental_state ||
-                  "Non renseigné"}
-              </strong>
 
-              <br />
-
-              Erreur déclarée :{" "}
-              <strong className="green">
-                {lastSession
-                  ?.dominant_error ||
-                  "Aucune"}
-              </strong>
-            </p>
-
-            <p
-              className={
-                lastSession
-                  ?.plan_respected ===
-                false
-                  ? "text red"
-                  : "text green"
-              }
-              style={{
-                fontWeight: 950,
-              }}
-            >
-              {lastSession
-                ?.plan_respected ===
-              true
-                ? "✓ Plan respecté"
-                : lastSession
-                    ?.plan_respected ===
-                  false
-                ? "✗ Hors plan"
-                : "Plan non renseigné"}
-            </p>
-          </section>
 
           <section className="card">
             <p className="label">
@@ -1662,7 +1613,8 @@ export default function HomePage() {
               </strong>
             </p>
           </section>
-       
+        </section>
+
         <section className="small-grid">
           <div className="mini-card">
             <TrendingUp
