@@ -1092,8 +1092,3 @@ function ProductCard({
     </div>
   );
 }
-
-      <p>{text}</p>
-    </div>
-  );
-}
