@@ -40,6 +40,8 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
   const [exporting, setExporting] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   useEffect(() => {
     loadSettings();
@@ -138,23 +140,51 @@ export default function SettingsPage() {
   }
 
   async function handlePasswordReset() {
-    if (!email) return;
+    if (passwordLoading) return;
 
+    setPasswordLoading(true);
+    setPasswordMessage("");
     setMessage("");
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://theprimeapp.com";
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/reset-password`,
-    });
+      if (userError || !user?.email) {
+        setPasswordMessage(
+          "Impossible de retrouver ton adresse email. Reconnecte-toi puis réessaie."
+        );
+        return;
+      }
 
-    if (error) {
-      setMessage("Impossible d’envoyer le lien pour le moment.");
-      return;
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || "https://theprimeapp.com";
+
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${siteUrl}/reset-password`,
+      });
+
+      if (error) {
+        console.error("[PRIME Password Reset]", error);
+        setPasswordMessage(
+          "Impossible d’envoyer le lien pour le moment. Réessaie dans quelques instants."
+        );
+        return;
+      }
+
+      setPasswordMessage(
+        `Lien envoyé à ${user.email}. Vérifie aussi tes spams si besoin.`
+      );
+    } catch (error) {
+      console.error("[PRIME Password Reset]", error);
+      setPasswordMessage(
+        "Une erreur est survenue pendant l’envoi du lien. Réessaie dans quelques instants."
+      );
+    } finally {
+      setPasswordLoading(false);
     }
-
-    setMessage("Un lien de changement de mot de passe vient d’être envoyé.");
   }
 
 
@@ -738,7 +768,18 @@ export default function SettingsPage() {
 
           <div className="action-list" style={{ marginTop: 14 }}>
             <SettingAction icon={<User size={18} />} title="Modifier mon profil" subtitle="Nom affiché et informations personnelles." onClick={() => router.push("/profile")} />
-            <SettingAction icon={<Lock size={18} />} title="Changer mon mot de passe" subtitle="Recevoir un lien sécurisé par email." onClick={handlePasswordReset} />
+            <SettingAction
+              icon={<Lock size={18} />}
+              title={passwordLoading ? "Envoi en cours..." : "Changer mon mot de passe"}
+              subtitle="Recevoir un lien sécurisé par email."
+              onClick={handlePasswordReset}
+              disabled={passwordLoading}
+            />
+            {passwordMessage && (
+              <p className="message" style={{ margin: "0" }}>
+                {passwordMessage}
+              </p>
+            )}
             <SettingAction icon={<LogOut size={18} />} title="Déconnexion" subtitle="Quitter ton compte PRIME." onClick={handleLogout} />
           </div>
         </section>
