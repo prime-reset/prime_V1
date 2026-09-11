@@ -42,6 +42,7 @@ export default function SessionPage() {
   const [activePrescription, setActivePrescription] = useState(null);
   const [prescriptionAnswered, setPrescriptionAnswered] = useState(false);
   const [primeProfile, setPrimeProfile] = useState(null);
+  const [primeChecklist, setPrimeChecklist] = useState([]);
   const [todaySessionCount, setTodaySessionCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +78,24 @@ export default function SessionPage() {
 
       if (profileData?.profile) {
         setPrimeProfile(profileData.profile);
+      }
+
+      const { data: userProfileData, error: userProfileError } = await supabase
+        .from("profiles")
+        .select("checklist")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (userProfileError) {
+        console.error("Erreur chargement checklist PRIME :", userProfileError);
+      }
+
+      if (Array.isArray(userProfileData?.checklist)) {
+        setPrimeChecklist(
+          userProfileData.checklist.filter(
+            (item) => typeof item === "string" && item.trim()
+          )
+        );
       }
 
       const { data: prescriptionData, error: prescriptionError } = await supabase
@@ -119,8 +138,11 @@ export default function SessionPage() {
   };
 
   const checklist = useMemo(
-    () => getChecklistByProfile(primeProfile),
-    [primeProfile]
+    () =>
+      primeChecklist.length > 0
+        ? primeChecklist
+        : getChecklistByProfile(primeProfile),
+    [primeChecklist, primeProfile]
   );
 
   const mistakesList = [
