@@ -592,7 +592,7 @@ function getResetSignal({ sessions, averageScore, detectedPattern }) {
   if (detectedPattern?.type === "revenge_trading") return { show: true, level: "critical", message: "PRIME détecte un risque de récupération émotionnelle. Le danger n’est plus le marché : c’est la volonté de réparer une perte." };
   if (detectedPattern?.type === "overtrading") return { show: true, level: "warning", message: "PRIME détecte une suractivité. Tu risques de confondre présence au marché et qualité d’exécution." };
   if (detectedPattern?.type === "low_discipline_streak" || averageScore < 55) return { show: true, level: "warning", message: "PRIME détecte une baisse de discipline. Le Reset est conseillé pour éviter une dérive plus coûteuse." };
-  if (negativeOffPlan >= 1 || repeatedLosses >= 3) return { show: true, level: "warning", message: "Tes dernières traces montrent un risque de perte de contrôle. Le Reset peut empêcher une mauvaise session de devenir une mauvaise journée." };
+ if (negativeOffPlan >= 2 || repeatedLosses >= 3) return { show: true, level: "warning", message: "Tes dernières traces montrent un risque de perte de contrôle. Le Reset peut empêcher une mauvaise série de devenir une dérive comportementale." };
   return { show: false, level: "stable", message: "" };
 }
 
