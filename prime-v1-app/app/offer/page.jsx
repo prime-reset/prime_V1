@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import {
   ArrowRight,
@@ -18,6 +19,7 @@ const supabase = createClient(
 );
 
 export default function OfferPage() {
+  const router = useRouter();
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [checkoutError, setCheckoutError] = useState("");
 
@@ -182,6 +184,47 @@ export default function OfferPage() {
         .hero-point span {
           color: #D4B06A;
           margin-right: 6px;
+        }
+
+        .member-access {
+          width: fit-content;
+          max-width: 100%;
+          margin: 24px auto 0;
+          padding: 9px 10px 9px 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.045);
+          border: 1px solid rgba(255,255,255,0.10);
+          color: rgba(255,255,255,0.62);
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .member-access button {
+          border: 1px solid rgba(212,176,106,0.28);
+          border-radius: 999px;
+          padding: 10px 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          background: rgba(212,176,106,0.12);
+          color: #D4B06A;
+          font-size: 13px;
+          font-weight: 900;
+          cursor: pointer;
+          transition: background .2s ease, transform .2s ease;
+        }
+
+        .member-access button:hover {
+          background: rgba(212,176,106,0.18);
+        }
+
+        .member-access button:active {
+          transform: scale(.985);
         }
 
         .truth-card {
@@ -677,6 +720,11 @@ export default function OfferPage() {
         }
 
         @media(max-width: 420px) {
+          .member-access {
+            width: 100%;
+            justify-content: space-between;
+          }
+
           .brand {
             font-size: 16px;
             letter-spacing: 8px;
@@ -718,6 +766,18 @@ export default function OfferPage() {
             PRIME analyse chacune de tes sessions, détecte les erreurs que tu répètes
             et t’aide à construire une discipline durable.
           </p>
+
+          <div className="member-access">
+            <span>Déjà membre PRIME ?</span>
+
+            <button
+              type="button"
+              onClick={() => router.push("/auth")}
+            >
+              Se connecter
+              <ArrowRight size={16} />
+            </button>
+          </div>
 
           <div className="hero-points">
             <div className="hero-point">
@@ -1027,6 +1087,11 @@ function ProductCard({
       </div>
 
       <h3>{title}</h3>
+
+      <p>{text}</p>
+    </div>
+  );
+}
 
       <p>{text}</p>
     </div>
