@@ -1352,22 +1352,7 @@ export default function HomePage() {
                 />
               </div>
 
-              <div className="workspace-checks">
-                <div>
-                  <span>✓</span>
-                  Checklist validée
-                </div>
-
-                <div>
-                  <span>✓</span>
-                  Mental renseigné
-                </div>
-
-                <div>
-                  <span>✓</span>
-                  Plan validé
-                </div>
-              </div>
+            
             </div>
 
             <div className="tv-button">
@@ -1503,14 +1488,14 @@ export default function HomePage() {
       </h2>
 
       <p className="text">
-        Mental :{" "}
+      Mental avant :{" "}
         <strong className="green">
           {lastSession.mental_state || "Non renseigné"}
         </strong>
 
         <br />
 
-        Erreur dominante :{" "}
+        Erreur déclarée :{" "}
         <strong className="green">
           {lastSession.dominant_error || "Aucune"}
         </strong>
@@ -1547,7 +1532,7 @@ export default function HomePage() {
 </section>
 
             <p className="text">
-              Mental :{" "}
+              Mental avant :{" "}
               <strong className="green">
                 {lastSession
                   ?.mental_state ||
@@ -1556,7 +1541,7 @@ export default function HomePage() {
 
               <br />
 
-              Erreur dominante :{" "}
+              Erreur déclarée :{" "}
               <strong className="green">
                 {lastSession
                   ?.dominant_error ||
@@ -2471,7 +2456,7 @@ function getRiskFromSessions(
     label:
       "Sous observation",
     message:
-      "PRIME collecte encore assez de données pour établir ton risque comportemental.",
+      "PRIME collecte encore des données pour établir ton risque comportemental.",
   };
 }
 
@@ -2621,7 +2606,7 @@ function getBehaviorStructure(
       icon:
         "◎",
       message:
-        "PRIME collecte encore assez de sessions pour lire ta structure comportementale.",
+        "PRIME collecte encore des sessions pour lire ta structure comportementale.",
     };
   }
 
