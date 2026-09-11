@@ -1685,8 +1685,7 @@ export default function HomePage() {
               </strong>
             </p>
           </section>
-        </section>
-
+       
         <section className="small-grid">
           <div className="mini-card">
             <TrendingUp
