@@ -331,6 +331,12 @@ export default function CoachPage() {
       ? calculatedRecentDominantError
       : null;
 
+  const latestDeclaredError =
+    recentSessions.find((s) => s.dominant_error)?.dominant_error || null;
+
+  const displayedRecentError =
+    recentDominantError || latestDeclaredError;
+
   // Le Coach analyse l'état actuel sur les dernières sessions clôturées.
   // L'identité PRIME conserve la vision globale de la saison.
   const detectedPattern = detectPrimePattern(sessions);
@@ -388,8 +394,8 @@ export default function CoachPage() {
   });
 
   let rootCause = "Stabilité";
-  let symptom = recentDominantError || "Aucun";
-  let risk = "Faible";
+  let symptom = displayedRecentError || "Aucun";
+  let risk = resetSignal.show ? "À surveiller" : "Faible";
 
   if (detectedPattern?.type === "low_discipline_streak") {
     rootCause = "Discipline";
@@ -496,7 +502,21 @@ export default function CoachPage() {
 
         <section className="grid">
           <div className="metric-card"><div className="metric-top"><Activity size={22} className="icon" /></div><div><p className="metric-title">Mental dominant récent</p><p className="metric-value">{dominantMentalState || "Aucun"}</p></div></div>
-          <div className="metric-card"><div className="metric-top"><Flame size={22} className="icon" /></div><div><p className="metric-title">Erreur dominante récente</p><p className="metric-value">{recentDominantError || "Aucune"}</p></div></div>
+          <div className="metric-card">
+            <div className="metric-top">
+              <Flame size={22} className="icon" />
+            </div>
+            <div>
+              <p className="metric-title">
+                {recentDominantError
+                  ? "Erreur dominante récente"
+                  : "Dernière erreur déclarée"}
+              </p>
+              <p className="metric-value">
+                {displayedRecentError || "Aucune"}
+              </p>
+            </div>
+          </div>
         </section>
 
         <section className="card">
