@@ -1490,10 +1490,61 @@ export default function HomePage() {
             </p>
           </section>
 
-          <section className="card">
-            <p className="label">
-              Dernière session
-            </p>
+         <section className="card">
+  <p className="label">
+    Dernière session
+  </p>
+
+  {lastSession ? (
+    <>
+      <h2 className="card-title">
+        Discipline :{" "}
+        {lastSession.discipline_score ?? 0}%
+      </h2>
+
+      <p className="text">
+        Mental :{" "}
+        <strong className="green">
+          {lastSession.mental_state || "Non renseigné"}
+        </strong>
+
+        <br />
+
+        Erreur dominante :{" "}
+        <strong className="green">
+          {lastSession.dominant_error || "Aucune"}
+        </strong>
+      </p>
+
+      <p
+        className={
+          lastSession.plan_respected === false
+            ? "text red"
+            : "text green"
+        }
+        style={{
+          fontWeight: 950,
+        }}
+      >
+        {lastSession.plan_respected === true
+          ? "✓ Plan respecté"
+          : lastSession.plan_respected === false
+          ? "✗ Hors plan"
+          : "Plan non renseigné"}
+      </p>
+    </>
+  ) : (
+    <>
+      <h2 className="card-title">
+        Aucune session
+      </h2>
+
+      <p className="text">
+        Ta première session apparaîtra ici après sa clôture.
+      </p>
+    </>
+  )}
+</section>
 
             <h2 className="card-title">
               Discipline :{" "}
