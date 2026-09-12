@@ -4,7 +4,7 @@ import Stripe from "stripe";
 
 import { createClient } from "@supabase/supabase-js";
 
- 
+
 
 const PRICE_IDS = {
 
@@ -14,7 +14,27 @@ const PRICE_IDS = {
 
 };
 
- 
+
+
+const FOUNDER_LIMIT = 20;
+
+
+
+const FOUNDER_ACTIVE_STATUSES = [
+
+  "active",
+
+  "trialing",
+
+  "past_due",
+
+  "unpaid",
+
+  "paused",
+
+];
+
+
 
 export async function POST(request) {
 
@@ -26,7 +46,9 @@ export async function POST(request) {
 
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
 
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
 
     ) {
 
@@ -36,7 +58,7 @@ export async function POST(request) {
 
       );
 
- 
+
 
       return NextResponse.json(
 
@@ -48,7 +70,7 @@ export async function POST(request) {
 
     }
 
- 
+
 
     const stripe = new Stripe(
 
@@ -56,13 +78,13 @@ export async function POST(request) {
 
     );
 
- 
+
 
     const authorization =
 
       request.headers.get("authorization");
 
- 
+
 
     if (
 
@@ -82,13 +104,13 @@ export async function POST(request) {
 
     }
 
- 
+
 
     const accessToken =
 
       authorization.replace("Bearer ", "");
 
- 
+
 
     const supabase = createClient(
 
@@ -98,7 +120,29 @@ export async function POST(request) {
 
     );
 
- 
+
+
+    const adminSupabase = createClient(
+
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+
+      {
+
+        auth: {
+
+          persistSession: false,
+
+          autoRefreshToken: false,
+
+        },
+
+      }
+
+    );
+
+
 
     const {
 
@@ -112,7 +156,7 @@ export async function POST(request) {
 
     );
 
- 
+
 
     if (userError || !user) {
 
@@ -124,7 +168,7 @@ export async function POST(request) {
 
       );
 
- 
+
 
       return NextResponse.json(
 
@@ -136,13 +180,13 @@ export async function POST(request) {
 
     }
 
- 
+
 
     const body = await request.json();
 
     const plan = body?.plan;
 
- 
+
 
     if (!plan || !PRICE_IDS[plan]) {
 
@@ -156,11 +200,140 @@ export async function POST(request) {
 
     }
 
- 
+
+
+    /*
+     * ---------------------------------------------------------
+     * LIMITE FOUNDER
+     * ---------------------------------------------------------
+     *
+     * L'offre Founder est limitée à 20 membres.
+     *
+     * On vérifie côté serveur :
+     * - que l'utilisateur ne possède pas déjà un Founder actif
+     * - que moins de 20 utilisateurs possèdent actuellement
+     *   un abonnement Founder valide
+     *
+     * Cette vérification ne dépend donc pas du navigateur.
+     */
+
+    if (plan === "founder") {
+
+      const {
+
+        data: founderSubscriptions,
+
+        error: founderError,
+
+      } = await adminSupabase
+
+        .from("subscriptions")
+
+        .select("user_id, status")
+
+        .eq("plan", "founder")
+
+        .in("status", FOUNDER_ACTIVE_STATUSES);
+
+
+
+      if (founderError) {
+
+        console.error(
+
+          "[Stripe Checkout] Vérification places Founder :",
+
+          founderError
+
+        );
+
+
+
+        return NextResponse.json(
+
+          {
+
+            error:
+
+              "Impossible de vérifier les places Founder disponibles.",
+
+          },
+
+          { status: 500 }
+
+        );
+
+      }
+
+
+
+      const founderUserIds = new Set(
+
+        (founderSubscriptions || [])
+
+          .map((subscription) => subscription.user_id)
+
+          .filter(Boolean)
+
+      );
+
+
+
+      if (founderUserIds.has(user.id)) {
+
+        return NextResponse.json(
+
+          {
+
+            error:
+
+              "Tu disposes déjà d’un abonnement PRIME Founder.",
+
+          },
+
+          { status: 409 }
+
+        );
+
+      }
+
+
+
+      if (founderUserIds.size >= FOUNDER_LIMIT) {
+
+        return NextResponse.json(
+
+          {
+
+            error:
+
+              "Les 20 places PRIME Founder sont désormais complètes.",
+
+            code: "FOUNDER_SOLD_OUT",
+
+          },
+
+          { status: 409 }
+
+        );
+
+      }
+
+
+
+      console.log(
+
+        `[Stripe Checkout] Founder : ${founderUserIds.size}/${FOUNDER_LIMIT} places utilisées`
+
+      );
+
+    }
+
+
 
     const priceId = PRICE_IDS[plan];
 
- 
+
 
     const origin =
 
@@ -170,7 +343,7 @@ export async function POST(request) {
 
       "https://theprimeapp.com";
 
- 
+
 
     const subscriptionData = {
 
@@ -184,7 +357,7 @@ export async function POST(request) {
 
     };
 
- 
+
 
     if (plan === "standard") {
 
@@ -192,7 +365,7 @@ export async function POST(request) {
 
     }
 
- 
+
 
     const checkoutSession =
 
@@ -236,7 +409,7 @@ export async function POST(request) {
 
       });
 
- 
+
 
     if (!checkoutSession.url) {
 
@@ -248,7 +421,7 @@ export async function POST(request) {
 
     }
 
- 
+
 
     return NextResponse.json({
 
@@ -266,7 +439,7 @@ export async function POST(request) {
 
     );
 
- 
+
 
     return NextResponse.json(
 
