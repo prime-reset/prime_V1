@@ -1452,11 +1452,15 @@ function getJournalSummary(sessions) {
 
   return {
     title: "Ta structure reste globalement stable.",
-    text: `Sur les 10 dernières sessions, ton plan a été respecté ${planRate}% du temps${
-      dominantError
-        ? ` et l’erreur la plus fréquente reste ${dominantError}.`
-        : ", sans erreur dominante répétée."
-    }`,
+    text: `${
+  recent.length === 1
+    ? "Sur ta dernière session"
+    : `Sur tes ${recent.length} dernières sessions`
+}, ton plan a été respecté ${planRate}% du temps${
+  dominantError
+    ? ` et l’erreur la plus fréquente reste ${dominantError}.`
+    : ", sans erreur dominante répétée."
+}`,
   };
 }
 
