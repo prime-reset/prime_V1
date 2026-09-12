@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -241,6 +242,65 @@ export default function SettingsPage() {
       );
     } finally {
       setPortalLoading(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteLoading) return;
+
+    const firstConfirmation = window.confirm(
+      "Supprimer définitivement ton compte PRIME ?\n\nTes données PRIME seront supprimées et, si tu as un abonnement Stripe actif, il sera résilié. Cette action est irréversible."
+    );
+
+    if (!firstConfirmation) return;
+
+    const typedConfirmation = window.prompt(
+      'Pour confirmer, écris exactement : SUPPRIMER'
+    );
+
+    if (typedConfirmation !== "SUPPRIMER") {
+      setMessage("Suppression annulée : le mot de confirmation ne correspond pas.");
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      setMessage("");
+
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        setMessage("Ta session a expiré. Reconnecte-toi avant de supprimer ton compte.");
+        return;
+      }
+
+      const response = await fetch("/api/account/delete", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error || "Impossible de supprimer le compte pour le moment."
+        );
+      }
+
+      await supabase.auth.signOut();
+      window.location.href = "/auth?account=deleted";
+    } catch (error) {
+      console.error("[PRIME Account Delete]", error);
+      setMessage(
+        error?.message || "Impossible de supprimer le compte pour le moment."
+      );
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -864,7 +924,14 @@ export default function SettingsPage() {
               }
             />
 
-            <SettingAction icon={<Trash2 size={18} />} title="Supprimer mon compte" subtitle="Suppression définitive. Confirmation obligatoire." danger onClick={() => handleComingSoon("Suppression du compte")} />
+            <SettingAction
+              icon={<Trash2 size={18} />}
+              title={deleteLoading ? "Suppression en cours..." : "Supprimer mon compte"}
+              subtitle="Suppression définitive. Confirmation obligatoire."
+              danger
+              onClick={handleDeleteAccount}
+              disabled={deleteLoading}
+            />
           </div>
         </section>
 
