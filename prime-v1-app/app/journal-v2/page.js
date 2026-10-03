@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
   ChevronRight,
-  Clock3,
   Flame,
   Gauge,
   Minus,
@@ -16,131 +15,113 @@ import {
 } from "lucide-react";
 
 import BottomNav from "../components/BottomNav";
-
-const DEMO_TRADES = [
-  {
-    id: "demo-1",
-    symbol: "NAS100",
-    side: "short",
-    volume: 1,
-    entry_price: 18245,
-    exit_price: 18180,
-    opened_at: "2026-10-03T14:42:00",
-    closed_at: "2026-10-03T15:07:00",
-    gross_pnl: 134,
-    commission: -4,
-    swap: 0,
-    fees: 0,
-    net_pnl: 130,
-    result: "win",
-    stop_loss: 18275,
-    take_profit: 18180,
-    setup: "Sweep + rejet",
-    plan_respected: true,
-    emotion: "Calme",
-    behavioral_error: null,
-    comment:
-      "Entrée après confirmation. Pas de précipitation malgré le premier mouvement.",
-    discipline_score: 94,
-  },
-  {
-    id: "demo-2",
-    symbol: "XAUUSD",
-    side: "long",
-    volume: 0.1,
-    entry_price: 2661.4,
-    exit_price: 2658.8,
-    opened_at: "2026-10-03T15:31:00",
-    closed_at: "2026-10-03T15:43:00",
-    gross_pnl: -31,
-    commission: -2,
-    swap: 0,
-    fees: 0,
-    net_pnl: -33,
-    result: "loss",
-    stop_loss: 2658.8,
-    take_profit: 2668,
-    setup: "Pullback",
-    plan_respected: true,
-    emotion: "Neutre",
-    behavioral_error: null,
-    comment:
-      "Stop respecté. Le scénario était valide malgré le résultat négatif.",
-    discipline_score: 91,
-  },
-  {
-    id: "demo-3",
-    symbol: "EURUSD",
-    side: "long",
-    volume: 0.5,
-    entry_price: 1.1732,
-    exit_price: 1.174,
-    opened_at: "2026-10-03T16:02:00",
-    closed_at: "2026-10-03T16:11:00",
-    gross_pnl: 38,
-    commission: -3,
-    swap: 0,
-    fees: 0,
-    net_pnl: 35,
-    result: "win",
-    stop_loss: 1.1727,
-    take_profit: 1.174,
-    setup: "Breakout",
-    plan_respected: false,
-    emotion: "Impatience",
-    behavioral_error: "FOMO",
-    comment:
-      "Trade gagnant mais entrée anticipée. Le résultat ne valide pas l'exécution.",
-    discipline_score: 61,
-  },
-];
+import { supabase } from "../../lib/supabase";
 
 export default function JournalV2Page() {
   const [selectedTrade, setSelectedTrade] = useState(null);
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTrades();
+  }, []);
+
+  async function loadTrades() {
+    setLoading(true);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setLoading(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("trades")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("closed_at", { ascending: false });
+
+    if (error) {
+      console.error("Journal V2 trades error:", error);
+      setLoading(false);
+      return;
+    }
+
+    setTrades(data || []);
+    setLoading(false);
+  }
 
   const stats = useMemo(() => {
-    const netPnl = DEMO_TRADES.reduce(
+    const netPnl = trades.reduce(
       (sum, trade) => sum + Number(trade.net_pnl || 0),
       0
     );
 
-    const wins = DEMO_TRADES.filter((trade) => trade.net_pnl > 0);
-    const losses = DEMO_TRADES.filter((trade) => trade.net_pnl < 0);
+    const wins = trades.filter(
+      (trade) => Number(trade.net_pnl || 0) > 0
+    );
 
-    const winRate = DEMO_TRADES.length
-      ? Math.round((wins.length / DEMO_TRADES.length) * 100)
+    const losses = trades.filter(
+      (trade) => Number(trade.net_pnl || 0) < 0
+    );
+
+    const winRate = trades.length
+      ? Math.round((wins.length / trades.length) * 100)
       : 0;
 
     const grossProfit = wins.reduce(
-      (sum, trade) => sum + trade.net_pnl,
+      (sum, trade) => sum + Number(trade.net_pnl || 0),
       0
     );
 
     const grossLoss = Math.abs(
-      losses.reduce((sum, trade) => sum + trade.net_pnl, 0)
+      losses.reduce(
+        (sum, trade) => sum + Number(trade.net_pnl || 0),
+        0
+      )
     );
 
     const profitFactor =
-      grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : "—";
+      grossLoss > 0
+        ? (grossProfit / grossLoss).toFixed(2)
+        : grossProfit > 0
+        ? "∞"
+        : "—";
+
+    const scoredTrades = trades.filter(
+      (trade) =>
+        trade.discipline_score !== null &&
+        trade.discipline_score !== undefined
+    );
 
     const discipline =
-      DEMO_TRADES.length > 0
+      scoredTrades.length > 0
         ? Math.round(
-            DEMO_TRADES.reduce(
-              (sum, trade) => sum + Number(trade.discipline_score || 0),
+            scoredTrades.reduce(
+              (sum, trade) =>
+                sum + Number(trade.discipline_score || 0),
               0
-            ) / DEMO_TRADES.length
+            ) / scoredTrades.length
           )
-        : 0;
+        : null;
 
     return {
       netPnl,
-      count: DEMO_TRADES.length,
+      count: trades.length,
       winRate,
       profitFactor,
       discipline,
     };
-  }, []);
+  }, [trades]);
+
+  const latestTradeDate =
+    trades.length > 0
+      ? trades[0].closed_at || trades[0].opened_at
+      : null;
 
   return (
     <main className="journal-v2-page">
@@ -150,6 +131,7 @@ export default function JournalV2Page() {
         <section className="hero">
           <div className="hero-top">
             <p className="brand">JOURNAL PRIME · V2</p>
+
             <span className="sync-badge">
               <span className="sync-dot" />
               PRIME Sync
@@ -169,9 +151,17 @@ export default function JournalV2Page() {
         <section className="discipline-card">
           <div>
             <p className="label">DISCIPLINE PRIME</p>
-            <div className="discipline-value">{stats.discipline}%</div>
+
+            <div className="discipline-value">
+              {stats.discipline !== null
+                ? `${stats.discipline}%`
+                : "—"}
+            </div>
+
             <p className="discipline-caption">
-              Qualité moyenne d&apos;exécution aujourd&apos;hui
+              {stats.discipline !== null
+                ? "Qualité moyenne d'exécution"
+                : "En attente d'évaluation comportementale"}
             </p>
           </div>
 
@@ -183,8 +173,10 @@ export default function JournalV2Page() {
         <section className="metrics-grid">
           <MetricCard
             label="PnL net"
-            value={`${stats.netPnl > 0 ? "+" : ""}${stats.netPnl}€`}
-            caption="Aujourd'hui"
+            value={`${stats.netPnl > 0 ? "+" : ""}${formatMoney(
+              stats.netPnl
+            )}€`}
+            caption="Trades synchronisés"
             icon={
               stats.netPnl > 0 ? (
                 <ArrowUpRight size={20} />
@@ -206,7 +198,7 @@ export default function JournalV2Page() {
           <MetricCard
             label="Trades"
             value={stats.count}
-            caption="Exécutions clôturées"
+            caption="Exécutions enregistrées"
             icon={<BarChart3 size={20} />}
           />
 
@@ -225,44 +217,64 @@ export default function JournalV2Page() {
           />
         </section>
 
-        <section className="prime-reading">
-          <div className="reading-icon">
-            <Gauge size={23} />
-          </div>
-
-          <div>
-            <p className="label">LECTURE PRIME</p>
-            <h2>Rentable, mais pas irréprochable.</h2>
-            <p>
-              Ton PnL est positif, mais un trade hors plan dégrade la qualité
-              globale de ta journée. PRIME distingue le résultat de
-              l&apos;exécution.
-            </p>
-          </div>
-        </section>
+        <PrimeReading
+          trades={trades}
+          loading={loading}
+        />
 
         <div className="section-title">
           <div>
-            <p className="label">3 OCTOBRE 2026</p>
-            <h2>Trades de la journée</h2>
+            <p className="label">
+              {latestTradeDate
+                ? formatFullDate(latestTradeDate)
+                : "HISTORIQUE"}
+            </p>
+
+            <h2>Trades synchronisés</h2>
           </div>
 
-          <span>3 trades</span>
+          <span>
+            {stats.count} trade{stats.count > 1 ? "s" : ""}
+          </span>
         </div>
 
-        <div className="trade-list">
-          {DEMO_TRADES.map((trade) => (
-            <TradeCard
-              key={trade.id}
-              trade={trade}
-              onOpen={() => setSelectedTrade(trade)}
-            />
-          ))}
-        </div>
+        {loading && (
+          <section className="state-card">
+            <div className="loader" />
+            <h3>Chargement du journal...</h3>
+            <p>PRIME récupère tes trades.</p>
+          </section>
+        )}
 
-        <p className="demo-note">
-          Maquette de développement · données fictives
-        </p>
+        {!loading && trades.length === 0 && (
+          <section className="state-card empty-state">
+            <div className="empty-icon">
+              <BarChart3 size={27} />
+            </div>
+
+            <p className="label">PRIME SYNC</p>
+
+            <h3>Aucun trade synchronisé.</h3>
+
+            <p>
+              Dès qu&apos;un trade sera importé dans PRIME, il
+              apparaîtra automatiquement ici avec ses données
+              techniques et son analyse comportementale.
+            </p>
+          </section>
+        )}
+
+        {!loading && trades.length > 0 && (
+          <div className="trade-list">
+            {trades.map((trade) => (
+              <TradeCard
+                key={trade.id}
+                trade={trade}
+                onOpen={() => setSelectedTrade(trade)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {selectedTrade && (
@@ -299,20 +311,136 @@ function MetricCard({
   );
 }
 
+function PrimeReading({ trades, loading }) {
+  if (loading) {
+    return (
+      <section className="prime-reading">
+        <div className="reading-icon">
+          <Gauge size={23} />
+        </div>
+
+        <div>
+          <p className="label">LECTURE PRIME</p>
+          <h2>Analyse en cours.</h2>
+          <p>
+            PRIME prépare la lecture de ton historique.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  if (trades.length === 0) {
+    return (
+      <section className="prime-reading">
+        <div className="reading-icon">
+          <Gauge size={23} />
+        </div>
+
+        <div>
+          <p className="label">LECTURE PRIME</p>
+          <h2>Ton historique commence ici.</h2>
+          <p>
+            Tes prochains trades permettront à PRIME de croiser
+            performance financière et qualité d&apos;exécution.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const evaluatedTrades = trades.filter(
+    (trade) =>
+      trade.plan_respected !== null &&
+      trade.plan_respected !== undefined
+  );
+
+  if (evaluatedTrades.length === 0) {
+    return (
+      <section className="prime-reading">
+        <div className="reading-icon">
+          <Gauge size={23} />
+        </div>
+
+        <div>
+          <p className="label">LECTURE PRIME</p>
+          <h2>Performance enregistrée.</h2>
+          <p>
+            Tes trades sont bien synchronisés. Leur lecture
+            comportementale sera enrichie avec tes données PRIME.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const offPlan = evaluatedTrades.filter(
+    (trade) => trade.plan_respected === false
+  );
+
+  if (offPlan.length > 0) {
+    return (
+      <section className="prime-reading">
+        <div className="reading-icon">
+          <Gauge size={23} />
+        </div>
+
+        <div>
+          <p className="label">LECTURE PRIME</p>
+          <h2>Une dérive mérite ton attention.</h2>
+          <p>
+            PRIME détecte {offPlan.length} trade
+            {offPlan.length > 1 ? "s" : ""} hors plan dans ton
+            historique évalué. Le résultat financier ne suffit pas
+            à valider une décision.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="prime-reading">
+      <div className="reading-icon">
+        <Gauge size={23} />
+      </div>
+
+      <div>
+        <p className="label">LECTURE PRIME</p>
+        <h2>Ton exécution reste dans le cadre.</h2>
+        <p>
+          Les trades évalués respectent ton plan. PRIME continuera
+          à surveiller la stabilité de cette discipline.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function TradeCard({ trade, onOpen }) {
-  const duration = getDuration(trade.opened_at, trade.closed_at);
+  const duration = getDuration(
+    trade.opened_at,
+    trade.closed_at
+  );
+
   const pnl = Number(trade.net_pnl || 0);
 
   return (
     <button
       className={`trade-card ${
-        trade.plan_respected === false ? "trade-warning" : ""
+        trade.plan_respected === false
+          ? "trade-warning"
+          : ""
       }`}
       onClick={onOpen}
     >
       <div
         className={`trade-accent ${
-          pnl > 0 ? "positive" : pnl < 0 ? "negative" : "neutral"
+          pnl > 0
+            ? "positive"
+            : pnl < 0
+            ? "negative"
+            : "neutral"
         }`}
       />
 
@@ -320,10 +448,16 @@ function TradeCard({ trade, onOpen }) {
         <div className="trade-top">
           <div>
             <div className="trade-name">
-              <h3>{trade.symbol}</h3>
+              <h3>{trade.symbol || "—"}</h3>
 
-              <span className={`side side-${trade.side}`}>
-                {trade.side === "long" ? "LONG" : "SHORT"}
+              <span
+                className={`side side-${trade.side}`}
+              >
+                {trade.side === "long"
+                  ? "LONG"
+                  : trade.side === "short"
+                  ? "SHORT"
+                  : "—"}
               </span>
             </div>
 
@@ -343,37 +477,48 @@ function TradeCard({ trade, onOpen }) {
             }
           >
             {pnl > 0 ? "+" : ""}
-            {pnl}€
+            {formatMoney(pnl)}€
           </strong>
         </div>
 
         <div className="prices">
           <div>
             <span>Entrée</span>
-            <strong>{formatPrice(trade.entry_price)}</strong>
+            <strong>
+              {formatPrice(trade.entry_price)}
+            </strong>
           </div>
 
           <div className="price-arrow">→</div>
 
           <div>
             <span>Sortie</span>
-            <strong>{formatPrice(trade.exit_price)}</strong>
+            <strong>
+              {formatPrice(trade.exit_price)}
+            </strong>
           </div>
         </div>
 
         <div className="trade-bottom">
           <div className="trade-status">
-            <span
-              className={
-                trade.plan_respected
-                  ? "status-good"
-                  : "status-warning"
-              }
-            >
-              {trade.plan_respected
-                ? "Plan respecté"
-                : "Hors plan"}
-            </span>
+            {trade.plan_respected === true && (
+              <span className="status-good">
+                Plan respecté
+              </span>
+            )}
+
+            {trade.plan_respected === false && (
+              <span className="status-warning">
+                Hors plan
+              </span>
+            )}
+
+            {trade.plan_respected === null ||
+            trade.plan_respected === undefined ? (
+              <span className="status-neutral">
+                À évaluer
+              </span>
+            ) : null}
 
             {trade.behavioral_error && (
               <span className="error-tag">
@@ -384,7 +529,14 @@ function TradeCard({ trade, onOpen }) {
 
           <div className="trade-score">
             <span>PRIME</span>
-            <strong>{trade.discipline_score}%</strong>
+
+            <strong>
+              {trade.discipline_score !== null &&
+              trade.discipline_score !== undefined
+                ? `${trade.discipline_score}%`
+                : "—"}
+            </strong>
+
             <ChevronRight size={17} />
           </div>
         </div>
@@ -397,7 +549,10 @@ function TradeModal({ trade, onClose }) {
   const pnl = Number(trade.net_pnl || 0);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div
+      className="modal-backdrop"
+      onClick={onClose}
+    >
       <div
         className="modal-sheet"
         onClick={(event) => event.stopPropagation()}
@@ -407,15 +562,25 @@ function TradeModal({ trade, onClose }) {
         <div className="modal-head">
           <div>
             <p className="label">DOSSIER TRADE</p>
+
             <div className="modal-symbol">
-              <h2>{trade.symbol}</h2>
-              <span className={`side side-${trade.side}`}>
-                {trade.side.toUpperCase()}
+              <h2>{trade.symbol || "—"}</h2>
+
+              <span
+                className={`side side-${trade.side}`}
+              >
+                {trade.side
+                  ? trade.side.toUpperCase()
+                  : "—"}
               </span>
             </div>
           </div>
 
-          <button className="modal-close" onClick={onClose}>
+          <button
+            className="modal-close"
+            onClick={onClose}
+            aria-label="Fermer"
+          >
             <X size={20} />
           </button>
         </div>
@@ -423,6 +588,7 @@ function TradeModal({ trade, onClose }) {
         <section className="modal-main-metrics">
           <div>
             <span>PnL net</span>
+
             <strong
               className={
                 pnl > 0
@@ -433,28 +599,42 @@ function TradeModal({ trade, onClose }) {
               }
             >
               {pnl > 0 ? "+" : ""}
-              {pnl}€
+              {formatMoney(pnl)}€
             </strong>
           </div>
 
           <div>
             <span>Discipline</span>
-            <strong>{trade.discipline_score}%</strong>
+
+            <strong>
+              {trade.discipline_score !== null &&
+              trade.discipline_score !== undefined
+                ? `${trade.discipline_score}%`
+                : "—"}
+            </strong>
           </div>
         </section>
 
-        <p className="modal-section-title">DONNÉES TECHNIQUES</p>
+        <p className="modal-section-title">
+          DONNÉES TECHNIQUES
+        </p>
 
         <div className="data-grid">
           <DataBox
             label="Entrée"
             value={formatPrice(trade.entry_price)}
           />
+
           <DataBox
             label="Sortie"
             value={formatPrice(trade.exit_price)}
           />
-          <DataBox label="Volume" value={trade.volume} />
+
+          <DataBox
+            label="Volume"
+            value={trade.volume ?? "—"}
+          />
+
           <DataBox
             label="Durée"
             value={getDuration(
@@ -462,67 +642,86 @@ function TradeModal({ trade, onClose }) {
               trade.closed_at
             )}
           />
+
           <DataBox
             label="Stop Loss"
             value={formatPrice(trade.stop_loss)}
           />
+
           <DataBox
             label="Take Profit"
             value={formatPrice(trade.take_profit)}
           />
+
           <DataBox
             label="Commission"
-            value={`${trade.commission}€`}
+            value={`${formatMoney(
+              Number(trade.commission || 0)
+            )}€`}
           />
+
           <DataBox
             label="PnL brut"
-            value={`${trade.gross_pnl > 0 ? "+" : ""}${
-              trade.gross_pnl
-            }€`}
+            value={`${
+              Number(trade.gross_pnl || 0) > 0
+                ? "+"
+                : ""
+            }${formatMoney(
+              Number(trade.gross_pnl || 0)
+            )}€`}
           />
         </div>
 
-        <p className="modal-section-title">COMPORTEMENT PRIME</p>
+        <p className="modal-section-title">
+          COMPORTEMENT PRIME
+        </p>
 
         <div className="data-grid">
-          <DataBox label="Setup" value={trade.setup || "—"} />
+          <DataBox
+            label="Setup"
+            value={trade.setup || "À renseigner"}
+          />
+
           <DataBox
             label="Plan"
             value={
-              trade.plan_respected
+              trade.plan_respected === true
                 ? "Respecté"
-                : "Non respecté"
+                : trade.plan_respected === false
+                ? "Non respecté"
+                : "À renseigner"
             }
           />
+
           <DataBox
             label="Émotion"
-            value={trade.emotion || "—"}
+            value={trade.emotion || "À renseigner"}
           />
+
           <DataBox
             label="Erreur"
-            value={trade.behavioral_error || "Aucune"}
+            value={
+              trade.behavioral_error ||
+              "Aucune renseignée"
+            }
           />
         </div>
 
         <section className="prime-analysis">
           <p className="label">ANALYSE PRIME</p>
 
-          <h3>
-            {trade.plan_respected
-              ? pnl < 0
-                ? "Bonne perte."
-                : "Exécution maîtrisée."
-              : pnl > 0
-              ? "Gain trompeur."
-              : "Dérive coûteuse."}
-          </h3>
+          <h3>{getTradeInsightTitle(trade)}</h3>
 
           <p>{getTradeInsight(trade)}</p>
         </section>
 
         <section className="trade-note">
           <p className="label">NOTE DU TRADER</p>
-          <p>{trade.comment || "Aucune note ajoutée."}</p>
+
+          <p>
+            {trade.comment ||
+              "Aucune note ajoutée pour ce trade."}
+          </p>
         </section>
       </div>
     </div>
@@ -642,7 +841,8 @@ function JournalStyles() {
       .discipline-card,
       .metric-card,
       .prime-reading,
-      .trade-card {
+      .trade-card,
+      .state-card {
         background: #101010;
         border: 1px solid rgba(255,255,255,.07);
         box-shadow: 0 18px 45px rgba(0,0,0,.38);
@@ -686,7 +886,6 @@ function JournalStyles() {
         color: #D4B06A;
         border: 2px solid rgba(212,176,106,.45);
         background: rgba(212,176,106,.06);
-        box-shadow: 0 0 30px rgba(212,176,106,.08);
       }
 
       .metrics-grid {
@@ -904,10 +1103,6 @@ function JournalStyles() {
         border: 1px solid rgba(255,255,255,.055);
       }
 
-      .prices div:not(.price-arrow) {
-        min-width: 0;
-      }
-
       .prices span,
       .prices strong {
         display: block;
@@ -962,6 +1157,11 @@ function JournalStyles() {
         background: rgba(212,176,106,.08);
       }
 
+      .status-neutral {
+        color: rgba(255,255,255,.55);
+        background: rgba(255,255,255,.05);
+      }
+
       .trade-score {
         display: flex;
         align-items: center;
@@ -979,11 +1179,51 @@ function JournalStyles() {
         font-size: 13px;
       }
 
-      .demo-note {
-        margin: 16px 0 0;
-        color: rgba(255,255,255,.25);
+      .state-card {
+        padding: 30px 22px;
+        border-radius: 26px;
         text-align: center;
-        font-size: 9px;
+      }
+
+      .state-card h3 {
+        margin: 10px 0 0;
+        font-size: 21px;
+      }
+
+      .state-card > p:last-child {
+        margin: 10px auto 0;
+        max-width: 340px;
+        color: rgba(255,255,255,.55);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .empty-icon {
+        width: 56px;
+        height: 56px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 18px;
+        border-radius: 18px;
+        color: #D4B06A;
+        background: rgba(212,176,106,.07);
+        border: 1px solid rgba(212,176,106,.18);
+      }
+
+      .loader {
+        width: 34px;
+        height: 34px;
+        margin: 0 auto 18px;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,.08);
+        border-top-color: #D4B06A;
+        animation: spin .8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .modal-backdrop {
@@ -1164,8 +1404,26 @@ function formatTime(value) {
   });
 }
 
+function formatFullDate(value) {
+  if (!value) return "HISTORIQUE";
+
+  return new Date(value)
+    .toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+    .toUpperCase();
+}
+
 function formatPrice(value) {
-  if (value === null || value === undefined) return "—";
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "—";
+  }
 
   const number = Number(value);
 
@@ -1180,6 +1438,14 @@ function formatPrice(value) {
   }
 
   return number.toLocaleString("fr-FR", {
+    maximumFractionDigits: 5,
+  });
+}
+
+function formatMoney(value) {
+  const number = Number(value || 0);
+
+  return number.toLocaleString("fr-FR", {
     maximumFractionDigits: 2,
   });
 }
@@ -1192,10 +1458,14 @@ function getDuration(openedAt, closedAt) {
 
   const minutes = Math.max(
     0,
-    Math.round((end.getTime() - start.getTime()) / 60000)
+    Math.round(
+      (end.getTime() - start.getTime()) / 60000
+    )
   );
 
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
 
   const hours = Math.floor(minutes / 60);
   const remaining = minutes % 60;
@@ -1205,18 +1475,54 @@ function getDuration(openedAt, closedAt) {
     : `${hours}h`;
 }
 
+function getTradeInsightTitle(trade) {
+  const pnl = Number(trade.net_pnl || 0);
+
+  if (
+    trade.plan_respected === null ||
+    trade.plan_respected === undefined
+  ) {
+    return "À compléter.";
+  }
+
+  if (trade.plan_respected === true && pnl < 0) {
+    return "Bonne perte.";
+  }
+
+  if (trade.plan_respected === false && pnl > 0) {
+    return "Gain trompeur.";
+  }
+
+  if (trade.plan_respected === false && pnl < 0) {
+    return "Dérive coûteuse.";
+  }
+
+  if (pnl > 0) {
+    return "Exécution maîtrisée.";
+  }
+
+  return "Trace enregistrée.";
+}
+
 function getTradeInsight(trade) {
   const pnl = Number(trade.net_pnl || 0);
 
-  if (trade.plan_respected && pnl < 0) {
+  if (
+    trade.plan_respected === null ||
+    trade.plan_respected === undefined
+  ) {
+    return "Les données techniques de ce trade sont enregistrées. Complète sa lecture comportementale pour permettre à PRIME d'évaluer la qualité de l'exécution.";
+  }
+
+  if (trade.plan_respected === true && pnl < 0) {
     return "Le trade est perdant financièrement, mais ton scénario et ton cadre ont été respectés. PRIME considère cette exécution comme saine.";
   }
 
-  if (!trade.plan_respected && pnl > 0) {
+  if (trade.plan_respected === false && pnl > 0) {
     return "Le résultat est positif, mais l'exécution était hors plan. Ce gain ne doit pas renforcer une mauvaise décision.";
   }
 
-  if (!trade.plan_respected && pnl < 0) {
+  if (trade.plan_respected === false && pnl < 0) {
     return "La perte financière accompagne ici une dégradation du processus. C'est ce comportement que PRIME cherchera à empêcher de se répéter.";
   }
 
