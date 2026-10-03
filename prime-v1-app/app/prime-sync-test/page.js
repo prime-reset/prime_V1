@@ -4,12 +4,17 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 export default function PrimeSyncTestPage() {
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [syncToken, setSyncToken] = useState(null);
+  const [accountId, setAccountId] = useState(null);
+  const [connectionLoading, setConnectionLoading] = useState(false);
+  const [tradeLoading, setTradeLoading] = useState(false);
+  const [connectionMessage, setConnectionMessage] = useState(null);
+  const [tradeResult, setTradeResult] = useState(null);
 
   async function createTestConnection() {
-    setLoading(true);
-    setResult(null);
+    setConnectionLoading(true);
+    setConnectionMessage(null);
+    setTradeResult(null);
 
     try {
       const {
@@ -41,17 +46,100 @@ export default function PrimeSyncTestPage() {
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Erreur PRIME Sync."
+          data.error || "Impossible de créer la connexion PRIME Sync."
         );
       }
 
-      setResult(data);
+      setSyncToken(data.sync_token);
+      setAccountId(data.trading_account_id);
+      setConnectionMessage({
+        type: "success",
+        text: "Connexion PRIME Sync créée ✓",
+      });
     } catch (error) {
-      setResult({
-        error: error.message,
+      setSyncToken(null);
+      setAccountId(null);
+
+      setConnectionMessage({
+        type: "error",
+        text: error.message,
       });
     } finally {
-      setLoading(false);
+      setConnectionLoading(false);
+    }
+  }
+
+  async function sendTestTrade() {
+    if (!syncToken) {
+      setTradeResult({
+        type: "error",
+        text: "Crée d'abord une connexion PRIME Sync.",
+      });
+      return;
+    }
+
+    setTradeLoading(true);
+    setTradeResult(null);
+
+    try {
+      const now = new Date();
+
+      const openedAt = new Date(
+        now.getTime() - 25 * 60 * 1000
+      ).toISOString();
+
+      const closedAt = now.toISOString();
+
+      const response = await fetch("/api/prime-sync/trade", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${syncToken}`,
+        },
+        body: JSON.stringify({
+          external_trade_id: "PRIME-TEST-TRADE-001",
+          external_account_id: "PRIME-TEST-001",
+
+          symbol: "NAS100",
+          side: "long",
+          volume: 1,
+
+          entry_price: 18245.5,
+          exit_price: 18310.5,
+
+          opened_at: openedAt,
+          closed_at: closedAt,
+
+          gross_pnl: 134,
+          commission: -4,
+          swap: 0,
+          fees: 0,
+
+          stop_loss: 18205.5,
+          take_profit: 18310.5,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Impossible d'envoyer le trade test."
+        );
+      }
+
+      setTradeResult({
+        type: "success",
+        text: "Trade test enregistré dans PRIME ✓",
+        data,
+      });
+    } catch (error) {
+      setTradeResult({
+        type: "error",
+        text: error.message,
+      });
+    } finally {
+      setTradeLoading(false);
     }
   }
 
@@ -82,7 +170,13 @@ export default function PrimeSyncTestPage() {
           PRIME SYNC · TEST
         </p>
 
-        <h1>Connexion test</h1>
+        <h1
+          style={{
+            marginBottom: "10px",
+          }}
+        >
+          Test du pipeline
+        </h1>
 
         <p
           style={{
@@ -90,87 +184,200 @@ export default function PrimeSyncTestPage() {
             lineHeight: "1.5",
           }}
         >
-          Cette page sert uniquement à tester
-          l&apos;infrastructure PRIME Sync.
+          Test complet de la connexion PRIME Sync jusqu'au
+          Journal V2.
         </p>
 
-        <button
-          onClick={createTestConnection}
-          disabled={loading}
+        <section
           style={{
-            width: "100%",
-            marginTop: "25px",
-            padding: "16px",
-            border: "none",
-            borderRadius: "14px",
-            background: "#D4B06A",
-            color: "#050505",
-            fontWeight: "900",
-            cursor: "pointer",
+            marginTop: "30px",
+            padding: "20px",
+            borderRadius: "20px",
+            background: "#101010",
+            border: "1px solid rgba(255,255,255,.08)",
           }}
         >
-          {loading
-            ? "Connexion en cours..."
-            : "Créer la connexion test"}
-        </button>
-
-        {result && (
-          <div
+          <p
             style={{
-              marginTop: "25px",
-              padding: "18px",
-              borderRadius: "18px",
-              background: "#101010",
-              border:
-                "1px solid rgba(255,255,255,.08)",
-              overflowWrap: "anywhere",
+              margin: "0 0 8px",
+              color: "#D4B06A",
+              fontSize: "10px",
+              letterSpacing: "2px",
+              fontWeight: "900",
             }}
           >
-            {result.error ? (
-              <>
-                <strong
+            ÉTAPE 1
+          </p>
+
+          <h2
+            style={{
+              margin: "0 0 10px",
+              fontSize: "20px",
+            }}
+          >
+            Connexion
+          </h2>
+
+          <button
+            onClick={createTestConnection}
+            disabled={connectionLoading}
+            style={{
+              width: "100%",
+              padding: "16px",
+              marginTop: "10px",
+              border: "none",
+              borderRadius: "14px",
+              background: "#D4B06A",
+              color: "#050505",
+              fontWeight: "900",
+              cursor: "pointer",
+            }}
+          >
+            {connectionLoading
+              ? "Connexion en cours..."
+              : syncToken
+              ? "Recréer la connexion test"
+              : "Créer la connexion test"}
+          </button>
+
+          {connectionMessage && (
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "14px",
+                borderRadius: "12px",
+                background:
+                  connectionMessage.type === "success"
+                    ? "rgba(107,226,139,.07)"
+                    : "rgba(240,91,91,.07)",
+                color:
+                  connectionMessage.type === "success"
+                    ? "#6BE28B"
+                    : "#F05B5B",
+                fontWeight: "800",
+              }}
+            >
+              {connectionMessage.text}
+
+              {accountId && (
+                <div
                   style={{
-                    color: "#F05B5B",
+                    marginTop: "7px",
+                    color: "rgba(255,255,255,.45)",
+                    fontSize: "10px",
+                    fontWeight: "500",
                   }}
                 >
-                  Erreur
-                </strong>
+                  Compte test prêt
+                </div>
+              )}
+            </div>
+          )}
+        </section>
 
-                <p>{result.error}</p>
-              </>
-            ) : (
-              <>
-                <strong
+        <section
+          style={{
+            marginTop: "15px",
+            padding: "20px",
+            borderRadius: "20px",
+            background: "#101010",
+            border: "1px solid rgba(255,255,255,.08)",
+            opacity: syncToken ? 1 : 0.45,
+          }}
+        >
+          <p
+            style={{
+              margin: "0 0 8px",
+              color: "#D4B06A",
+              fontSize: "10px",
+              letterSpacing: "2px",
+              fontWeight: "900",
+            }}
+          >
+            ÉTAPE 2
+          </p>
+
+          <h2
+            style={{
+              margin: "0 0 10px",
+              fontSize: "20px",
+            }}
+          >
+            Envoyer un trade
+          </h2>
+
+          <p
+            style={{
+              color: "rgba(255,255,255,.5)",
+              fontSize: "12px",
+              lineHeight: "1.5",
+            }}
+          >
+            Envoie un faux trade NAS100 dans le même pipeline
+            qu'utilisera le futur connecteur de trading.
+          </p>
+
+          <button
+            onClick={sendTestTrade}
+            disabled={!syncToken || tradeLoading}
+            style={{
+              width: "100%",
+              padding: "16px",
+              marginTop: "10px",
+              border: "1px solid rgba(212,176,106,.35)",
+              borderRadius: "14px",
+              background: syncToken
+                ? "rgba(212,176,106,.08)"
+                : "rgba(255,255,255,.03)",
+              color: syncToken
+                ? "#D4B06A"
+                : "rgba(255,255,255,.3)",
+              fontWeight: "900",
+              cursor: syncToken ? "pointer" : "default",
+            }}
+          >
+            {tradeLoading
+              ? "Envoi en cours..."
+              : "Envoyer le trade test"}
+          </button>
+
+          {tradeResult && (
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "14px",
+                borderRadius: "12px",
+                background:
+                  tradeResult.type === "success"
+                    ? "rgba(107,226,139,.07)"
+                    : "rgba(240,91,91,.07)",
+                color:
+                  tradeResult.type === "success"
+                    ? "#6BE28B"
+                    : "#F05B5B",
+                fontWeight: "800",
+              }}
+            >
+              {tradeResult.text}
+
+              {tradeResult.type === "success" && (
+                <div
                   style={{
-                    color: "#6BE28B",
+                    marginTop: "8px",
+                    color: "rgba(255,255,255,.5)",
+                    fontSize: "11px",
+                    lineHeight: "1.5",
+                    fontWeight: "500",
                   }}
                 >
-                  Connexion créée ✓
-                </strong>
-
-                <p>
-                  Compte :{" "}
-                  {result.trading_account_id}
-                </p>
-
-                <p>Token PRIME Sync :</p>
-
-                <code
-                  style={{
-                    display: "block",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    background: "#050505",
-                    color: "#D4B06A",
-                    wordBreak: "break-all",
-                  }}
-                >
-                  {result.sync_token}
-                </code>
-              </>
-            )}
-          </div>
-        )}
+                  Résultat : {tradeResult.data?.result}
+                  <br />
+                  PnL net : {tradeResult.data?.net_pnl} €
+                </div>
+              )}
+            </div>
+          )}
+        </section>
       </div>
     </main>
   );
