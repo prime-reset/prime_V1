@@ -80,23 +80,27 @@ export default function SessionPage() {
         setPrimeProfile(profileData.profile);
       }
 
-      const { data: userProfileData, error: userProfileError } = await supabase
-        .from("profiles")
-        .select("checklist")
-        .eq("id", user.id)
-        .maybeSingle();
+      // La Session lit désormais les règles structurées créées dans trading_rules.
+      // Seules les règles de type "validation" appartiennent à la checklist pré-trade.
+      // Les invalidations restent stockées séparément et ne doivent pas être cochées
+      // comme des validations.
+      const { data: tradingRulesData, error: tradingRulesError } = await supabase
+        .from("trading_rules")
+        .select("id, label, rule_type, position, is_active")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .eq("rule_type", "validation")
+        .order("position", { ascending: true });
 
-      if (userProfileError) {
-        console.error("Erreur chargement checklist PRIME :", userProfileError);
+      if (tradingRulesError) {
+        console.error("Erreur chargement règles PRIME :", tradingRulesError);
       }
 
-      if (Array.isArray(userProfileData?.checklist)) {
-        setPrimeChecklist(
-          userProfileData.checklist.filter(
-            (item) => typeof item === "string" && item.trim()
-          )
-        );
-      }
+      const validationRules = (tradingRulesData || [])
+        .map((rule) => rule?.label?.trim())
+        .filter(Boolean);
+
+      setPrimeChecklist(validationRules);
 
       const { data: prescriptionData, error: prescriptionError } = await supabase
         .from("prescriptions")
