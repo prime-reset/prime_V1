@@ -829,11 +829,11 @@ if (identityHasChanged) {
             </p>
 
             <div className="card-label" style={{ marginTop: "24px" }}>
-              CHECKLIST PERSONNALISÉE
+              RÈGLES PRÉ-SESSION
             </div>
 
             {(tradingRules.length > 0
-              ? tradingRules
+              ? tradingRules.filter((rule) => rule.rule_type === "validation")
               : result.checklist.map((item, index) => ({
                   label: item,
                   rule_type: "validation",
@@ -841,21 +841,58 @@ if (identityHasChanged) {
                 }))
             ).map((rule, index) => (
               <div
-                key={`${rule.rule_type}-${rule.label}-${index}`}
+                key={`validation-${rule.label}-${index}`}
                 className="rule-row"
               >
-                <CheckCircle
-                  size={18}
-                  color={rule.rule_type === "invalidation" ? "#F05B5B" : "#D4B06A"}
-                />
+                <CheckCircle size={18} color="#D4B06A" />
                 <div className="rule-content">
-                  <span className={`rule-badge ${rule.rule_type}`}>
-                    {rule.rule_type === "invalidation" ? "Invalidation" : "Validation"}
-                  </span>
+                  <span className="rule-badge validation">Validation</span>
                   <p className="list-text">{rule.label}</p>
                 </div>
               </div>
             ))}
+
+            {tradingRules.some(
+              (rule) => rule.rule_type === "invalidation"
+            ) && (
+              <>
+                <div className="card-label" style={{ marginTop: "30px" }}>
+                  INVALIDATIONS DU SETUP
+                </div>
+
+                <p className="text" style={{ marginTop: 0 }}>
+                  Ces conditions annulent ton scénario. PRIME les conservera pour
+                  l’analyse de ta session.
+                </p>
+
+                {tradingRules
+                  .filter((rule) => rule.rule_type === "invalidation")
+                  .map((rule, index) => (
+                    <div
+                      key={`invalidation-${rule.label}-${index}`}
+                      className="rule-row"
+                    >
+                      <div
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          borderRadius: "50%",
+                          border: "2px solid #F05B5B",
+                          marginTop: "2px",
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      <div className="rule-content">
+                        <span className="rule-badge invalidation">
+                          Invalidation
+                        </span>
+                        <p className="list-text">{rule.label}</p>
+                      </div>
+                    </div>
+                  ))}
+              </>
+            )}
           </section>
         )}
       </div>
