@@ -27,6 +27,8 @@ export default function SessionPage() {
   const [mentalState, setMentalState] = useState("");
   const [postMentalState, setPostMentalState] = useState("");
   const [planRespected, setPlanRespected] = useState(null);
+  const [invalidationRules, setInvalidationRules] = useState([]);
+  const [invalidationAnswers, setInvalidationAnswers] = useState({});
   const [hasMistake, setHasMistake] = useState(null);
   const [selectedMistake, setSelectedMistake] = useState("");
   const [customMistake, setCustomMistake] = useState("");
@@ -101,6 +103,20 @@ export default function SessionPage() {
         .filter(Boolean);
 
       setPrimeChecklist(validationRules);
+
+      const { data: invalidationData, error: invalidationError } = await supabase
+        .from("trading_rules")
+        .select("id, label, position")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .eq("rule_type", "invalidation")
+        .order("position", { ascending: true });
+
+      if (invalidationError) {
+        console.error("Erreur chargement invalidations PRIME :", invalidationError);
+      } else {
+        setInvalidationRules((invalidationData || []).filter((rule) => rule.label?.trim()));
+      }
 
       const { data: prescriptionData, error: prescriptionError } = await supabase
         .from("prescriptions")
@@ -383,7 +399,14 @@ export default function SessionPage() {
     Boolean(mentalState) &&
     checklist.every((item) => checked[item]);
 
+  const invalidationsComplete = invalidationRules.every((rule) => {
+    const answer = invalidationAnswers[rule.id];
+    return answer?.occurred === false ||
+      (answer?.occurred === true && typeof answer?.respected === "boolean");
+  });
+
   const debriefComplete =
+    invalidationsComplete &&
     planRespected !== null &&
     Boolean(postMentalState) &&
     hasMistake !== null &&
@@ -427,6 +450,37 @@ export default function SessionPage() {
 
     setDisciplineScore(finalScore);
 
+    // Sauvegarder les invalidations avant de clôturer la session.
+    if (invalidationRules.length > 0) {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        alert("Connexion requise pour enregistrer les invalidations.");
+        setSaving(false);
+        return;
+      }
+
+      const rows = invalidationRules.map((rule) => ({
+        user_id: user.id,
+        session_id: sessionId,
+        trading_rule_id: rule.id,
+        rule_label: rule.label,
+        occurred: invalidationAnswers[rule.id].occurred,
+        respected: invalidationAnswers[rule.id].occurred
+          ? invalidationAnswers[rule.id].respected
+          : null,
+      }));
+
+      const { error: invalidationSaveError } = await supabase
+        .from("session_invalidations")
+        .upsert(rows, { onConflict: "session_id,trading_rule_id" });
+
+      if (invalidationSaveError) {
+        alert("Erreur enregistrement invalidations : " + invalidationSaveError.message);
+        setSaving(false);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("sessions")
       .update({
@@ -461,6 +515,7 @@ export default function SessionPage() {
     setMentalState("");
     setPostMentalState("");
     setPlanRespected(null);
+    setInvalidationAnswers({});
     setHasMistake(null);
     setSelectedMistake("");
     setCustomMistake("");
@@ -642,6 +697,9 @@ export default function SessionPage() {
             setStep={setStep}
             planRespected={planRespected}
             handlePlanRespected={handlePlanRespected}
+            invalidationRules={invalidationRules}
+            invalidationAnswers={invalidationAnswers}
+            setInvalidationAnswers={setInvalidationAnswers}
             postMentalState={postMentalState}
             setPostMentalState={setPostMentalState}
             hasMistake={hasMistake}
@@ -867,6 +925,9 @@ function DebriefStep({
   setStep,
   planRespected,
   handlePlanRespected,
+  invalidationRules,
+  invalidationAnswers,
+  setInvalidationAnswers,
   postMentalState,
   setPostMentalState,
   hasMistake,
@@ -939,6 +1000,53 @@ function DebriefStep({
           </button>
         </div>
       </section>
+
+      {invalidationRules.length > 0 && (
+        <section className="card">
+          <div className="card-top">
+            <ShieldAlert size={23} className="icon" />
+            <p className="label">RESPECT DES INVALIDATIONS</p>
+          </div>
+          <h2 className="question">Tes conditions d’invalidation ont-elles été respectées ?</h2>
+          <p className="support-copy">
+            Pour chaque règle de ton Identity, indique si elle s’est produite pendant
+            la session. Si oui, précise si tu as respecté ton signal d’arrêt.
+          </p>
+          {invalidationRules.map((rule) => {
+            const answer = invalidationAnswers[rule.id] || {};
+            const updateAnswer = (patch) =>
+              setInvalidationAnswers((prev) => ({
+                ...prev,
+                [rule.id]: { ...prev[rule.id], ...patch },
+              }));
+            return (
+              <div key={rule.id} style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.09)" }}>
+                <p className="text" style={{ color: "white", marginBottom: 12, fontWeight: 800 }}>
+                  {rule.label}
+                </p>
+                <p className="support-copy">Cette invalidation s’est-elle produite ?</p>
+                <div className="two-buttons" style={{ marginTop: 10 }}>
+                  <button type="button" className={answer.occurred === true ? "binary-card danger active" : "binary-card"}
+                    onClick={() => updateAnswer({ occurred: true, respected: null })}>Oui</button>
+                  <button type="button" className={answer.occurred === false ? "binary-card success active" : "binary-card"}
+                    onClick={() => updateAnswer({ occurred: false, respected: null })}>Non</button>
+                </div>
+                {answer.occurred === true && (
+                  <>
+                    <p className="support-copy">As-tu respecté cette invalidation ?</p>
+                    <div className="two-buttons" style={{ marginTop: 10 }}>
+                      <button type="button" className={answer.respected === true ? "binary-card success active" : "binary-card"}
+                        onClick={() => updateAnswer({ respected: true })}>Oui</button>
+                      <button type="button" className={answer.respected === false ? "binary-card danger active" : "binary-card"}
+                        onClick={() => updateAnswer({ respected: false })}>Non</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       <section className="card">
         <div className="card-top">
